@@ -3,7 +3,6 @@
  */
 package rinde.logistics.pdptw.mas.route;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static com.google.common.collect.Lists.newLinkedList;
 
@@ -40,10 +39,10 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    checkState(pdpModel != null && vehicle != null);
     @SuppressWarnings({ "unchecked", "rawtypes" })
     final Collection<DefaultParcel> inCargo = Collections
-        .checkedCollection((Collection) pdpModel.getContents(vehicle), DefaultParcel.class);
+        .checkedCollection((Collection) pdpModel.get().getContents(vehicle
+            .get()), DefaultParcel.class);
     if (onMap.isEmpty() && inCargo.isEmpty()) {
       assignedParcels.clear();
     } else {

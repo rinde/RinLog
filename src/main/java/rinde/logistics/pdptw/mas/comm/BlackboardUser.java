@@ -6,13 +6,14 @@ package rinde.logistics.pdptw.mas.comm;
 import java.util.Collection;
 
 import rinde.sim.core.model.pdp.PDPModel;
-import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.event.Event;
 import rinde.sim.event.EventDispatcher;
 import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
+
+import com.google.common.base.Optional;
 
 /**
  * This {@link Communicator} implementation allows communication via a
@@ -21,7 +22,7 @@ import rinde.sim.pdptw.common.DefaultVehicle;
  */
 public class BlackboardUser implements Communicator {
 
-  protected BlackboardCommModel bcModel;
+  protected Optional<BlackboardCommModel> bcModel;
   protected final EventDispatcher eventDispatcher;
 
   /**
@@ -29,24 +30,25 @@ public class BlackboardUser implements Communicator {
    */
   public BlackboardUser() {
     eventDispatcher = new EventDispatcher(CommunicatorEventType.values());
+    bcModel = Optional.absent();
   }
 
   /**
    * @param model Injects the {@link BlackboardCommModel}.
    */
   public void init(BlackboardCommModel model) {
-    bcModel = model;
+    bcModel = Optional.of(model);
   }
 
   public void waitFor(DefaultParcel p) {}
 
   /**
-   * Lay a claim on the specified {@link Parcel}.
+   * Lay a claim on the specified {@link DefaultParcel}.
    * @param p The parcel to claim.
    */
   public void claim(DefaultParcel p) {
     // forward call to model
-    bcModel.claim(this, p);
+    bcModel.get().claim(this, p);
   }
 
   /**
@@ -62,7 +64,7 @@ public class BlackboardUser implements Communicator {
   }
 
   public Collection<DefaultParcel> getParcels() {
-    return bcModel.getUnclaimedParcels();
+    return bcModel.get().getUnclaimedParcels();
   }
 
   // not needed

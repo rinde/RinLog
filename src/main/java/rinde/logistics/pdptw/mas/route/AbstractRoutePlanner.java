@@ -17,6 +17,8 @@ import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 
+import com.google.common.base.Optional;
+
 /**
  * A partial {@link RoutePlanner} implementation, it already implements much of
  * the common required behaviors. Subclasses only need to concentrate on the
@@ -29,23 +31,23 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   private boolean initialized;
   private boolean updated;
 
-  @Nullable
-  protected RoadModel roadModel;
-  @Nullable
-  protected PDPModel pdpModel;
-  @Nullable
-  protected DefaultVehicle vehicle;
+  protected Optional<RoadModel> roadModel;
+  protected Optional<PDPModel> pdpModel;
+  protected Optional<DefaultVehicle> vehicle;
 
   protected AbstractRoutePlanner() {
     history = newArrayList();
+    roadModel = Optional.absent();
+    pdpModel = Optional.absent();
+    vehicle = Optional.absent();
   }
 
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
     checkState(!isInitialized(), "init shoud be called only once");
     initialized = true;
-    roadModel = rm;
-    pdpModel = pm;
-    vehicle = dv;
+    roadModel = Optional.of(rm);
+    pdpModel = Optional.of(pm);
+    vehicle = Optional.of(dv);
   }
 
   public final void update(Collection<DefaultParcel> onMap, long time) {

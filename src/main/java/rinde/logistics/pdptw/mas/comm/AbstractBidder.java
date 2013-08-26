@@ -10,10 +10,16 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Collection;
 import java.util.Set;
 
+import rinde.sim.core.model.pdp.PDPModel;
+import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.event.Event;
 import rinde.sim.event.EventDispatcher;
 import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.pdptw.common.DefaultVehicle;
+import rinde.sim.pdptw.common.PDPRoadModel;
+
+import com.google.common.base.Optional;
 
 /**
  * Basic implementation for {@link Bidder}.
@@ -23,6 +29,9 @@ public abstract class AbstractBidder implements Bidder {
 
   protected final Set<DefaultParcel> assignedParcels;
   protected final EventDispatcher eventDispatcher;
+  protected Optional<PDPRoadModel> roadModel;
+  protected Optional<PDPModel> pdpModel;
+  protected Optional<DefaultVehicle> vehicle;
 
   /**
    * Initializes bidder.
@@ -30,6 +39,9 @@ public abstract class AbstractBidder implements Bidder {
   public AbstractBidder() {
     assignedParcels = newLinkedHashSet();
     eventDispatcher = new EventDispatcher(CommunicatorEventType.values());
+    roadModel = Optional.absent();
+    pdpModel = Optional.absent();
+    vehicle = Optional.absent();
   }
 
   public void addUpdateListener(Listener l) {
@@ -52,5 +64,11 @@ public abstract class AbstractBidder implements Bidder {
     assignedParcels.add(p);
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+  }
+
+  public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
+    roadModel = Optional.of((PDPRoadModel) rm);
+    pdpModel = Optional.of(pm);
+    vehicle = Optional.of(v);
   }
 }

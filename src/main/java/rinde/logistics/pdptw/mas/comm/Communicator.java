@@ -32,6 +32,13 @@ public interface Communicator {
     CHANGE;
   }
 
+  /**
+   * Initializes the communicator for one specific {@link DefaultVehicle} in a
+   * {@link RoadModel} and a {@link PDPModel}.
+   * @param rm The {@link RoadModel} which the truck is on.
+   * @param pm The {@link PDPModel} which manages the truck.
+   * @param v The {@link DefaultVehicle} for which routes will be planned.
+   */
   void init(RoadModel rm, PDPModel pm, DefaultVehicle v);
 
   /**

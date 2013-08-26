@@ -3,7 +3,6 @@
  */
 package rinde.logistics.pdptw.mas.route;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newLinkedList;
 
 import java.util.Collection;
@@ -44,11 +43,9 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    checkState(roadModel != null && pdpModel != null && vehicle != null);
-    checkState(roadModel instanceof PDPRoadModel);
     route = Solvers
-        .solve(solver, (PDPRoadModel) roadModel, pdpModel, vehicle, onMap, time, SI
-            .MILLI(SI.SECOND), NonSI.KILOMETERS_PER_HOUR, SI.KILOMETER);
+        .solve(solver, (PDPRoadModel) roadModel.get(), pdpModel.get(), vehicle
+            .get(), onMap, time, SI.MILLI(SI.SECOND), NonSI.KILOMETERS_PER_HOUR, SI.KILOMETER);
   }
 
   public boolean hasNext() {
@@ -64,5 +61,4 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
   protected void nextImpl(long time) {
     route.poll();
   }
-
 }

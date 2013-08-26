@@ -7,11 +7,10 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.measure.unit.NonSI;
 import javax.measure.unit.SI;
 
-import rinde.sim.core.model.pdp.PDPModel;
-import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.StateContext;
 import rinde.sim.pdptw.central.arrays.ArraysSolvers;
@@ -19,10 +18,6 @@ import rinde.sim.pdptw.central.arrays.ArraysSolvers.ArraysObject;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.SolutionObject;
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.pdptw.common.DefaultVehicle;
-import rinde.sim.pdptw.common.PDPRoadModel;
-
-import com.google.common.base.Optional;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
@@ -32,15 +27,8 @@ public class SolverBidder extends AbstractBidder {
 
   protected final SingleVehicleArraysSolver solver;
 
-  protected Optional<PDPRoadModel> roadModel;
-  protected Optional<PDPModel> pdpModel;
-  protected Optional<DefaultVehicle> vehicle;
-
   public SolverBidder(SingleVehicleArraysSolver sol) {
     solver = sol;
-    roadModel = Optional.absent();
-    pdpModel = Optional.absent();
-    vehicle = Optional.absent();
   }
 
   // TODO figure out what happens when the vehicle is moving towards a parcel
@@ -59,7 +47,7 @@ public class SolverBidder extends AbstractBidder {
     return additional - baseline;
   }
 
-  private double computeBid(DefaultParcel p, long time) {
+  private double computeBid(@Nullable DefaultParcel p, long time) {
     final Set<DefaultParcel> availableParcels = newLinkedHashSet(assignedParcels);
     if (p != null) {
       availableParcels.add(p);
@@ -75,11 +63,5 @@ public class SolverBidder extends AbstractBidder {
     final SolutionObject so = solver
         .solve(ao.travelTime, ao.releaseDates, ao.dueDates, ao.servicePairs, ao.serviceTimes);
     return so.objectiveValue;
-  }
-
-  public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
-    roadModel = Optional.of((PDPRoadModel) rm);
-    pdpModel = Optional.of(pm);
-    vehicle = Optional.of(v);
   }
 }
