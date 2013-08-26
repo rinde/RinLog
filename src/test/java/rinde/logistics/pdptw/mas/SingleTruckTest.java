@@ -106,8 +106,8 @@ public class SingleTruckTest {
     assertTrue(truck.stateMachine.getCurrentState() instanceof Goto);
     assertFalse(truck.getDTO().startPosition.equals(roadModel
         .getPosition(truck)));
-    final DefaultParcel cur2 = ((Goto) truck.stateMachine.getCurrentState()).cur;
-    assertNotNull(cur2);
+    final DefaultParcel cur2 = ((Goto) truck.stateMachine.getCurrentState()).cur
+        .get();
     assertEquals(parcel1dto, cur2.dto);
 
     // move to pickup

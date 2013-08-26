@@ -10,8 +10,6 @@ import static java.util.Collections.unmodifiableList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.DefaultParcel;
@@ -59,7 +57,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   /**
    * Should implement functionality of
    * {@link #update(Collection, Collection, long)} according to the interface.
-   * It can be assumed that hte method is allowed to be called (i.e. the route
+   * It can be assumed that the method is allowed to be called (i.e. the route
    * planner is initialized).
    * @param onMap A collection of parcels which currently reside on the map.
    * @param inCargo A collection of parcels which currently reside in the
@@ -70,11 +68,12 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
 
-  @Nullable
-  public final DefaultParcel next(long time) {
+  public final Optional<DefaultParcel> next(long time) {
     checkState(isInitialized(), "RoutePlanner should be initialized before it can be used, see init()");
     checkState(updated, "RoutePlanner should be udpated before it can be used, see update()");
-    history.add(current());
+    if (current().isPresent()) {
+      history.add(current().get());
+    }
     nextImpl(time);
     return current();
   }
@@ -87,12 +86,11 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected abstract void nextImpl(long time);
 
-  @Nullable
-  public DefaultParcel prev() {
+  public Optional<DefaultParcel> prev() {
     if (history.isEmpty()) {
-      return null;
+      return Optional.absent();
     }
-    return history.get(history.size() - 1);
+    return Optional.of(history.get(history.size() - 1));
   }
 
   public List<DefaultParcel> getHistory() {

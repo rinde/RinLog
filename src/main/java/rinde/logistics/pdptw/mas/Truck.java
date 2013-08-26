@@ -124,15 +124,15 @@ public class Truck extends DefaultVehicle implements Listener {
       if (changed) {
         changed = false;
         routePlanner.update(communicator.getParcels(), currentTime.getTime());
-        communicator.waitFor(routePlanner.current());
+        communicator.waitFor(routePlanner.current().get());
       }
 
-      final Parcel cur = routePlanner.current();
-      if (cur != null && !isTooEarly(cur)) {
+      final Optional<DefaultParcel> cur = routePlanner.current();
+      if (cur.isPresent() && !isTooEarly(cur.get())) {
         return TruckEvent.DONE;
       }
 
-      if (cur == null && isEndOfDay()
+      if (!cur.isPresent() && isEndOfDay()
           && !roadModel.get().equalPosition(context, depot.get())) {
         roadModel.get().moveTo(context, depot.get(), context.currentTime);
       }
@@ -142,25 +142,22 @@ public class Truck extends DefaultVehicle implements Listener {
 
   class Goto extends AbstractTruckState {
 
-    @Nullable
-    DefaultParcel cur;
+    Optional<DefaultParcel> cur = Optional.absent();
 
     @Override
     public void onEntry(TruckEvent event, Truck context) {
       cur = routePlanner.current();
-      checkState(cur != null, "RoutePlanner.current() can not be null");
-      if (pdpModel.get().getParcelState(cur) != ParcelState.IN_CARGO) {
-        communicator.claim(cur);
+      if (pdpModel.get().getParcelState(cur.get()) != ParcelState.IN_CARGO) {
+        communicator.claim(cur.get());
       }
     }
 
     @Nullable
     @Override
     public TruckEvent handle(TruckEvent event, Truck context) {
-      checkState(cur != null, "Destination can not be null");
       // move to service location
-      roadModel.get().moveTo(context, cur, currentTime);
-      if (roadModel.get().equalPosition(context, cur)) {
+      roadModel.get().moveTo(context, cur.get(), currentTime);
+      if (roadModel.get().equalPosition(context, cur.get())) {
         return TruckEvent.DONE;
       }
       return null;
@@ -170,8 +167,7 @@ public class Truck extends DefaultVehicle implements Listener {
   class Service extends AbstractTruckState {
     @Override
     public void onEntry(TruckEvent event, Truck context) {
-      final Parcel cur = routePlanner.current();
-      checkState(cur != null);
+      final Parcel cur = routePlanner.current().get();
       pdpModel.get().service(context, cur, currentTime);
       routePlanner.next(currentTime.getTime());
     }

@@ -11,6 +11,8 @@ import java.util.Queue;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 
+import com.google.common.base.Optional;
+
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
@@ -23,8 +25,8 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
     route = newLinkedList();
   }
 
-  public DefaultParcel current() {
-    return route.peek();
+  public Optional<DefaultParcel> current() {
+    return Optional.fromNullable(route.peek());
   }
 
   public boolean hasNext() {

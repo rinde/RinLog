@@ -18,6 +18,8 @@ import rinde.sim.pdptw.central.arrays.SolutionObject;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
 
+import com.google.common.base.Optional;
+
 /**
  * A {@link RoutePlanner} implementation that uses a {@link Solver} that
  * computes a complete route each time {@link #update(Collection, long)} is
@@ -52,9 +54,8 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
     return !route.isEmpty();
   }
 
-  @Nullable
-  public DefaultParcel current() {
-    return route.peek();
+  public Optional<DefaultParcel> current() {
+    return Optional.fromNullable((DefaultParcel) route.peek());
   }
 
   @Override

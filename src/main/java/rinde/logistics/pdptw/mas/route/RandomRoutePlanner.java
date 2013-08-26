@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+
+import com.google.common.base.Optional;
 
 /**
  * A {@link RoutePlanner} implementation that creates random routes.
@@ -67,9 +67,8 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
     return !assignedParcels.isEmpty();
   }
 
-  @Nullable
-  public DefaultParcel current() {
-    return assignedParcels.peek();
+  public Optional<DefaultParcel> current() {
+    return Optional.fromNullable(assignedParcels.peek());
   }
 
 }

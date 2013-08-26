@@ -7,8 +7,6 @@ import static com.google.common.collect.Lists.newLinkedList;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -138,15 +136,15 @@ public class RoutePlannerTest {
 
   @Test
   public void testRouteCompleteness() {
-    assertNull(routePlanner.prev());
-    assertNull(routePlanner.current());
+    assertFalse(routePlanner.prev().isPresent());
+    assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
 
     routePlanner.init(roadModel, pdpModel, truck);
 
-    assertNull(routePlanner.prev());
-    assertNull(routePlanner.current());
+    assertFalse(routePlanner.prev().isPresent());
+    assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
 
@@ -156,22 +154,22 @@ public class RoutePlannerTest {
     final List<Parcel> visited = newLinkedList();
     routePlanner.update(onMap, 0);
 
-    assertNull(routePlanner.prev());
-    assertNotNull(routePlanner.current());
+    assertFalse(routePlanner.prev().isPresent());
+    assertTrue(routePlanner.current().isPresent());
     assertTrue(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
 
     while (routePlanner.hasNext()) {
-      visited.add(routePlanner.current());
+      visited.add(routePlanner.current().get());
       assertEquals("current must keep the same value during repeated invocations", routePlanner
           .current(), routePlanner.current());
       routePlanner.next(0);
-      assertEquals(visited.get(visited.size() - 1), routePlanner.prev());
+      assertEquals(visited.get(visited.size() - 1), routePlanner.prev().get());
     }
 
     assertEquals(visited, routePlanner.getHistory());
-    assertNull(routePlanner.current());
-    assertNull(routePlanner.next(0));
+    assertFalse(routePlanner.current().isPresent());
+    assertFalse(routePlanner.next(0).isPresent());
 
     assertEquals("total number of stops should equal num locations", (onMap.size() * 2)
         + inCargo.size(), visited.size());
@@ -197,7 +195,7 @@ public class RoutePlannerTest {
     final Collection<DefaultParcel> singleOnMap = ImmutableSet.of(mapParcel);
 
     routePlanner.update(empty, 0);
-    assertNull(routePlanner.prev());
+    assertFalse(routePlanner.prev().isPresent());
 
     assertEquals(1, singleOnMap.size());
     assertEquals(1, singleCargo.size());
@@ -219,9 +217,9 @@ public class RoutePlannerTest {
     routePlanner.update(singleOnMap, 0);
     assertEquals(0, routePlanner.getHistory().size());
 
-    assertEquals(mapParcel, routePlanner.next(0));
+    assertEquals(mapParcel, routePlanner.next(0).get());
     assertTrue(routePlanner.hasNext());
-    assertNull(routePlanner.next(0));
+    assertFalse(routePlanner.next(0).isPresent());
 
     assertEquals(asList(mapParcel, mapParcel), routePlanner.getHistory());
   }
