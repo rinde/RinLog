@@ -1,6 +1,6 @@
 analyseLocally=false
 eclipse.preferences.version=1
-extraProperties=sonar.host.url\=http\://localhost\:9000
+extraProperties=sonar.language\=java\r\nsonar.host.url\=http\://localhost\:9000
 projectKey=com.github.rinde\:rinlog
 serverUrl=http\://kraken.cs.kuleuven.be\:9000
 version=2
