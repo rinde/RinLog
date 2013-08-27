@@ -32,6 +32,7 @@ import rinde.sim.core.Simulator;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.Model;
 import rinde.sim.pdptw.central.arrays.ArraysSolverDebugger;
+import rinde.sim.pdptw.central.arrays.ArraysSolverDebugger.SVASDebugger;
 import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
@@ -196,7 +197,7 @@ public class SingleVehicleSolverTest {
   }
 
   static class TestConfigurator implements Configurator {
-    final List<ArraysSolverDebugger> debuggers;
+    final List<SVASDebugger> debuggers;
     final SingleVehicleArraysSolver solver;
     final Unit<Duration> timeUnit;
 
@@ -211,8 +212,8 @@ public class SingleVehicleSolverTest {
       final Communicator c = new RandomBidder(123);
       sim.register(c);
 
-      final ArraysSolverDebugger sd = ArraysSolverDebugger
-          .wrap(ArraysSolverValidator.wrap(solver), false);
+      final SVASDebugger sd = ArraysSolverDebugger.wrap(ArraysSolverValidator
+          .wrap(solver), false);
       debuggers.add(sd);
       return sim.register(new Truck(event.vehicleDTO, new SolverRoutePlanner(
           new SingleVehicleSolverAdapter(sd, timeUnit)), c));
