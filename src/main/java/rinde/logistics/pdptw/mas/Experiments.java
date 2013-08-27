@@ -37,6 +37,8 @@ import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
 import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.StatsTracker.StatisticsDTO;
+import rinde.sim.pdptw.experiments.ExperimentUtil;
+import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 
 import com.google.common.base.Charsets;
@@ -48,60 +50,31 @@ import com.google.common.io.Files;
  */
 public class Experiments {
 
-  enum ExperimentClass {
-    /**
-     * _240_24
-     */
-    SHORT_LOW_FREQ(240, 24, 10),
-
-    /**
-     * _240_33
-     */
-    SHORT_HIGH_FREQ(240, 33, 10),
-
-    /**
-     * _450_24
-     */
-    LONG_LOW_FREQ(450, 24, 20);
-
-    public final String fileId;
-    public final int duration;
-    public final int frequency;
-    public final int vehicles;
-
-    private ExperimentClass(int d, int f, int v) {
-      duration = d;
-      frequency = f;
-      vehicles = v;
-      fileId = "_" + duration + "_" + frequency;
-    }
-  }
-
   public static void main(String[] args) {
 
     // fullExperiment(new HeuristicAuctioneerHeuristicSolver(), 123, 1,
-    // ExperimentClass.SHORT_LOW_FREQ);
-    fullExperiment(new RandomAuctioneerHeuristicSolver(), 123, 10, ExperimentClass.SHORT_LOW_FREQ);
+    // GendreauProblemClass.SHORT_LOW_FREQ);
+    fullAgentExperiment(new RandomAuctioneerHeuristicSolver(), 123, 10, GendreauProblemClass.SHORT_LOW_FREQ);
 
     // experiments(123, 1, new RandomAuctioneerHeuristicSolver());
   }
 
-  static void experiments(long masterSeed, int repetitions,
+  static void agentExperiments(long masterSeed, int repetitions,
       Configurator... configurators) {
     for (final Configurator c : configurators) {
-      fullExperiment(c, masterSeed, repetitions, ExperimentClass.values());
+      fullAgentExperiment(c, masterSeed, repetitions, GendreauProblemClass.values());
     }
   }
 
-  static void fullExperiment(Configurator c, long masterSeed, int repetitions,
-      ExperimentClass... claz) {
-    for (final ExperimentClass ec : claz) {
-      fullExperiment(c, masterSeed, repetitions, ec);
+  static void fullAgentExperiment(Configurator c, long masterSeed,
+      int repetitions, GendreauProblemClass... claz) {
+    for (final GendreauProblemClass ec : claz) {
+      fullAgentExperiment(c, masterSeed, repetitions, ec);
     }
   }
 
-  static void fullExperiment(Configurator c, long masterSeed, int repetitions,
-      ExperimentClass claz) {
+  static void fullAgentExperiment(Configurator c, long masterSeed,
+      int repetitions, GendreauProblemClass claz) {
     final List<String> files = ExperimentUtil
         .getFilesFromDir("files/scenarios/gendreau06/", claz.fileId);
     final RandomGenerator rng = new MersenneTwister(masterSeed);
