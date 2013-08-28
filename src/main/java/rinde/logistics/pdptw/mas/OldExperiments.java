@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import javax.measure.quantity.Duration;
 import javax.measure.unit.SI;
@@ -36,27 +37,56 @@ import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
 import rinde.sim.pdptw.common.AddVehicleEvent;
+import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
+import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.common.StatsTracker.StatisticsDTO;
+import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiments.ExperimentUtil;
-import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
+import rinde.sim.pdptw.experiments.Experiments;
+import rinde.sim.pdptw.experiments.Experiments.ExperimentResults;
+import rinde.sim.pdptw.experiments.Experiments.Result;
+import rinde.sim.pdptw.experiments.MASConfiguration;
+import rinde.sim.pdptw.experiments.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
+import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
+import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashBasedTable;
+import com.google.common.collect.Table;
+import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
  */
-public class Experiments {
+public class OldExperiments {
 
   public static void main(String[] args) {
 
     // fullExperiment(new HeuristicAuctioneerHeuristicSolver(), 123, 1,
     // GendreauProblemClass.SHORT_LOW_FREQ);
-    fullAgentExperiment(new RandomAuctioneerHeuristicSolver(), 123, 10, GendreauProblemClass.SHORT_LOW_FREQ);
+    // fullAgentExperiment(new RandomBB(), 123, 10,
+    // GendreauProblemClass.SHORT_LOW_FREQ);
 
     // experiments(123, 1, new RandomAuctioneerHeuristicSolver());
+
+    final ExperimentResults results = Experiments
+        .experiment(new Gendreau06ObjectiveFunction())
+        .addScenarioProvider(new Gendreau06Scenarios(
+            "files/scenarios/gendreau06/", GendreauProblemClass.SHORT_LOW_FREQ))
+        .addSolution(new RandomBB()) //
+        .addSolution(new RandomAuctioneerHeuristicSolver()) //
+        .withRandomSeed(123) //
+        .repeat(1) //
+        .perform();
+
+    writeGendreauResults(results);
+
+    System.out.println(results);
+
   }
 
   static void agentExperiments(long masterSeed, int repetitions,
@@ -71,6 +101,65 @@ public class Experiments {
     for (final GendreauProblemClass ec : claz) {
       fullAgentExperiment(c, masterSeed, repetitions, ec);
     }
+  }
+
+  static void writeGendreauResults(ExperimentResults results) {
+
+    final Table<MASConfigurator, ProblemClass, StringBuilder> table = LinkedHashBasedTable
+        .create();
+
+    checkArgument(results.objectiveFunction instanceof Gendreau06ObjectiveFunction);
+    final Gendreau06ObjectiveFunction obj = (Gendreau06ObjectiveFunction) results.objectiveFunction;
+
+    for (final Result r : results.results) {
+      final MASConfigurator config = r.masConfigurator;
+      final ProblemClass pc = r.scenario.getProblemClass();
+
+      if (!table.contains(config, pc)) {
+        table
+            .put(config, pc, new StringBuilder(
+                "seed,instance,duration,frequency,cost,tardiness,travelTime,overTime\n"));
+      }
+      final StringBuilder sb = table.get(config, pc);
+
+      final GendreauProblemClass gpc = (GendreauProblemClass) pc;
+      sb.append(r.seed).append(",")/* seed */
+      .append(r.scenario.getProblemInstanceId()).append(",")/* instance */
+      .append(gpc.duration).append(",") /* duration */
+      .append(gpc.frequency).append(",")/* frequency */
+      .append(obj.computeCost(r.stats)).append(',')/* cost */
+      .append(obj.tardiness(r.stats)).append(',')/* tardiness */
+      .append(obj.travelTime(r.stats)).append(',')/* travelTime */
+      .append(obj.overTime(r.stats))/* overTime */
+      .append("\n");
+
+    }
+
+    final Set<Cell<MASConfigurator, ProblemClass, StringBuilder>> set = table
+        .cellSet();
+
+    for (final Cell<MASConfigurator, ProblemClass, StringBuilder> cell : set) {
+
+      try {
+        final File dir = new File("files/results/gendreau"
+            + cell.getColumnKey().getId());
+        if (!dir.exists() || !dir.isDirectory()) {
+          Files.createParentDirs(dir);
+          dir.mkdir();
+        }
+        final File file = new File(dir.getPath() + "/"
+            + cell.getRowKey().getClass().getSimpleName() + "_"
+            + results.masterSeed + cell.getColumnKey().getId() + ".txt");
+        if (file.exists()) {
+          file.delete();
+        }
+
+        Files.write(cell.getValue().toString(), file, Charsets.UTF_8);
+      } catch (final IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
   }
 
   static void fullAgentExperiment(Configurator c, long masterSeed,
@@ -114,18 +203,19 @@ public class Experiments {
         .append("\n");
       }
     }
-    final File dir = new File("files/results/gendreau" + claz.fileId);
-    if (!dir.exists() || !dir.isDirectory()) {
-      dir.mkdir();
-    }
-    final File file = new File(dir.getPath() + "/"
-        + c.getClass().getSimpleName() + "_" + masterSeed + claz.fileId
-        + ".txt");
-    if (file.exists()) {
-      file.delete();
-    }
-
     try {
+      final File dir = new File("files/results/gendreau" + claz.fileId);
+      if (!dir.exists() || !dir.isDirectory()) {
+        Files.createParentDirs(dir);
+        dir.mkdir();
+      }
+      final File file = new File(dir.getPath() + "/"
+          + c.getClass().getSimpleName() + "_" + masterSeed + claz.fileId
+          + ".txt");
+      if (file.exists()) {
+        file.delete();
+      }
+
       Files.write(sb.toString(), file, Charsets.UTF_8);
     } catch (final IOException e) {
       throw new RuntimeException(e);
@@ -174,32 +264,34 @@ public class Experiments {
   }
 
   // random auctioneer with random solver route planner
-  public static class RandomAuctioneerHeuristicSolver implements Configurator,
-      RandomSeed {
+  public static class RandomAuctioneerHeuristicSolver implements
+      MASConfigurator {
 
-    protected final RandomGenerator rng;
+    public MASConfiguration configure(long seed) {
+      final RandomGenerator rng = new MersenneTwister(seed);
+      return new DefaultMASConfiguration() {
+        public Creator<AddVehicleEvent> getVehicleCreator() {
+          return new Creator<AddVehicleEvent>() {
+            public boolean create(Simulator sim, AddVehicleEvent event) {
+              final Communicator c = new RandomBidder(rng.nextLong());
+              sim.register(c);
+              return sim
+                  .register(new Truck(event.vehicleDTO,
+                      new SolverRoutePlanner(SolverValidator
+                          .wrap(new SingleVehicleSolverAdapter(
+                              ArraysSolverValidator.wrap(new HeuristicSolver(
+                                  new MersenneTwister(rng.nextLong()))),
+                              SI.SECOND))), c));
+            }
+          };
+        }
 
-    public RandomAuctioneerHeuristicSolver() {
-      rng = new MersenneTwister(0L);
+        @Override
+        public ImmutableList<? extends Model<?>> getModels() {
+          return ImmutableList.of(new AuctionCommModel());
+        }
+      };
     }
-
-    public boolean create(Simulator sim, AddVehicleEvent event) {
-      final Communicator c = new RandomBidder(rng.nextLong());
-      sim.register(c);
-      return sim.register(new Truck(event.vehicleDTO, new SolverRoutePlanner(
-          SolverValidator.wrap(new SingleVehicleSolverAdapter(
-              ArraysSolverValidator.wrap(new HeuristicSolver(
-                  new MersenneTwister(rng.nextLong()))), SI.SECOND))), c));
-    }
-
-    public void setSeed(long seed) {
-      rng.setSeed(seed);
-    }
-
-    public Model<?>[] createModels() {
-      return new Model<?>[] { new AuctionCommModel() };
-    }
-
   }
 
   /**
@@ -235,26 +327,27 @@ public class Experiments {
 
   }
 
-  public static class RandomBB implements Configurator, RandomSeed {
-    protected final RandomGenerator rng;
+  public static class RandomBB implements MASConfigurator {
+    public MASConfiguration configure(long seed) {
+      final RandomGenerator rng = new MersenneTwister(seed);
 
-    public RandomBB() {
-      rng = new MersenneTwister(0L);
-    }
+      return new DefaultMASConfiguration() {
+        public Creator<AddVehicleEvent> getVehicleCreator() {
+          return new Creator<AddVehicleEvent>() {
+            public boolean create(Simulator sim, AddVehicleEvent event) {
+              final Communicator c = new BlackboardUser();
+              sim.register(c);
+              return sim.register(new Truck(event.vehicleDTO,
+                  new RandomRoutePlanner(rng.nextLong()), c));
+            }
+          };
+        }
 
-    public boolean create(Simulator sim, AddVehicleEvent event) {
-      final Communicator c = new BlackboardUser();
-      sim.register(c);
-      return sim.register(new Truck(event.vehicleDTO, new RandomRoutePlanner(
-          rng.nextLong()), c));
-    }
-
-    public Model<?>[] createModels() {
-      return new Model<?>[] { new BlackboardCommModel() };
-    }
-
-    public void setSeed(long seed) {
-      rng.setSeed(seed);
+        @Override
+        public ImmutableList<? extends Model<?>> getModels() {
+          return ImmutableList.of(new BlackboardCommModel());
+        }
+      };
     }
   }
 

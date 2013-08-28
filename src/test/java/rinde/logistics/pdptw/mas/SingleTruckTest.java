@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Test;
 
-import rinde.logistics.pdptw.mas.Experiments.RandomRandom;
+import rinde.logistics.pdptw.mas.OldExperiments.RandomRandom;
 import rinde.logistics.pdptw.mas.Truck.Goto;
 import rinde.logistics.pdptw.mas.Truck.Service;
 import rinde.logistics.pdptw.mas.Truck.Wait;
