@@ -44,7 +44,7 @@ import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiments.ExperimentUtil;
 import rinde.sim.pdptw.experiments.Experiments;
 import rinde.sim.pdptw.experiments.Experiments.ExperimentResults;
-import rinde.sim.pdptw.experiments.Experiments.Result;
+import rinde.sim.pdptw.experiments.Experiments.SimulationResult;
 import rinde.sim.pdptw.experiments.MASConfiguration;
 import rinde.sim.pdptw.experiments.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
@@ -77,8 +77,8 @@ public class OldExperiments {
         .experiment(new Gendreau06ObjectiveFunction())
         .addScenarioProvider(new Gendreau06Scenarios(
             "files/scenarios/gendreau06/", GendreauProblemClass.SHORT_LOW_FREQ))
-        .addSolution(new RandomBB()) //
-        .addSolution(new RandomAuctioneerHeuristicSolver()) //
+        .addConfigurator(new RandomBB()) //
+        .addConfigurator(new RandomAuctioneerHeuristicSolver()) //
         .withRandomSeed(123) //
         .repeat(1) //
         .perform();
@@ -111,7 +111,7 @@ public class OldExperiments {
     checkArgument(results.objectiveFunction instanceof Gendreau06ObjectiveFunction);
     final Gendreau06ObjectiveFunction obj = (Gendreau06ObjectiveFunction) results.objectiveFunction;
 
-    for (final Result r : results.results) {
+    for (final SimulationResult r : results.results) {
       final MASConfigurator config = r.masConfigurator;
       final ProblemClass pc = r.scenario.getProblemClass();
 
