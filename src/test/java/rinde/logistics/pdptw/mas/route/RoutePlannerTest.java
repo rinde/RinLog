@@ -25,14 +25,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import rinde.logistics.pdptw.mas.GSimulation.Configurator;
-import rinde.logistics.pdptw.mas.GSimulationTestUtil;
 import rinde.logistics.pdptw.solver.HeuristicSolver;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.TimeLapseFactory;
 import rinde.sim.core.graph.Point;
-import rinde.sim.core.model.Model;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.core.model.pdp.Vehicle;
@@ -44,8 +41,11 @@ import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
+import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.common.VehicleDTO;
+import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
+import rinde.sim.pdptw.experiments.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
@@ -112,13 +112,13 @@ public class RoutePlannerTest {
     final RandomGenerator rng = new MersenneTwister(123);
     final List<TimedEvent> events = newLinkedList();
     for (int i = 0; i < numOnMap; i++) {
-      events.add(newParcelEvent(new Point(rng.nextDouble() * 5, rng
-          .nextDouble() * 5), new Point(rng.nextDouble() * 5,
-          rng.nextDouble() * 5)));
+      events.add(newParcelEvent(
+          new Point(rng.nextDouble() * 5, rng.nextDouble() * 5),
+          new Point(rng.nextDouble() * 5, rng.nextDouble() * 5)));
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events);
 
-    problem = GSimulationTestUtil.init(scen, new TestConfigurator(), false);
+    problem = ExperimentTest.init(scen, new TestConfiguration(), false);
     simulator = problem.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -161,8 +161,9 @@ public class RoutePlannerTest {
 
     while (routePlanner.hasNext()) {
       visited.add(routePlanner.current().get());
-      assertEquals("current must keep the same value during repeated invocations", routePlanner
-          .current(), routePlanner.current());
+      assertEquals(
+          "current must keep the same value during repeated invocations",
+          routePlanner.current(), routePlanner.current());
       routePlanner.next(0);
       assertEquals(visited.get(visited.size() - 1), routePlanner.prev().get());
     }
@@ -171,8 +172,8 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.next(0).isPresent());
 
-    assertEquals("total number of stops should equal num locations", (onMap.size() * 2)
-        + inCargo.size(), visited.size());
+    assertEquals("total number of stops should equal num locations",
+        (onMap.size() * 2) + inCargo.size(), visited.size());
 
     for (final Parcel p : onMap) {
       assertEquals(2, Collections.frequency(visited, p));
@@ -277,13 +278,13 @@ public class RoutePlannerTest {
         delivery, 0, -1, 300000, 300000));
   }
 
-  class TestConfigurator implements Configurator {
-    public boolean create(Simulator sim, AddVehicleEvent event) {
-      return sim.register(new TestTruck(event.vehicleDTO));
-    }
-
-    public Model<?>[] createModels() {
-      return new Model<?>[] {};
+  class TestConfiguration extends DefaultMASConfiguration {
+    public Creator<AddVehicleEvent> getVehicleCreator() {
+      return new Creator<AddVehicleEvent>() {
+        public boolean create(Simulator sim, AddVehicleEvent event) {
+          return sim.register(new TestTruck(event.vehicleDTO));
+        }
+      };
     }
   }
 

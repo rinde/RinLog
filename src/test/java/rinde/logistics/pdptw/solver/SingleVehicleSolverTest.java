@@ -21,8 +21,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import rinde.logistics.pdptw.mas.GSimulation;
-import rinde.logistics.pdptw.mas.GSimulation.Configurator;
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import rinde.logistics.pdptw.mas.comm.Communicator;
@@ -39,14 +37,19 @@ import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
 import rinde.sim.pdptw.central.arrays.SolutionObject;
 import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.AddVehicleEvent;
+import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.common.StatsTracker.StatisticsDTO;
+import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
+import rinde.sim.pdptw.experiments.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
 import rinde.sim.util.TimeWindow;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Checks whether the objective as calculated by the simulator via
@@ -88,7 +91,8 @@ public class SingleVehicleSolverTest {
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = GSimulation.simulate(testScen, tc, false);
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+        new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
@@ -100,7 +104,9 @@ public class SingleVehicleSolverTest {
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
 
     assertEquals(simObj, solverObj, EPSILON);
-    assertTrue("the solver should have a slightly pessimistic view on the world", solverObj > simObj);
+    assertTrue(
+        "the solver should have a slightly pessimistic view on the world",
+        solverObj > simObj);
   }
 
   /**
@@ -120,12 +126,13 @@ public class SingleVehicleSolverTest {
 
     final List<TimedEvent> events = newArrayList();
     for (int i = 0; i < points.size() / 2; i++) {
-      events
-          .add(newParcelEvent(points.get(i), points.get(points.size() - 1 - i)));
+      events.add(newParcelEvent(points.get(i),
+          points.get(points.size() - 1 - i)));
     }
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = GSimulation.simulate(testScen, tc, false);
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+        new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
@@ -136,7 +143,9 @@ public class SingleVehicleSolverTest {
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
     assertEquals(simObj, solverObj, EPSILON);
-    assertTrue("the solver should have a slightly pessimistic view on the world", solverObj > simObj);
+    assertTrue(
+        "the solver should have a slightly pessimistic view on the world",
+        solverObj > simObj);
   }
 
   /**
@@ -162,14 +171,15 @@ public class SingleVehicleSolverTest {
 
     final List<TimedEvent> events = newArrayList();
     for (int i = 0; i < points.size() / 2; i++) {
-      events
-          .add(newParcelEvent(points.get(i), points.get(points.size() - 1 - i), timeWindows
-              .get(i), timeWindows.get(points.size() - 1 - i)));
+      events.add(newParcelEvent(points.get(i),
+          points.get(points.size() - 1 - i), timeWindows.get(i),
+          timeWindows.get(points.size() - 1 - i)));
     }
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = GSimulation.simulate(testScen, tc, false);
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+        new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
@@ -181,7 +191,9 @@ public class SingleVehicleSolverTest {
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
     assertEquals(simObj, solverObj, EPSILON);
-    assertTrue("the solver should have a slightly pessimistic view on the world", solverObj > simObj);
+    assertTrue(
+        "the solver should have a slightly pessimistic view on the world",
+        solverObj > simObj);
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination) {
@@ -196,7 +208,7 @@ public class SingleVehicleSolverTest {
         delivery, 0, -1, 300000, 300000));
   }
 
-  static class TestConfigurator implements Configurator {
+  static class TestConfigurator extends DefaultMASConfiguration {
     final List<SVASDebugger> debuggers;
     final SingleVehicleArraysSolver solver;
     final Unit<Duration> timeUnit;
@@ -208,19 +220,25 @@ public class SingleVehicleSolverTest {
       debuggers = newArrayList();
     }
 
-    public boolean create(Simulator sim, AddVehicleEvent event) {
-      final Communicator c = new RandomBidder(123);
-      sim.register(c);
+    public Creator<AddVehicleEvent> getVehicleCreator() {
+      return new Creator<AddVehicleEvent>() {
+        public boolean create(Simulator sim, AddVehicleEvent event) {
+          final Communicator c = new RandomBidder(123);
+          sim.register(c);
 
-      final SVASDebugger sd = ArraysSolverDebugger.wrap(ArraysSolverValidator
-          .wrap(solver), false);
-      debuggers.add(sd);
-      return sim.register(new Truck(event.vehicleDTO, new SolverRoutePlanner(
-          new SingleVehicleSolverAdapter(sd, timeUnit)), c));
+          final SVASDebugger sd = ArraysSolverDebugger.wrap(
+              ArraysSolverValidator.wrap(solver), false);
+          debuggers.add(sd);
+          return sim.register(new Truck(event.vehicleDTO,
+              new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
+                  timeUnit)), c));
+        }
+      };
     }
 
-    public Model<?>[] createModels() {
-      return new Model<?>[] { new AuctionCommModel() };
+    @Override
+    public ImmutableList<? extends Model<?>> getModels() {
+      return ImmutableList.of(new AuctionCommModel());
     }
   }
 

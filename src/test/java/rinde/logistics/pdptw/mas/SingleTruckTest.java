@@ -32,6 +32,7 @@ import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
 import rinde.sim.pdptw.common.ParcelDTO;
+import rinde.sim.pdptw.experiments.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
@@ -57,7 +58,7 @@ public class SingleTruckTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
 
-    prob = GSimulation.init(scen, new RandomRandom(), false);
+    prob = ExperimentTest.init(scen, new RandomRandom().configure(123), false);
     simulator = prob.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -127,12 +128,14 @@ public class SingleTruckTest {
     }
     assertTrue(truck.stateMachine.getCurrentState() instanceof Goto);
     assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
-    assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)), pdpModel.getContents(truck));
+    assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
+        pdpModel.getContents(truck));
 
     // move to delivery
     while (truck.stateMachine.getCurrentState() instanceof Goto) {
       assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
-      assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)), pdpModel.getContents(truck));
+      assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
+          pdpModel.getContents(truck));
       simulator.tick();
     }
     assertTrue(truck.stateMachine.getCurrentState() instanceof Service);
