@@ -8,7 +8,7 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.measure.unit.NonSI;
+import javax.measure.Measure;
 import javax.measure.unit.SI;
 
 import rinde.sim.pdptw.central.Solvers;
@@ -55,13 +55,13 @@ public class SolverBidder extends AbstractBidder {
     if (availableParcels.isEmpty()) {
       return 0;
     }
-    final StateContext sc = Solvers
-        .convert(roadModel.get(), pdpModel.get(), vehicle.get(), availableParcels, time, SI
-            .MILLI(SI.SECOND), NonSI.KILOMETERS_PER_HOUR, SI.KILOMETER);
-    final ArraysObject ao = ArraysSolvers.toSingleVehicleArrays(sc.state, SI
-        .MILLI(SI.SECOND));
-    final SolutionObject so = solver
-        .solve(ao.travelTime, ao.releaseDates, ao.dueDates, ao.servicePairs, ao.serviceTimes);
+    final StateContext sc = Solvers.convert(roadModel.get(), pdpModel.get(),
+        vehicle.get(), availableParcels,
+        Measure.valueOf(time, SI.MILLI(SI.SECOND)));
+    final ArraysObject ao = ArraysSolvers.toSingleVehicleArrays(sc.state,
+        SI.MILLI(SI.SECOND));
+    final SolutionObject so = solver.solve(ao.travelTime, ao.releaseDates,
+        ao.dueDates, ao.servicePairs, ao.serviceTimes);
     return so.objectiveValue;
   }
 }

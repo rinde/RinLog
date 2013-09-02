@@ -42,9 +42,9 @@ import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.common.StatsTracker.StatisticsDTO;
 import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiments.ExperimentUtil;
-import rinde.sim.pdptw.experiments.Experiments;
-import rinde.sim.pdptw.experiments.Experiments.ExperimentResults;
-import rinde.sim.pdptw.experiments.Experiments.SimulationResult;
+import rinde.sim.pdptw.experiments.Experiment;
+import rinde.sim.pdptw.experiments.Experiment.ExperimentResults;
+import rinde.sim.pdptw.experiments.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiments.MASConfiguration;
 import rinde.sim.pdptw.experiments.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
@@ -73,8 +73,8 @@ public class OldExperiments {
 
     // experiments(123, 1, new RandomAuctioneerHeuristicSolver());
 
-    final ExperimentResults results = Experiments
-        .experiment(new Gendreau06ObjectiveFunction())
+    final ExperimentResults results = Experiment
+        .build(new Gendreau06ObjectiveFunction())
         .addScenarioProvider(new Gendreau06Scenarios(
             "files/scenarios/gendreau06/", GendreauProblemClass.SHORT_LOW_FREQ))
         .addConfigurator(new RandomBB()) //

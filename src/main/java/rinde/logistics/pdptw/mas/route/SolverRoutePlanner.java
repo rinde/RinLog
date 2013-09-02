@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Queue;
 
 import javax.annotation.Nullable;
-import javax.measure.unit.NonSI;
+import javax.measure.Measure;
 import javax.measure.unit.SI;
 
 import rinde.sim.pdptw.central.Solver;
@@ -45,9 +45,9 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    route = Solvers
-        .solve(solver, (PDPRoadModel) roadModel.get(), pdpModel.get(), vehicle
-            .get(), onMap, time, SI.MILLI(SI.SECOND), NonSI.KILOMETERS_PER_HOUR, SI.KILOMETER);
+    route = Solvers.solve(solver, (PDPRoadModel) roadModel.get(),
+        pdpModel.get(), vehicle.get(), onMap,
+        Measure.valueOf(time, SI.MILLI(SI.SECOND)));
   }
 
   public boolean hasNext() {
