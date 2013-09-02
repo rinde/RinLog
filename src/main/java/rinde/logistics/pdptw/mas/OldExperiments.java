@@ -198,6 +198,11 @@ public class OldExperiments {
         }
       };
     }
+
+    @Override
+    public String toString() {
+      return getClass().getSimpleName();
+    }
   }
 
   // random auctioneer with random solver route planner
@@ -228,6 +233,11 @@ public class OldExperiments {
           return ImmutableList.of(new AuctionCommModel());
         }
       };
+    }
+
+    @Override
+    public String toString() {
+      return getClass().getSimpleName();
     }
   }
 
@@ -262,6 +272,11 @@ public class OldExperiments {
         }
       };
     }
+
+    @Override
+    public String toString() {
+      return getClass().getSimpleName();
+    }
   }
 
   public static class HeuristicSolverCreator implements SolverCreator {
@@ -293,6 +308,11 @@ public class OldExperiments {
           return ImmutableList.of(new BlackboardCommModel());
         }
       };
+    }
+
+    @Override
+    public String toString() {
+      return getClass().getSimpleName();
     }
   }
 }
