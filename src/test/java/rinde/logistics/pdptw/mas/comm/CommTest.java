@@ -27,8 +27,8 @@ import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
-import rinde.sim.pdptw.experiments.DefaultMASConfiguration;
-import rinde.sim.pdptw.experiments.ExperimentTest;
+import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
+import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 
 import com.google.common.collect.ImmutableList;

@@ -32,7 +32,7 @@ import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.pdptw.experiments.ExperimentTest;
+import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
