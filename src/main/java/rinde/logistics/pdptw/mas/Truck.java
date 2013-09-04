@@ -82,7 +82,8 @@ public class Truck extends DefaultVehicle implements Listener {
     communicator.init(rm, pm, this);
 
     final Set<DefaultDepot> depots = rm.getObjectsOfType(DefaultDepot.class);
-    checkState(depots.size() == 1, "This truck can only deal with problems with a single depot.");
+    checkState(depots.size() == 1,
+        "This truck can only deal with problems with a single depot.");
     depot = Optional.of(depots.iterator().next());
   }
 
@@ -111,8 +112,8 @@ public class Truck extends DefaultVehicle implements Listener {
   protected boolean isEndOfDay() {
     return currentTime.hasTimeLeft()
         && currentTime.getTime() > dto.availabilityTimeWindow.end
-            - ((Point
-                .distance(roadModel.get().getPosition(this), dto.startPosition) / getSpeed()) * 3600000);
+            - ((Point.distance(roadModel.get().getPosition(this),
+                dto.startPosition) / getSpeed()) * 3600000);
   }
 
   abstract class AbstractTruckState extends AbstractState<TruckEvent, Truck> {}

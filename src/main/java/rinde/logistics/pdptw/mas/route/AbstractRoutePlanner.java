@@ -49,7 +49,8 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   public final void update(Collection<DefaultParcel> onMap, long time) {
-    checkState(isInitialized(), "RoutePlanner should be initialized before it can be used, see init()");
+    checkState(isInitialized(),
+        "RoutePlanner should be initialized before it can be used, see init()");
     updated = true;
     doUpdate(onMap, time);
   }
@@ -69,8 +70,10 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
 
   public final Optional<DefaultParcel> next(long time) {
-    checkState(isInitialized(), "RoutePlanner should be initialized before it can be used, see init()");
-    checkState(updated, "RoutePlanner should be udpated before it can be used, see update()");
+    checkState(isInitialized(),
+        "RoutePlanner should be initialized before it can be used, see init()");
+    checkState(updated,
+        "RoutePlanner should be udpated before it can be used, see update()");
     if (current().isPresent()) {
       history.add(current().get());
     }

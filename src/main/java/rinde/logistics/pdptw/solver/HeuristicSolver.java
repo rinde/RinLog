@@ -57,7 +57,9 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
 
     final int laListSize = 2000;
     final int maxIterations = 100000;
-    final SolutionObject bestSol = performLateAcceptance(travelTime, releaseDates, dueDates, servicePairs, serviceTime, pickupToDeliveryMap, deliveryToPickupMap, laListSize, maxIterations);
+    final SolutionObject bestSol = performLateAcceptance(travelTime,
+        releaseDates, dueDates, servicePairs, serviceTime, pickupToDeliveryMap,
+        deliveryToPickupMap, laListSize, maxIterations);
 
     // ADDED BY RINDE TO CONFORM TO CHANGED SOLUTION OBJECT SPEC
     // SEE SolutionObject.arrivalTimes
@@ -79,8 +81,10 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
       int[] serviceTime, int[] pickupToDeliveryMap, int[] deliveryToPickupMap) {
     final int n = releaseDates.length;
 
-    final List<Integer> perm0 = generateFeasibleRandomPermutation(n, servicePairs);
-    final SolutionObject sol0 = construct(intListToArray(perm0), travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+    final List<Integer> perm0 = generateFeasibleRandomPermutation(n,
+        servicePairs);
+    final SolutionObject sol0 = construct(intListToArray(perm0), travelTime,
+        releaseDates, dueDates, servicePairs, serviceTime);
 
     boolean improved = true;
 
@@ -110,7 +114,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
           final int el = newPerm.remove(i);
 
           newPerm.add(j, el);
-          final SolutionObject newSol = construct(intListToArray(newPerm), travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+          final SolutionObject newSol = construct(intListToArray(newPerm),
+              travelTime, releaseDates, dueDates, servicePairs, serviceTime);
           if (newSol.objectiveValue < bestSol.objectiveValue) {
             bestSol = newSol;
             bestPerm = newPerm;
@@ -134,7 +139,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
           final List<Integer> newPerm = new ArrayList<Integer>(current);
           final int el = newPerm.remove(i);
           newPerm.add(j, el);
-          final SolutionObject newSol = construct(intListToArray(newPerm), travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+          final SolutionObject newSol = construct(intListToArray(newPerm),
+              travelTime, releaseDates, dueDates, servicePairs, serviceTime);
           if (newSol.objectiveValue < bestSol.objectiveValue) {
             bestSol = newSol;
             bestPerm = newPerm;
@@ -159,8 +165,10 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
       int L, int maxIt) {
     final int n = releaseDates.length;
 
-    final List<Integer> perm0 = generateFeasibleRandomPermutation(n, servicePairs);
-    final SolutionObject sol0 = construct(intListToArray(perm0), travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+    final List<Integer> perm0 = generateFeasibleRandomPermutation(n,
+        servicePairs);
+    final SolutionObject sol0 = construct(intListToArray(perm0), travelTime,
+        releaseDates, dueDates, servicePairs, serviceTime);
 
     List<Integer> current = new ArrayList<Integer>(perm0);
     int currentObj = sol0.objectiveValue;
@@ -236,7 +244,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
         newPerm.add(j, el);
       }
 
-      final SolutionObject newSol = construct(intListToArray(newPerm), travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+      final SolutionObject newSol = construct(intListToArray(newPerm),
+          travelTime, releaseDates, dueDates, servicePairs, serviceTime);
       if (newSol.objectiveValue <= laList[it % L]) {
         // accept
         current = newPerm;
@@ -328,8 +337,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     arrivalTimes[0] = releaseDates[0];
     for (int i = 1; i < n; i++) {
       final int next = permutation[i];
-      arrivalTimes[next] = Math
-          .max(previousT + travelTime[previous][next], releaseDates[next]);
+      arrivalTimes[next] = Math.max(previousT + travelTime[previous][next],
+          releaseDates[next]);
       totalTravelTime += travelTime[previous][next];
 
       previousT = arrivalTimes[next] + serviceTime[next];
