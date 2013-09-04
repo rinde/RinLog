@@ -22,8 +22,8 @@ import com.google.common.base.Optional;
  */
 public class BlackboardUser implements Communicator {
 
-  protected Optional<BlackboardCommModel> bcModel;
-  protected final EventDispatcher eventDispatcher;
+  private Optional<BlackboardCommModel> bcModel;
+  private final EventDispatcher eventDispatcher;
 
   /**
    * Constructor.
@@ -40,12 +40,14 @@ public class BlackboardUser implements Communicator {
     bcModel = Optional.of(model);
   }
 
+  @Override
   public void waitFor(DefaultParcel p) {}
 
   /**
    * Lay a claim on the specified {@link DefaultParcel}.
    * @param p The parcel to claim.
    */
+  @Override
   public void claim(DefaultParcel p) {
     // forward call to model
     bcModel.get().claim(this, p);
@@ -59,15 +61,18 @@ public class BlackboardUser implements Communicator {
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
+  @Override
   public void addUpdateListener(Listener l) {
     eventDispatcher.addListener(l, CommunicatorEventType.CHANGE);
   }
 
+  @Override
   public Collection<DefaultParcel> getParcels() {
     return bcModel.get().getUnclaimedParcels();
   }
 
   // not needed
+  @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {}
 
 }

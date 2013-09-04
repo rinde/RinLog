@@ -72,8 +72,6 @@ public interface RoutePlanner {
    * immutable.</b>
    * @param onMap A collection of parcels which currently reside on the map.
    *          Note: this may be a <i>subset</i> of all parcels available.
-   * @param inCargo A collection of parcels which currently reside in the
-   *          vehicle's cargo.
    * @param time The current simulation time, this may be relevant for some
    *          routeplanners that want to take time windows into account.
    */

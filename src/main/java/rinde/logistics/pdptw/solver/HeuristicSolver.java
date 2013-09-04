@@ -17,8 +17,8 @@ import rinde.sim.pdptw.central.arrays.SolutionObject;
  */
 public class HeuristicSolver implements SingleVehicleArraysSolver {
 
-  public static final int TRAVEL_TIME_WEIGHT = 1;
-  public static final int TARDINESS_WEIGHT = 1;
+  private static final int TRAVEL_TIME_WEIGHT = 1;
+  private static final int TARDINESS_WEIGHT = 1;
   private static final boolean DEBUG = false;
 
   private final RandomGenerator rand;
@@ -30,6 +30,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
   /**
    * Heuristic implementation of the solver interface method
    */
+  @Override
   public SolutionObject solve(int[][] travelTime, int[] releaseDates,
       int[] dueDates, int[][] servicePairs, int[] serviceTime) {
     final int n = releaseDates.length;

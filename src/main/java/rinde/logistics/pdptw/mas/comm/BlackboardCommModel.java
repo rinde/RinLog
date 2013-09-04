@@ -21,7 +21,7 @@ import rinde.sim.pdptw.common.DefaultParcel;
  */
 public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
 
-  protected final Set<DefaultParcel> unclaimedParcels;
+  private final Set<DefaultParcel> unclaimedParcels;
 
   /**
    * New empty blackboard comm model.
@@ -69,6 +69,7 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
     return true;
   }
 
+  @Override
   public Class<BlackboardUser> getSupportedType() {
     return BlackboardUser.class;
   }

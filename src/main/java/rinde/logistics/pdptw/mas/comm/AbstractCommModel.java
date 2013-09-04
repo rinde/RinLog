@@ -34,8 +34,10 @@ public abstract class AbstractCommModel<T extends Communicator> implements
     communicators = newArrayList();
   }
 
+  @Override
   public void registerModelProvider(ModelProvider mp) {
     mp.getModel(PDPModel.class).getEventAPI().addListener(new Listener() {
+      @Override
       public void handleEvent(Event e) {
         final PDPModelEvent event = ((PDPModelEvent) e);
         checkArgument(event.parcel instanceof DefaultParcel,
@@ -48,11 +50,13 @@ public abstract class AbstractCommModel<T extends Communicator> implements
 
   protected abstract void receiveParcel(DefaultParcel p, long time);
 
+  @Override
   public boolean register(final T communicator) {
     communicators.add(communicator);
     return true;
   }
 
+  @Override
   public boolean unregister(T element) {
     throw new UnsupportedOperationException();
   }

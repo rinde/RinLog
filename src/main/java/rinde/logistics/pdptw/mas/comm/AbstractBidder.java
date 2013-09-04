@@ -44,28 +44,34 @@ public abstract class AbstractBidder implements Bidder {
     vehicle = Optional.absent();
   }
 
+  @Override
   public void addUpdateListener(Listener l) {
     eventDispatcher.addListener(l, CommunicatorEventType.CHANGE);
   }
 
   // ignore
+  @Override
   public void waitFor(DefaultParcel p) {}
 
+  @Override
   public void claim(DefaultParcel p) {
     checkArgument(assignedParcels.contains(p));
     assignedParcels.remove(p);
   }
 
+  @Override
   public final Collection<DefaultParcel> getParcels() {
     return unmodifiableSet(assignedParcels);
   }
 
+  @Override
   public void receiveParcel(DefaultParcel p) {
     assignedParcels.add(p);
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
+  @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
     roadModel = Optional.of((PDPRoadModel) rm);
     pdpModel = Optional.of(pm);

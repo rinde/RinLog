@@ -36,9 +36,9 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    final Collection<DefaultParcel> inCargo = Collections
-        .checkedCollection((Collection) pdpModel.get().getContents(vehicle
-            .get()), DefaultParcel.class);
+    final Collection<DefaultParcel> inCargo = Collections.checkedCollection(
+        (Collection) pdpModel.get().getContents(vehicle.get()),
+        DefaultParcel.class);
     route.clear();
     route.addAll(onMap);
     route.addAll(inCargo);

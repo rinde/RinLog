@@ -26,8 +26,8 @@ public class MultiVehicleSolverTest {
     final Point p2 = new Point(10, 10);
     final Point p3 = new Point(0, 10);
 
-    final int[][] travelTime = ArraysSolvers
-        .toTravelTimeMatrix(asList(p0, p1, p2, p3), 1.5, RoundingMode.CEILING);
+    final int[][] travelTime = ArraysSolvers.toTravelTimeMatrix(
+        asList(p0, p1, p2, p3), 1.5, RoundingMode.CEILING);
 
     System.out.println(Arrays.deepToString(travelTime));
 

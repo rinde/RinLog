@@ -25,7 +25,7 @@ import rinde.sim.pdptw.common.DefaultParcel;
  */
 public class SolverBidder extends AbstractBidder {
 
-  protected final SingleVehicleArraysSolver solver;
+  private final SingleVehicleArraysSolver solver;
 
   public SolverBidder(SingleVehicleArraysSolver sol) {
     solver = sol;
@@ -33,6 +33,7 @@ public class SolverBidder extends AbstractBidder {
 
   // TODO figure out what happens when the vehicle is moving towards a parcel
   // at the moment this method is called?
+  @Override
   public double getBidFor(DefaultParcel p, long time) {
 
     // TODO optimize baseline, baseline can be remembered from last assigned

@@ -40,6 +40,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     vehicle = Optional.absent();
   }
 
+  @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
     checkState(!isInitialized(), "init shoud be called only once");
     initialized = true;
@@ -48,6 +49,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     vehicle = Optional.of(dv);
   }
 
+  @Override
   public final void update(Collection<DefaultParcel> onMap, long time) {
     checkState(isInitialized(),
         "RoutePlanner should be initialized before it can be used, see init()");
@@ -61,14 +63,13 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * It can be assumed that the method is allowed to be called (i.e. the route
    * planner is initialized).
    * @param onMap A collection of parcels which currently reside on the map.
-   * @param inCargo A collection of parcels which currently reside in the
-   *          truck's cargo.
    * @param time The current simulation time, this may be relevant for some
    *          routeplanners that want to take time windows into account.
    * @see #doUpdate(Collection, Collection, long)
    */
   protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
 
+  @Override
   public final Optional<DefaultParcel> next(long time) {
     checkState(isInitialized(),
         "RoutePlanner should be initialized before it can be used, see init()");
@@ -89,6 +90,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected abstract void nextImpl(long time);
 
+  @Override
   public Optional<DefaultParcel> prev() {
     if (history.isEmpty()) {
       return Optional.absent();
@@ -96,6 +98,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     return Optional.of(history.get(history.size() - 1));
   }
 
+  @Override
   public List<DefaultParcel> getHistory() {
     return unmodifiableList(history);
   }

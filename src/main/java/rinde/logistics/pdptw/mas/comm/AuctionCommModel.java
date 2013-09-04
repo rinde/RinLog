@@ -37,6 +37,7 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
     bestBidder.receiveParcel(p);
   }
 
+  @Override
   public Class<Bidder> getSupportedType() {
     return Bidder.class;
   }

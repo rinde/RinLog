@@ -17,7 +17,7 @@ import rinde.sim.pdptw.common.DefaultVehicle;
  */
 public class RandomBidder extends AbstractBidder {
 
-  protected final RandomGenerator rng;
+  private final RandomGenerator rng;
 
   /**
    * Create a random bidder using the specified random seed.
@@ -27,10 +27,12 @@ public class RandomBidder extends AbstractBidder {
     rng = new MersenneTwister(seed);
   }
 
+  @Override
   public double getBidFor(DefaultParcel p, long time) {
     return rng.nextDouble();
   }
 
   // not needed
+  @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {}
 }

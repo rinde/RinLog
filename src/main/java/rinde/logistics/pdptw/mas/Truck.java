@@ -27,6 +27,7 @@ import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.util.fsm.AbstractState;
 import rinde.sim.util.fsm.StateMachine;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
 /**
@@ -35,17 +36,18 @@ import com.google.common.base.Optional;
  */
 public class Truck extends DefaultVehicle implements Listener {
 
-  protected enum TruckEvent {
+  private enum TruckEvent {
     DONE;
   }
 
-  protected final StateMachine<TruckEvent, Truck> stateMachine;
-  protected final RoutePlanner routePlanner;
-  protected final Communicator communicator;
-  protected TimeLapse currentTime;
-  protected boolean changed;
+  @VisibleForTesting
+  final StateMachine<TruckEvent, Truck> stateMachine;
+  private final RoutePlanner routePlanner;
+  private final Communicator communicator;
+  private TimeLapse currentTime;
+  private boolean changed;
 
-  protected Optional<DefaultDepot> depot;
+  private Optional<DefaultDepot> depot;
 
   /**
    * Create a new Truck using the specified {@link RoutePlanner} and
@@ -183,6 +185,7 @@ public class Truck extends DefaultVehicle implements Listener {
     }
   }
 
+  @Override
   public void handleEvent(@SuppressWarnings("null") Event e) {
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
       changed = true;

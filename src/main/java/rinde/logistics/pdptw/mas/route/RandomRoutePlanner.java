@@ -25,8 +25,8 @@ import com.google.common.base.Optional;
  */
 public class RandomRoutePlanner extends AbstractRoutePlanner {
 
-  protected Queue<DefaultParcel> assignedParcels;
-  protected final Random rng;
+  private Queue<DefaultParcel> assignedParcels;
+  private final Random rng;
 
   /**
    * Creates a random route planner using the specified random seed.
@@ -63,10 +63,12 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
     assignedParcels.poll();
   }
 
+  @Override
   public boolean hasNext() {
     return !assignedParcels.isEmpty();
   }
 
+  @Override
   public Optional<DefaultParcel> current() {
     return Optional.fromNullable(assignedParcels.peek());
   }

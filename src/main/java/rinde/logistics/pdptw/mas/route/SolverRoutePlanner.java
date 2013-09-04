@@ -28,10 +28,10 @@ import com.google.common.base.Optional;
  */
 public class SolverRoutePlanner extends AbstractRoutePlanner {
 
-  protected final Solver solver;
-  protected Queue<? extends DefaultParcel> route;
+  private final Solver solver;
+  private Queue<? extends DefaultParcel> route;
   @Nullable
-  protected SolutionObject solutionObject;
+  private SolutionObject solutionObject;
 
   /**
    * Create a route planner that uses the specified {@link Solver} to compute
@@ -50,10 +50,12 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
         Measure.valueOf(time, SI.MILLI(SI.SECOND)));
   }
 
+  @Override
   public boolean hasNext() {
     return !route.isEmpty();
   }
 
+  @Override
   public Optional<DefaultParcel> current() {
     return Optional.fromNullable((DefaultParcel) route.peek());
   }

@@ -21,20 +21,20 @@ import rinde.sim.pdptw.central.arrays.SolutionObject;
  */
 public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
-  private final RandomGenerator rand;
-  private final int L;
-  private final int maxIterations;
-
   private static final int TRAVEL_TIME_WEIGHT = 1;
   private static final int TARDINESS_WEIGHT = 1;
   private static final boolean DEBUG = false;
+
+  private final RandomGenerator rand;
+  private final int l;
+  private final int maxIterations;
 
   private SolutionObject[] sols;
 
   public MultiVehicleHeuristicSolver(RandomGenerator rand, int l,
       int maxIterations) {
     this.rand = rand;
-    L = l;
+    this.l = l;
     this.maxIterations = maxIterations;
   }
 
@@ -42,6 +42,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     this(rand, 2000, 200000);
   }
 
+  @Override
   public SolutionObject[] solve(int[][] travelTime, int[] releaseDates,
       int[] dueDates, int[][] servicePairs, int[] serviceTimes,
       int[][] vehicleTravelTimes, int[][] inventories,
@@ -100,7 +101,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     sols = solveWithLateAcceptance(n, v, travelTime, releaseDates, dueDates,
         servicePairs, serviceTimes, vehicleTravelTimes, inventories,
         remainingServiceTimes, currentDestinations, pickupToDeliveryMap,
-        deliveryToPickupMap, fixedVehicleAssignment, L, maxIterations);
+        deliveryToPickupMap, fixedVehicleAssignment, l, maxIterations);
     return sols;
   }
 
@@ -420,6 +421,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     }
     Collections.shuffle(elements, new RandomAdaptor(rand));
     Collections.sort(elements, new Comparator<Integer>() {
+      @Override
       public int compare(Integer o1, Integer o2) {
         if (dueDates[o1] < dueDates[o2]) {
           return -1;
