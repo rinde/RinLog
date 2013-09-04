@@ -36,6 +36,8 @@ import com.google.common.base.Optional;
  */
 public class Truck extends DefaultVehicle implements Listener {
 
+  // FIXME this truck must reuse the RouteFollowingTruck from RinSim
+
   private enum TruckEvent {
     DONE;
   }
