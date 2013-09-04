@@ -65,6 +65,11 @@ public class OldExperiments {
 
   private OldExperiments() {}
 
+  public static void main(String[] args) {
+    offlineExperiment();
+
+  }
+
   static void offlineExperiment() {
     final Gendreau06Scenarios offlineScenarios = new Gendreau06Scenarios(
         "files/scenarios/gendreau06/", false,
@@ -76,12 +81,12 @@ public class OldExperiments {
         .withRandomSeed(321)
         .repeat(10)
         .addConfigurator(
-            Central.solverConfigurator(new HeuristicSolverCreator(),
-                "OfflineCentralHeuristicSolver")).perform();
+            Central.solverConfigurator(new HeuristicSolverCreator(6000,
+                20000000), "OfflineCentralHeuristicSolver")).perform();
     writeGendreauResults(offlineResults);
   }
 
-  public static void main(String[] args) {
+  static void onlineExperiment() {
 
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
         "files/scenarios/gendreau06/", true,
@@ -97,7 +102,8 @@ public class OldExperiments {
         .addConfigurator(new RandomRandom())
         // .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
         .addConfigurator(
-            Central.solverConfigurator(new HeuristicSolverCreator(),
+            Central.solverConfigurator(
+                new HeuristicSolverCreator(2000, 200000),
                 "CentralHeuristicSolver")) //
 
         .perform();
@@ -280,10 +286,19 @@ public class OldExperiments {
   }
 
   public static class HeuristicSolverCreator implements SolverCreator {
+
+    private final int l;
+    private final int maxIterations;
+
+    public HeuristicSolverCreator(int l, int maxIterations) {
+      this.l = l;
+      this.maxIterations = maxIterations;
+    }
+
     public Solver create(long seed) {
       return new MultiVehicleSolverAdapter(
           ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
-              new MersenneTwister(seed))), SI.SECOND);
+              new MersenneTwister(seed), l, maxIterations)), SI.SECOND);
     }
   }
 

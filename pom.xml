@@ -29,6 +29,17 @@
 		<developerConnection>scm:git:git@github.com:rinde/rinlog.git</developerConnection>
 		<url>http://github.com/rinde/RinLog</url>
 	</scm>
+	
+	<repositories>
+		<repository>
+			<id>sonatype-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<developers>
 		<developer>
