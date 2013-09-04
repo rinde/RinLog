@@ -31,6 +31,7 @@ import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -41,24 +42,28 @@ import com.google.common.collect.ImmutableList;
 public class CommTest implements TickListener {
 
   static CommunicatorCreator RANDOM_BIDDER = new CommunicatorCreator() {
+    @Override
     public Communicator create() {
       return new RandomBidder(123);
     }
   };
 
   protected static CommunicationModelCreator AUCTION_COMM_MODEL = new CommunicationModelCreator() {
+    @Override
     public AbstractCommModel<?> create() {
       return new AuctionCommModel();
     }
   };
 
   static CommunicatorCreator BLACKBOARD_USER = new CommunicatorCreator() {
+    @Override
     public Communicator create() {
       return new BlackboardUser();
     }
   };
 
   static CommunicationModelCreator BLACKBOARD_COMM_MODEL = new CommunicationModelCreator() {
+    @Override
     public AbstractCommModel<?> create() {
       return new BlackboardCommModel();
     }
@@ -107,8 +112,10 @@ public class CommTest implements TickListener {
       return ImmutableList.of(commModel);
     }
 
+    @Override
     public Creator<AddVehicleEvent> getVehicleCreator() {
       return new Creator<AddVehicleEvent>() {
+        @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
           final Communicator comm = commCr.create();
           communicators.add(comm);
@@ -128,16 +135,20 @@ public class CommTest implements TickListener {
     AbstractCommModel<?> create();
   }
 
+  @Override
   public void tick(TimeLapse timeLapse) {
-    final RoadModel roadModel = problem.getSimulator().getModelProvider()
-        .getModel(RoadModel.class);
+
+    final Optional<RoadModel> roadModel = Optional.fromNullable(problem
+        .getSimulator().getModelProvider().getModel(RoadModel.class));
     for (final Communicator c : configuration.communicators) {
       assertTrue(
           "The communicator may only return parcels which are not yet picked up",
-          roadModel.getObjectsOfType(Parcel.class).containsAll(c.getParcels()));
+          roadModel.get().getObjectsOfType(Parcel.class)
+              .containsAll(c.getParcels()));
     }
   }
 
+  @Override
   public void afterTick(TimeLapse timeLapse) {}
 
 }
