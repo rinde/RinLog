@@ -42,10 +42,10 @@ import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.Experiment;
-import rinde.sim.pdptw.experiment.MASConfiguration;
-import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
 import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
+import rinde.sim.pdptw.experiment.MASConfiguration;
+import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
@@ -66,8 +66,8 @@ public class OldExperiments {
   private OldExperiments() {}
 
   public static void main(String[] args) {
-    offlineExperiment();
-
+    // offlineExperiment();
+    onlineExperiment();
   }
 
   static void offlineExperiment() {
@@ -82,7 +82,7 @@ public class OldExperiments {
         .repeat(10)
         .addConfigurator(
             Central.solverConfigurator(new HeuristicSolverCreator(6000,
-                20000000), "OfflineCentralHeuristicSolver")).perform();
+                20000000), "-Offline")).perform();
     writeGendreauResults(offlineResults);
   }
 
@@ -93,18 +93,17 @@ public class OldExperiments {
         GendreauProblemClass.SHORT_LOW_FREQ);
 
     final ExperimentResults onlineResults = Experiment
-        .build(new Gendreau06ObjectiveFunction())
+        .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
+        .repeat(1)
+        .withThreads(2)
         .addScenarioProvider(onlineScenarios)
-        .withRandomSeed(123)
-        .repeat(10)
         .addConfigurator(new RandomBB())
-        .addConfigurator(new RandomAuctioneerHeuristicSolver())
+        // .addConfigurator(new RandomAuctioneerHeuristicSolver())
         .addConfigurator(new RandomRandom())
         // .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
         .addConfigurator(
             Central.solverConfigurator(
-                new HeuristicSolverCreator(2000, 200000),
-                "CentralHeuristicSolver")) //
+                new HeuristicSolverCreator(2000, 200000), "-Online"))
 
         .perform();
 
@@ -299,6 +298,12 @@ public class OldExperiments {
       return new MultiVehicleSolverAdapter(
           ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
               new MersenneTwister(seed), l, maxIterations)), SI.SECOND);
+    }
+
+    @Override
+    public String toString() {
+      return new StringBuilder("Heuristic-").append(l).append("-")
+          .append(maxIterations).toString();
     }
   }
 
