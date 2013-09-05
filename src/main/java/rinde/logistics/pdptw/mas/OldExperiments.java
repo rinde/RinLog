@@ -72,14 +72,13 @@ public class OldExperiments {
 
   static void offlineExperiment() {
     final Gendreau06Scenarios offlineScenarios = new Gendreau06Scenarios(
-        "files/scenarios/gendreau06/", false,
-        GendreauProblemClass.SHORT_LOW_FREQ);
-
+        "files/scenarios/gendreau06/", false, GendreauProblemClass.values());
     final ExperimentResults offlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction())
         .addScenarioProvider(offlineScenarios)
         .withRandomSeed(321)
         .repeat(10)
+        .withThreads(12)
         .addConfigurator(
             Central.solverConfigurator(new HeuristicSolverCreator(6000,
                 20000000), "-Offline")).perform();
@@ -87,18 +86,15 @@ public class OldExperiments {
   }
 
   static void onlineExperiment() {
-
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
-        "files/scenarios/gendreau06/", true,
-        GendreauProblemClass.SHORT_LOW_FREQ);
-
+        "files/scenarios/gendreau06/", true, GendreauProblemClass.values());
     final ExperimentResults onlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
-        .repeat(1)
-        .withThreads(2)
+        .repeat(10)
+        .withThreads(12)
         .addScenarioProvider(onlineScenarios)
         .addConfigurator(new RandomBB())
-        // .addConfigurator(new RandomAuctioneerHeuristicSolver())
+        .addConfigurator(new RandomAuctioneerHeuristicSolver())
         .addConfigurator(new RandomRandom())
         // .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
         .addConfigurator(
@@ -111,7 +107,6 @@ public class OldExperiments {
   }
 
   static void writeGendreauResults(ExperimentResults results) {
-
     final Table<MASConfigurator, ProblemClass, StringBuilder> table = LinkedHashBasedTable
         .create();
 
