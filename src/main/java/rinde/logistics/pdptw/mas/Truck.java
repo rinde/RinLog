@@ -48,22 +48,8 @@ public class Truck extends RouteFollowingVehicle implements Listener {
     communicator = c;
     communicator.addUpdateListener(this);
 
-    stateMachine.getEventAPI().addListener(new Listener() {
-      @Override
-      public void handleEvent(Event e) {
-        // we know this is safe since there is only one type of event here
-        @SuppressWarnings("unchecked")
-        final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
-        if (event.event == StateEvent.GOTO) {
-          final DefaultParcel cur = getRoute().iterator().next();
-          if (pdpModel.get().getParcelState(cur) != ParcelState.IN_CARGO) {
-            communicator.claim(cur);
-          }
-        } else if (event.event == StateEvent.DONE) {
-          routePlanner.next(getCurrentTime().get().getTime());
-        }
-      }
-    }, StateMachineEvent.STATE_TRANSITION);
+    stateMachine.getEventAPI().addListener(this,
+        StateMachineEvent.STATE_TRANSITION);
   }
 
   @Override
@@ -96,6 +82,18 @@ public class Truck extends RouteFollowingVehicle implements Listener {
   public void handleEvent(Event e) {
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
       changed = true;
+    } else {
+      // we know this is safe since it can only be one type of event
+      @SuppressWarnings("unchecked")
+      final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
+      if (event.event == StateEvent.GOTO) {
+        final DefaultParcel cur = getRoute().iterator().next();
+        if (pdpModel.get().getParcelState(cur) != ParcelState.IN_CARGO) {
+          communicator.claim(cur);
+        }
+      } else if (event.event == StateEvent.DONE) {
+        routePlanner.next(getCurrentTime().get().getTime());
+      }
     }
   }
 }

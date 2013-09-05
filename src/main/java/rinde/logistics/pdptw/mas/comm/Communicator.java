@@ -53,7 +53,7 @@ public interface Communicator {
   void waitFor(DefaultParcel p);
 
   /**
-   * Indicates that the truck is going to this parcel (this is final!)
+   * Indicates that the truck is going to this parcel (this is final!).
    * @param p The parcel.
    */
   void claim(DefaultParcel p);
