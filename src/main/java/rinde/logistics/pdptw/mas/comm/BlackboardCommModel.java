@@ -9,14 +9,14 @@ import static java.util.Collections.unmodifiableSet;
 
 import java.util.Set;
 
-import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.pdptw.common.DefaultParcel;
 
 /**
  * This is an implementation of a blackboard communication model. It allows
- * {@link BlackboardUser}s to claim {@link Parcel}s. Via the blackboard, all
- * other {@link BlackboardUser}s are notified of claims. With this communication
- * strategy race conditions between {@link BlackboardUser}s can be prevented.
+ * {@link BlackboardUser}s to claim {@link DefaultParcel}s. Via the blackboard,
+ * all other {@link BlackboardUser}s are notified of claims. With this
+ * communication strategy race conditions between {@link BlackboardUser}s can be
+ * prevented.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
@@ -31,8 +31,8 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   }
 
   /**
-   * Lays a claim on the specified {@link Parcel}. This means that this parcel
-   * is no longer available to other {@link BlackboardUser}s.
+   * Lays a claim on the specified {@link DefaultParcel}. This means that this
+   * parcel is no longer available to other {@link BlackboardUser}s.
    * @param claimer The user that claims the parcel.
    * @param p The parcel that is claimed.
    */

@@ -29,8 +29,14 @@ import rinde.sim.pdptw.common.DefaultParcel;
  */
 public abstract class AbstractCommModel<T extends Communicator> implements
     ModelReceiver, Model<T> {
+  /**
+   * The list of registered communicators.
+   */
   protected List<T> communicators;
 
+  /**
+   * New instance.
+   */
   protected AbstractCommModel() {
     communicators = newArrayList();
   }
@@ -51,6 +57,11 @@ public abstract class AbstractCommModel<T extends Communicator> implements
     }, PDPModelEventType.NEW_PARCEL);
   }
 
+  /**
+   * Subclasses can define their own parcel handling strategy in this method.
+   * @param p The new {@link DefaultParcel} that becomes available.
+   * @param time The current time.
+   */
   protected abstract void receiveParcel(DefaultParcel p, long time);
 
   @Override
@@ -63,5 +74,4 @@ public abstract class AbstractCommModel<T extends Communicator> implements
   public boolean unregister(T element) {
     throw new UnsupportedOperationException();
   }
-
 }

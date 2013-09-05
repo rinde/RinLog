@@ -27,10 +27,29 @@ import com.google.common.base.Optional;
  */
 public abstract class AbstractBidder implements Bidder {
 
+  /**
+   * The set of parcels that are assigned to this bidder.
+   */
   protected final Set<DefaultParcel> assignedParcels;
+
+  /**
+   * The event dispatcher.
+   */
   protected final EventDispatcher eventDispatcher;
+
+  /**
+   * The road model.
+   */
   protected Optional<PDPRoadModel> roadModel;
+
+  /**
+   * The pdp model.
+   */
   protected Optional<PDPModel> pdpModel;
+
+  /**
+   * The vehicle for which this bidder operates.
+   */
   protected Optional<DefaultVehicle> vehicle;
 
   /**

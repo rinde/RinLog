@@ -1,6 +1,3 @@
-/**
- * 
- */
 package rinde.logistics.pdptw.mas.comm;
 
 import java.util.Collection;

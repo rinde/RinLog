@@ -10,10 +10,15 @@ import java.util.Iterator;
 import rinde.sim.pdptw.common.DefaultParcel;
 
 /**
+ * A communication model that supports auctions.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
- * 
  */
 public class AuctionCommModel extends AbstractCommModel<Bidder> {
+
+  /**
+   * New instance.
+   */
+  public AuctionCommModel() {}
 
   @Override
   protected void receiveParcel(DefaultParcel p, long time) {
