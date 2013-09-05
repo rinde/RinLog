@@ -47,7 +47,6 @@ public class Truck extends RouteFollowingVehicle implements Listener {
     routePlanner = rp;
     communicator = c;
     communicator.addUpdateListener(this);
-
     stateMachine.getEventAPI().addListener(this,
         StateMachineEvent.STATE_TRANSITION);
   }
@@ -61,20 +60,21 @@ public class Truck extends RouteFollowingVehicle implements Listener {
 
   @Override
   protected void preTick(TimeLapse time) {
-    if (stateMachine.stateIs(waitState)) {
-      if (changed) {
-        changed = false;
-        routePlanner.update(communicator.getParcels(), getCurrentTime().get()
-            .getTime());
-        communicator.waitFor(routePlanner.current().get());
-      }
-
+    if (stateMachine.stateIs(waitState) && changed) {
+      changed = false;
+      routePlanner
+          .update(communicator.getParcels(), getCurrentTime().getTime());
       final Optional<DefaultParcel> cur = routePlanner.current();
       if (cur.isPresent()) {
-        setRoute(asList(cur.get()));
-      } else {
-        setRoute(new LinkedList<DefaultParcel>());
+        communicator.waitFor(cur.get());
       }
+    }
+
+    final Optional<DefaultParcel> cur = routePlanner.current();
+    if (cur.isPresent()) {
+      setRoute(asList(cur.get()));
+    } else {
+      setRoute(new LinkedList<DefaultParcel>());
     }
   }
 
@@ -92,7 +92,7 @@ public class Truck extends RouteFollowingVehicle implements Listener {
           communicator.claim(cur);
         }
       } else if (event.event == StateEvent.DONE) {
-        routePlanner.next(getCurrentTime().get().getTime());
+        routePlanner.next(getCurrentTime().getTime());
       }
     }
   }
