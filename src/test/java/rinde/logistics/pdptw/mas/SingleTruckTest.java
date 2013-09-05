@@ -14,29 +14,45 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.After;
 import org.junit.Test;
 
-import rinde.logistics.pdptw.mas.OldExperiments.RandomRandom;
-import rinde.logistics.pdptw.mas.Truck.Goto;
-import rinde.logistics.pdptw.mas.Truck.Service;
-import rinde.logistics.pdptw.mas.Truck.Wait;
+import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
+import rinde.logistics.pdptw.mas.comm.Communicator;
+import rinde.logistics.pdptw.mas.comm.RandomBidder;
+import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
+import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.graph.Point;
+import rinde.sim.core.model.Model;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.core.model.pdp.Vehicle;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.AddParcelEvent;
+import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
+import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.ParcelDTO;
+import rinde.sim.pdptw.common.RouteFollowingVehicle;
+import rinde.sim.pdptw.common.VehicleDTO;
+import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.ExperimentTest;
+import rinde.sim.pdptw.experiment.MASConfiguration;
+import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
 import rinde.sim.util.TimeWindow;
+import rinde.sim.util.fsm.AbstractState;
+import rinde.sim.util.fsm.State;
+import rinde.sim.util.fsm.StateMachine;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
@@ -48,7 +64,7 @@ public class SingleTruckTest {
   protected Simulator simulator;
   protected RoadModel roadModel;
   protected PDPModel pdpModel;
-  protected Truck truck;
+  protected TestTruck truck;
 
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks) {
@@ -58,7 +74,8 @@ public class SingleTruckTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
 
-    prob = ExperimentTest.init(scen, new RandomRandom().configure(123), false);
+    prob = ExperimentTest.init(scen, new TestRandomRandom().configure(123),
+        false);
     simulator = prob.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -73,7 +90,7 @@ public class SingleTruckTest {
     // make sure there are no parcels yet
     assertTrue(roadModel.getObjectsOfType(Parcel.class).isEmpty());
 
-    truck = roadModel.getObjectsOfType(Truck.class).iterator().next();
+    truck = roadModel.getObjectsOfType(TestTruck.class).iterator().next();
     assertNotNull(truck);
     assertEquals(1000, simulator.getCurrentTime());
   }
@@ -96,7 +113,8 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto), 1);
 
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Wait);
+    assertEquals(truck.getStateMachine().getCurrentState(),
+        truck.getWaitState());
     assertEquals(truck.getDTO().startPosition, roadModel.getPosition(truck));
 
     simulator.tick();
@@ -104,59 +122,61 @@ public class SingleTruckTest {
     final Parcel parcel1 = roadModel.getObjectsOfType(Parcel.class).iterator()
         .next();
     assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Goto);
+    assertEquals(truck.getState(), truck.getGotoState());
     assertFalse(truck.getDTO().startPosition.equals(roadModel
         .getPosition(truck)));
-    final DefaultParcel cur2 = ((Goto) truck.stateMachine.getCurrentState()).cur
-        .get();
+    final DefaultParcel cur2 = truck.getRoute().iterator().next();
     assertEquals(parcel1dto, cur2.dto);
 
     // move to pickup
-    while (truck.stateMachine.getCurrentState() instanceof Goto) {
+    while (truck.getState() == truck.getGotoState()) {
       assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Service);
+    assertEquals(truck.getState(), truck.getServiceState());
     assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
     assertEquals(parcel1dto.pickupLocation, roadModel.getPosition(truck));
 
     // pickup
-    while (truck.stateMachine.getCurrentState() instanceof Service) {
+    while (truck.getState() == truck.getServiceState()) {
       assertEquals(parcel1dto.pickupLocation, roadModel.getPosition(truck));
       assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Goto);
+    assertEquals(truck.getWaitState(), truck.getState());
     assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
     assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
         pdpModel.getContents(truck));
 
+    simulator.tick();
+    assertEquals(truck.getGotoState(), truck.getState());
+
     // move to delivery
-    while (truck.stateMachine.getCurrentState() instanceof Goto) {
+    while (truck.getState() == truck.getGotoState()) {
       assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
       assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
           pdpModel.getContents(truck));
       simulator.tick();
     }
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Service);
+    assertEquals(truck.getState(), truck.getServiceState());
     assertEquals(parcel1dto.destinationLocation, roadModel.getPosition(truck));
     assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
 
     // deliver
-    while (truck.stateMachine.getCurrentState() instanceof Service) {
+    while (truck.getState() == truck.getServiceState()) {
       assertEquals(parcel1dto.destinationLocation, roadModel.getPosition(truck));
       assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
     assertEquals(ParcelState.DELIVERED, pdpModel.getParcelState(parcel1));
     assertTrue(pdpModel.getContents(truck).isEmpty());
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Wait);
+    assertEquals(truck.getState(), truck.getWaitState());
 
-    while (truck.stateMachine.getCurrentState() instanceof Wait
+    while (truck.getState() == truck.getWaitState()
         && !roadModel.getPosition(truck).equals(truck.getDTO().startPosition)) {
       simulator.tick();
     }
-    assertTrue(truck.stateMachine.getCurrentState() instanceof Wait);
+    assertEquals(truck.getState(), truck.getWaitState());
     assertEquals(truck.getDTO().startPosition, roadModel.getPosition(truck));
   }
 
@@ -177,4 +197,63 @@ public class SingleTruckTest {
     simulator.start();
   }
 
+  public static class TestTruck extends Truck {
+
+    public TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
+      super(pDto, rp, c);
+    }
+
+    public StateMachine<StateEvent, RouteFollowingVehicle> getStateMachine() {
+      return stateMachine;
+    }
+
+    public State<StateEvent, RouteFollowingVehicle> getState() {
+      return getStateMachine().getCurrentState();
+    }
+
+    public AbstractState<StateEvent, RouteFollowingVehicle> getWaitState() {
+      return waitState;
+    }
+
+    public AbstractState<StateEvent, RouteFollowingVehicle> getGotoState() {
+      return gotoState;
+    }
+
+    public AbstractState<StateEvent, RouteFollowingVehicle> getServiceState() {
+      return serviceState;
+    }
+
+    @Override
+    public Collection<DefaultParcel> getRoute() {
+      return super.getRoute();
+    }
+
+  }
+
+  public static class TestRandomRandom implements MASConfigurator {
+    @Override
+    public MASConfiguration configure(long seed) {
+      final RandomGenerator rng = new MersenneTwister(seed);
+
+      return new DefaultMASConfiguration() {
+        @Override
+        public ImmutableList<? extends Model<?>> getModels() {
+          return ImmutableList.of(new AuctionCommModel());
+        }
+
+        @Override
+        public Creator<AddVehicleEvent> getVehicleCreator() {
+          return new Creator<AddVehicleEvent>() {
+            @Override
+            public boolean create(Simulator sim, AddVehicleEvent event) {
+              final Communicator c = new RandomBidder(rng.nextLong());
+              sim.register(c);
+              return sim.register(new TestTruck(event.vehicleDTO,
+                  new RandomRoutePlanner(rng.nextLong()), c));
+            }
+          };
+        }
+      };
+    }
+  }
 }
