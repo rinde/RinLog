@@ -25,12 +25,11 @@ import rinde.sim.util.fsm.StateMachine.StateTransitionEvent;
 import com.google.common.base.Optional;
 
 /**
+ * A vehicle entirely controlled by a {@link RoutePlanner} and a
+ * {@link Communicator}.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
- * 
  */
 public class Truck extends RouteFollowingVehicle implements Listener {
-
-  // FIXME this truck must reuse the RouteFollowingTruck from RinSim
 
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
