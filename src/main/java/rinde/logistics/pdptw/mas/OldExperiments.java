@@ -128,7 +128,7 @@ public class OldExperiments {
                 config,
                 pc,
                 new StringBuilder(
-                    "seed,instance,duration,frequency,cost,tardiness,travelTime,overTime\n"));
+                    "seed,instance,duration,frequency,cost,tardiness,travelTime,overTime,computationTime\n"));
       }
       final StringBuilder sb = table.get(config, pc);
 
@@ -140,7 +140,8 @@ public class OldExperiments {
       .append(obj.computeCost(r.stats)).append(',')/* cost */
       .append(obj.tardiness(r.stats)).append(',')/* tardiness */
       .append(obj.travelTime(r.stats)).append(',')/* travelTime */
-      .append(obj.overTime(r.stats))/* overTime */
+      .append(obj.overTime(r.stats)).append(',')/* overTime */
+      .append(r.stats.computationTime) /* computation time */
       .append("\n");
 
     }
@@ -179,11 +180,14 @@ public class OldExperiments {
 
   public static class HeuristicAuctioneerHeuristicSolver implements
       MASConfigurator {
+    @Override
     public MASConfiguration configure(long seed) {
       final RandomGenerator rng = new MersenneTwister(seed);
       return new DefaultMASConfiguration() {
+        @Override
         public Creator<AddVehicleEvent> getVehicleCreator() {
           return new Creator<AddVehicleEvent>() {
+            @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new SolverBidder(
                   ArraysSolverValidator.wrap(new HeuristicSolver(
@@ -214,11 +218,14 @@ public class OldExperiments {
   public static class RandomAuctioneerHeuristicSolver implements
       MASConfigurator {
 
+    @Override
     public MASConfiguration configure(long seed) {
       final RandomGenerator rng = new MersenneTwister(seed);
       return new DefaultMASConfiguration() {
+        @Override
         public Creator<AddVehicleEvent> getVehicleCreator() {
           return new Creator<AddVehicleEvent>() {
+            @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new RandomBidder(rng.nextLong());
               sim.register(c);
@@ -256,6 +263,7 @@ public class OldExperiments {
    * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
    */
   public static class RandomRandom implements MASConfigurator {
+    @Override
     public MASConfiguration configure(long seed) {
       final RandomGenerator rng = new MersenneTwister(seed);
 
@@ -265,8 +273,10 @@ public class OldExperiments {
           return ImmutableList.of(new AuctionCommModel());
         }
 
+        @Override
         public Creator<AddVehicleEvent> getVehicleCreator() {
           return new Creator<AddVehicleEvent>() {
+            @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new RandomBidder(rng.nextLong());
               sim.register(c);
@@ -294,6 +304,7 @@ public class OldExperiments {
       this.maxIterations = maxIterations;
     }
 
+    @Override
     public Solver create(long seed) {
       return new MultiVehicleSolverAdapter(
           ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
@@ -308,12 +319,15 @@ public class OldExperiments {
   }
 
   public static class RandomBB implements MASConfigurator {
+    @Override
     public MASConfiguration configure(long seed) {
       final RandomGenerator rng = new MersenneTwister(seed);
 
       return new DefaultMASConfiguration() {
+        @Override
         public Creator<AddVehicleEvent> getVehicleCreator() {
           return new Creator<AddVehicleEvent>() {
+            @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new BlackboardUser();
               sim.register(c);
