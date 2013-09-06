@@ -61,37 +61,46 @@ import com.google.common.io.Files;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
  */
-public class OldExperiments {
+public class GendreauExperiments {
 
-  private OldExperiments() {}
+  private static final int THREADS = 16;
+  private static final int REPETITIONS = 10;
+
+  private GendreauExperiments() {}
 
   public static void main(String[] args) {
-    // offlineExperiment();
     onlineExperiment();
+    offlineExperiment();
   }
 
   static void offlineExperiment() {
+    System.out.println("offline");
     final Gendreau06Scenarios offlineScenarios = new Gendreau06Scenarios(
         "files/scenarios/gendreau06/", false, GendreauProblemClass.values());
     final ExperimentResults offlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction())
         .addScenarioProvider(offlineScenarios)
         .withRandomSeed(321)
-        .repeat(10)
-        .withThreads(12)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addConfigurator(
             Central.solverConfigurator(new HeuristicSolverCreator(6000,
-                20000000), "-Offline")).perform();
+                20000000), "-Offline"))
+        .addConfigurator(
+            Central.solverConfigurator(new HeuristicSolverCreator(8000,
+                200000000), "-Offline")).perform();
     writeGendreauResults(offlineResults);
   }
 
   static void onlineExperiment() {
+    System.out.println("online");
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
         "files/scenarios/gendreau06/", true, GendreauProblemClass.values());
     final ExperimentResults onlineResults = Experiment
-        .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
-        .repeat(10)
-        .withThreads(12)
+        .build(new Gendreau06ObjectiveFunction())
+        .withRandomSeed(123)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
         .addConfigurator(new RandomBB())
         .addConfigurator(new RandomAuctioneerHeuristicSolver())
@@ -100,6 +109,9 @@ public class OldExperiments {
         .addConfigurator(
             Central.solverConfigurator(
                 new HeuristicSolverCreator(2000, 200000), "-Online"))
+        .addConfigurator(
+            Central.solverConfigurator(
+                new HeuristicSolverCreator(4000, 2000000), "-Online"))
 
         .perform();
 
