@@ -47,12 +47,14 @@ import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
+import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
+import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedHashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
@@ -61,16 +63,25 @@ import com.google.common.io.Files;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
  */
-public class GendreauExperiments {
+public final class GendreauExperiments {
 
   private static final int THREADS = 16;
   private static final int REPETITIONS = 10;
 
   private GendreauExperiments() {}
 
-  public static void main(String[] args) {
-    onlineExperiment();
-    offlineExperiment();
+  public static void main(String[] args) throws IOException {
+
+    final Gendreau06Scenario scenario = Gendreau06Parser.parse(
+        "files/scenarios/gendreau06/req_rapide_3_450_24", 20);
+    final MASConfiguration configuration = Central.solverConfigurator(
+        new HeuristicSolverCreator(2000, 200000)).configure(
+        8884255227086587874L);
+    final Gendreau06ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    Experiment.performSingleRun(scenario, configuration, objFunc, false);
+
+    // onlineExperiment();
+    // offlineExperiment();
   }
 
   static void offlineExperiment() {
@@ -119,7 +130,8 @@ public class GendreauExperiments {
   }
 
   static void writeGendreauResults(ExperimentResults results) {
-    final Table<MASConfigurator, ProblemClass, StringBuilder> table = LinkedHashBasedTable
+
+    final Table<MASConfigurator, ProblemClass, StringBuilder> table = HashBasedTable
         .create();
 
     checkArgument(results.objectiveFunction instanceof Gendreau06ObjectiveFunction);
