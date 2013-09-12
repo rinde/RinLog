@@ -58,11 +58,11 @@ public class SolverBidder extends AbstractBidder {
     }
     final StateContext sc = Solvers.convert(roadModel.get(), pdpModel.get(),
         vehicle.get(), availableParcels,
-        Measure.valueOf(time, SI.MILLI(SI.SECOND)));
+        Measure.valueOf(time, SI.MILLI(SI.SECOND)), null);
     final ArraysObject ao = ArraysSolvers.toSingleVehicleArrays(sc.state,
         SI.MILLI(SI.SECOND));
     final SolutionObject so = solver.solve(ao.travelTime, ao.releaseDates,
-        ao.dueDates, ao.servicePairs, ao.serviceTimes);
+        ao.dueDates, ao.servicePairs, ao.serviceTimes, null);
     return so.objectiveValue;
   }
 }

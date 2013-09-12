@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -32,7 +34,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
    */
   @Override
   public SolutionObject solve(int[][] travelTime, int[] releaseDates,
-      int[] dueDates, int[][] servicePairs, int[] serviceTime) {
+      int[] dueDates, int[][] servicePairs, int[] serviceTime,
+      @Nullable SolutionObject currentSolution) {
     final int n = releaseDates.length;
 
     final int[] pickupToDeliveryMap = new int[n];
