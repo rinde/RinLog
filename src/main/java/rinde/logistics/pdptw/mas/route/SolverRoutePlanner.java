@@ -45,7 +45,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    route = Solvers.solve(solver, (PDPRoadModel) roadModel.get(),
+    route = Solvers.solveSingleVehicle(solver, (PDPRoadModel) roadModel.get(),
         pdpModel.get(), vehicle.get(), onMap,
         Measure.valueOf(time, SI.MILLI(SI.SECOND)));
   }

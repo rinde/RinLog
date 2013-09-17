@@ -43,7 +43,7 @@ public class Truck extends RouteFollowingVehicle implements Listener {
    * @param c The communicator used.
    */
   public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
-    super(pDto);
+    super(pDto, true);
     routePlanner = rp;
     communicator = c;
     communicator.addUpdateListener(this);
