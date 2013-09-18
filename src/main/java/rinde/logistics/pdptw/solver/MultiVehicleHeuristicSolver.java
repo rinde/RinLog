@@ -30,6 +30,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
   private static final int TRAVEL_TIME_WEIGHT = 1;
   private static final int TARDINESS_WEIGHT = 1;
   private static final boolean DEBUG = false;
+  private static final boolean STRICT_MODE = false;
 
   private final RandomGenerator rand;
   private final int listLength;
@@ -138,9 +139,11 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
     // ADDED BY RINDE
     // only for checking feasibility of initial permutation
-    ArraysSolverValidator.validateOutputs(sol0, travelTime, releaseDates,
-        dueDates, servicePairs, serviceTimes, vehicleTravelTimes, inventories,
-        remainingServiceTimes, currentDestinations);
+    if (STRICT_MODE) {
+      ArraysSolverValidator.validateOutputs(sol0, travelTime, releaseDates,
+          dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
+          inventories, remainingServiceTimes, currentDestinations);
+    }
     // END ADDED BY RINDE
 
     final double obj0 = getTotalObjective(sol0);
@@ -488,7 +491,6 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     final int objectiveValue = totalTardiness * TARDINESS_WEIGHT
         + totalTravelTime * TRAVEL_TIME_WEIGHT;
 
-    // checkArgument(objectiveValue >= 0);
     final SolutionObject solutionObject = new SolutionObject(
         Ints.toArray(route), arrivalTimes, objectiveValue);
     return solutionObject;
