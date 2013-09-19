@@ -24,15 +24,29 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
-
   private final List<DefaultParcel> history;
   private boolean initialized;
   private boolean updated;
 
+  /**
+   * Reference to the {@link RoadModel}.
+   */
   protected Optional<RoadModel> roadModel;
+
+  /**
+   * Reference to the {@link PDPModel}.
+   */
   protected Optional<PDPModel> pdpModel;
+
+  /**
+   * Reference to the {@link DefaultVehicle} that this planner is responsible
+   * for.
+   */
   protected Optional<DefaultVehicle> vehicle;
 
+  /**
+   * New abstract route planner.
+   */
   protected AbstractRoutePlanner() {
     history = newArrayList();
     roadModel = Optional.absent();
@@ -41,38 +55,25 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
+  public final void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
     checkState(!isInitialized(), "init shoud be called only once");
     initialized = true;
     roadModel = Optional.of(rm);
     pdpModel = Optional.of(pm);
     vehicle = Optional.of(dv);
+    afterInit();
   }
 
   @Override
   public final void update(Collection<DefaultParcel> onMap, long time) {
-    checkState(isInitialized(),
-        "RoutePlanner should be initialized before it can be used, see init()");
+    checkIsInitialized();
     updated = true;
     doUpdate(onMap, time);
   }
 
-  /**
-   * Should implement functionality of
-   * {@link #update(Collection, Collection, long)} according to the interface.
-   * It can be assumed that the method is allowed to be called (i.e. the route
-   * planner is initialized).
-   * @param onMap A collection of parcels which currently reside on the map.
-   * @param time The current simulation time, this may be relevant for some
-   *          routeplanners that want to take time windows into account.
-   * @see #doUpdate(Collection, Collection, long)
-   */
-  protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
-
   @Override
   public final Optional<DefaultParcel> next(long time) {
-    checkState(isInitialized(),
-        "RoutePlanner should be initialized before it can be used, see init()");
+    checkIsInitialized();
     checkState(updated,
         "RoutePlanner should be udpated before it can be used, see update()");
     if (current().isPresent()) {
@@ -81,14 +82,6 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     nextImpl(time);
     return current();
   }
-
-  /**
-   * Should implement functionality of {@link #next(long)} according to the
-   * interface. It can be assumed that the method is allowed to be called (i.e.
-   * the route planner is initialized and has been updated at least once).
-   * @param time The current time.
-   */
-  protected abstract void nextImpl(long time);
 
   @Override
   public Optional<DefaultParcel> prev() {
@@ -104,19 +97,51 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   /**
-   * @return <code>true</code> if the routeplanner is already initialized,
+   * Should implement functionality of {@link #update(Collection, long)}
+   * according to the interface. It can be assumed that the method is allowed to
+   * be called (i.e. the route planner is initialized).
+   * @param onMap A collection of parcels which currently reside on the map.
+   * @param time The current simulation time, this may be relevant for some
+   *          route planners that want to take time windows into account.
+   */
+  protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
+
+  /**
+   * Should implement functionality of {@link #next(long)} according to the
+   * interface. It can be assumed that the method is allowed to be called (i.e.
+   * the route planner is initialized and has been updated at least once).
+   * @param time The current time.
+   */
+  protected abstract void nextImpl(long time);
+
+  /**
+   * This method can optionally be overridden to execute additional code right
+   * after {@link #init(RoadModel, PDPModel, DefaultVehicle)} is called.
+   */
+  protected void afterInit() {}
+
+  /**
+   * Checks if {@link #isInitialized()} returns <code>true</code>, throws an
+   * {@link IllegalStateException} otherwise.
+   */
+  protected final void checkIsInitialized() {
+    checkState(isInitialized(),
+        "RoutePlanner should be initialized before it can be used, see init()");
+  }
+
+  /**
+   * @return <code>true</code> if the route planner is already initialized,
    *         <code>false</code> otherwise.
    */
-  protected boolean isInitialized() {
+  protected final boolean isInitialized() {
     return initialized;
   }
 
   /**
-   * @return <code>true</code> if the routeplanner has been updated at least
+   * @return <code>true</code> if the route planner has been updated at least
    *         once, <code>false</code> otherwise.
    */
-  protected boolean isUpdated() {
+  protected final boolean isUpdated() {
     return updated;
   }
-
 }

@@ -76,11 +76,13 @@ public class RoutePlannerTest {
     return Arrays.asList(new Object[][] {
     /* */
     { new RPBuilder() {
+      @Override
       public RoutePlanner build() {
         return new RandomRoutePlanner(123);
       }
     } }, /* */
     { new RPBuilder() {
+      @Override
       public RoutePlanner build() {
         return new SolverRoutePlanner(new SingleVehicleSolverAdapter(
             ArraysSolverValidator.wrap(new HeuristicSolver(new MersenneTwister(
@@ -88,6 +90,7 @@ public class RoutePlannerTest {
       }
     } }, /* */
     { new RPBuilder() {
+      @Override
       public RoutePlanner build() {
         return new TestRoutePlanner();
       }
@@ -122,6 +125,7 @@ public class RoutePlannerTest {
     simulator = problem.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
+    simulator.register(routePlanner);
     simulator.tick();
 
     assertEquals(1, roadModel.getObjectsOfType(Vehicle.class).size());
@@ -279,8 +283,10 @@ public class RoutePlannerTest {
   }
 
   class TestConfiguration extends DefaultMASConfiguration {
+    @Override
     public Creator<AddVehicleEvent> getVehicleCreator() {
       return new Creator<AddVehicleEvent>() {
+        @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
           return sim.register(new TestTruck(event.vehicleDTO));
         }

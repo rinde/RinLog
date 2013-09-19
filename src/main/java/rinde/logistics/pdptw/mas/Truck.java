@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import rinde.logistics.pdptw.mas.comm.Communicator;
 import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
+import rinde.sim.core.SimulatorAPI;
+import rinde.sim.core.SimulatorUser;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
@@ -29,7 +31,8 @@ import com.google.common.base.Optional;
  * {@link Communicator}.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
-public class Truck extends RouteFollowingVehicle implements Listener {
+public class Truck extends RouteFollowingVehicle implements Listener,
+    SimulatorUser {
 
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
@@ -97,5 +100,11 @@ public class Truck extends RouteFollowingVehicle implements Listener {
         routePlanner.next(getCurrentTime().getTime());
       }
     }
+  }
+
+  @Override
+  public void setSimulator(SimulatorAPI api) {
+    api.register(communicator);
+    api.register(routePlanner);
   }
 }

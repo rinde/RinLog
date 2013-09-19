@@ -8,13 +8,11 @@ import static com.google.common.collect.Lists.newLinkedList;
 import java.util.Collection;
 import java.util.Queue;
 
-import javax.annotation.Nullable;
-import javax.measure.Measure;
-import javax.measure.unit.SI;
-
+import rinde.sim.core.SimulatorAPI;
+import rinde.sim.core.SimulatorUser;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.Solvers;
-import rinde.sim.pdptw.central.arrays.SolutionObject;
+import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
 
@@ -26,12 +24,13 @@ import com.google.common.base.Optional;
  * called.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
-public class SolverRoutePlanner extends AbstractRoutePlanner {
+public class SolverRoutePlanner extends AbstractRoutePlanner implements
+    SimulatorUser {
 
   private final Solver solver;
   private Queue<? extends DefaultParcel> route;
-  @Nullable
-  private SolutionObject solutionObject;
+  private Optional<SVSolverHandle> solverHandle;
+  private Optional<SimulatorAPI> simulator;
 
   /**
    * Create a route planner that uses the specified {@link Solver} to compute
@@ -41,13 +40,32 @@ public class SolverRoutePlanner extends AbstractRoutePlanner {
   public SolverRoutePlanner(Solver s) {
     solver = s;
     route = newLinkedList();
+    solverHandle = Optional.absent();
+    simulator = Optional.absent();
   }
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    route = Solvers.solveSingleVehicle(solver, (PDPRoadModel) roadModel.get(),
-        pdpModel.get(), vehicle.get(), onMap,
-        Measure.valueOf(time, SI.MILLI(SI.SECOND)));
+    route = solverHandle.get().solve(onMap);
+  }
+
+  @Override
+  public void setSimulator(SimulatorAPI api) {
+    simulator = Optional.of(api);
+    initSolver();
+  }
+
+  private void initSolver() {
+    if (!solverHandle.isPresent() && isInitialized() && simulator.isPresent()) {
+      solverHandle = Optional.of(Solvers.singleVehicleSolver(solver,
+          (PDPRoadModel) roadModel.get(), pdpModel.get(), simulator.get(),
+          vehicle.get()));
+    }
+  }
+
+  @Override
+  protected void afterInit() {
+    initSolver();
   }
 
   @Override

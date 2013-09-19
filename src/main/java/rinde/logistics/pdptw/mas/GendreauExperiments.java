@@ -1,6 +1,3 @@
-/**
- * 
- */
 package rinde.logistics.pdptw.mas;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,8 +44,6 @@ import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
-import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
@@ -65,22 +60,26 @@ import com.google.common.io.Files;
  */
 public final class GendreauExperiments {
 
-  private static final int THREADS = 16;
-  private static final int REPETITIONS = 10;
+  private static final int THREADS = 2;
+  private static final int REPETITIONS = 1;
 
   private GendreauExperiments() {}
 
   public static void main(String[] args) throws IOException {
 
-    final Gendreau06Scenario scenario = Gendreau06Parser.parse(
-        "files/scenarios/gendreau06/req_rapide_3_450_24", 20);
-    final MASConfiguration configuration = Central.solverConfigurator(
-        new HeuristicSolverCreator(2000, 200000)).configure(
-        8884255227086587874L);
-    final Gendreau06ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
-    Experiment.performSingleRun(scenario, configuration, objFunc, false);
+    // final Gendreau06Scenario scenario = Gendreau06Parser.parse(
+    // "files/scenarios/gendreau06/req_rapide_1_240_24", 10);
+    // final MASConfiguration configuration = Central.solverConfigurator(
+    // new HeuristicSolverCreator(200, 20000), "-Online").configure(
+    // -3577649692547979120L);
+    //
+    // // Central.solverConfigurator(
+    // // new RandomSolverCreator()).configure(6035094637740532013L);
+    // final Gendreau06ObjectiveFunction objFunc = new
+    // Gendreau06ObjectiveFunction();
+    // Experiment.performSingleRun(scenario, configuration, objFunc, false);
 
-    // onlineExperiment();
+    onlineExperiment();
     // offlineExperiment();
   }
 
@@ -113,16 +112,18 @@ public final class GendreauExperiments {
         .repeat(REPETITIONS)
         .withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
-        .addConfigurator(new RandomBB())
-        .addConfigurator(new RandomAuctioneerHeuristicSolver())
-        .addConfigurator(new RandomRandom())
+        // .addConfigurator(new RandomBB())
+        // .addConfigurator(new RandomAuctioneerHeuristicSolver())
+        // .addConfigurator(new RandomRandom())
         // .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
+        // .addConfigurator(
+        // Central.solverConfigurator(new RandomSolverCreator(), "-Online"))
         .addConfigurator(
-            Central.solverConfigurator(
-                new HeuristicSolverCreator(2000, 200000), "-Online"))
+            Central.solverConfigurator(new HeuristicSolverCreator(200, 5000),
+                "-Online"))
         .addConfigurator(
-            Central.solverConfigurator(
-                new HeuristicSolverCreator(4000, 2000000), "-Online"))
+            Central.solverConfigurator(new HeuristicSolverCreator(400, 10000),
+                "-Online"))
 
         .perform();
 
@@ -211,7 +212,6 @@ public final class GendreauExperiments {
               final Communicator c = new SolverBidder(
                   ArraysSolverValidator.wrap(new HeuristicSolver(
                       new MersenneTwister(rng.nextLong()))));
-              sim.register(c);
               final RoutePlanner r = new SolverRoutePlanner(wrapSafe(
                   new HeuristicSolver(new MersenneTwister(rng.nextLong())),
                   SI.SECOND));
@@ -247,7 +247,6 @@ public final class GendreauExperiments {
             @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new RandomBidder(rng.nextLong());
-              sim.register(c);
               return sim
                   .register(new Truck(event.vehicleDTO,
                       new SolverRoutePlanner(SolverValidator
@@ -298,7 +297,6 @@ public final class GendreauExperiments {
             @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new RandomBidder(rng.nextLong());
-              sim.register(c);
               return sim.register(new Truck(event.vehicleDTO,
                   new RandomRoutePlanner(rng.nextLong()), c));
             }
@@ -315,25 +313,43 @@ public final class GendreauExperiments {
 
   public static class HeuristicSolverCreator implements SolverCreator {
 
-    private final int l;
+    private final int listLength;
     private final int maxIterations;
 
-    public HeuristicSolverCreator(int l, int maxIterations) {
-      this.l = l;
+    public HeuristicSolverCreator(int listLength, int maxIterations) {
+      this.listLength = listLength;
       this.maxIterations = maxIterations;
     }
 
     @Override
     public Solver create(long seed) {
-      return new MultiVehicleSolverAdapter(
-          ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
-              new MersenneTwister(seed), l, maxIterations)), SI.SECOND);
+      return SolverValidator
+          .wrap(new MultiVehicleSolverAdapter(ArraysSolverValidator
+              .wrap(new MultiVehicleHeuristicSolver(new MersenneTwister(seed),
+                  listLength, maxIterations)), SI.SECOND));
     }
 
     @Override
     public String toString() {
-      return new StringBuilder("Heuristic-").append(l).append("-")
+      return new StringBuilder("Heuristic-").append(listLength).append("-")
           .append(maxIterations).toString();
+    }
+  }
+
+  public static class RandomSolverCreator implements SolverCreator {
+
+    public RandomSolverCreator() {}
+
+    @Override
+    public Solver create(long seed) {
+      return new MultiVehicleSolverAdapter(
+          ArraysSolverValidator.wrap(new RandomMVArraysSolver(
+              new MersenneTwister(seed))), SI.SECOND);
+    }
+
+    @Override
+    public String toString() {
+      return "Random";
     }
   }
 
@@ -349,7 +365,6 @@ public final class GendreauExperiments {
             @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
               final Communicator c = new BlackboardUser();
-              sim.register(c);
               return sim.register(new Truck(event.vehicleDTO,
                   new RandomRoutePlanner(rng.nextLong()), c));
             }

@@ -16,10 +16,10 @@ import com.google.common.base.Optional;
 /**
  * This is a route planner interface. It is unusual in the sense that it reveals
  * its future destinations one hop at a time. The future destinations are hidden
- * deliberatly, they may not be known at a certain time. This allows a more
- * flexible routeplanner, internally the future hops may change repeatedly. The
- * routeplanner is always coupled to one {@link DefaultVehicle}, the
- * routeplanner plans its routes for this vehicle instance.
+ * deliberately, they may not be known at a certain time. This allows a more
+ * flexible route planner, internally the future hops may change repeatedly. The
+ * route planner is always coupled to one {@link DefaultVehicle}, the route
+ * planner plans its routes for this vehicle instance.
  * <p>
  * <b>Initialization</b> {@link RoutePlanner} instances should be initialized in
  * a uniform manner. The methods should be called in the following order:
@@ -45,7 +45,7 @@ import com.google.common.base.Optional;
  * </ul>
  * Each time one of these is called the route <i>may</i> change. When
  * {@link #next(long)} is called, the value of {@link #current()} is saved into
- * its history (accesible via {@link #getHistory()}) and accesible via
+ * its history (accessible via {@link #getHistory()}) and accessible via
  * {@link #prev()}.
  * 
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
@@ -53,7 +53,7 @@ import com.google.common.base.Optional;
 public interface RoutePlanner {
 
   /**
-   * Initializes the routeplanner for one specific {@link DefaultVehicle} in a
+   * Initializes the route planner for one specific {@link DefaultVehicle} in a
    * {@link RoadModel} and a {@link PDPModel}.
    * @param rm The {@link RoadModel} which the vehicle is on.
    * @param pm The {@link PDPModel} which manages the vehicle.
@@ -73,14 +73,14 @@ public interface RoutePlanner {
    * @param onMap A collection of parcels which currently reside on the map.
    *          Note: this may be a <i>subset</i> of all parcels available.
    * @param time The current simulation time, this may be relevant for some
-   *          routeplanners that want to take time windows into account.
+   *          route planners that want to take time windows into account.
    */
   void update(Collection<DefaultParcel> onMap, long time);
 
   /**
    * Should return the current parcel (the parcel that should be visited next).
    * Subsequent calls should always return the same destination (no
-   * recomputation should be done). Only when one of the <i>modifying</i>
+   * re-computation should be done). Only when one of the <i>modifying</i>
    * methods is called, {@link #update(Collection, long)} or {@link #next(long)}
    * , this method may return a different value.
    * @return The current parcel that should be visited next, returns
@@ -93,8 +93,8 @@ public interface RoutePlanner {
    * parcel to visit. This is one of the <i>modifying</i> methods (see
    * {@link RoutePlanner} for more information). When called, the value of
    * {@link #current()} is saved into the history (see {@link #getHistory()})
-   * and accesible via {@link #prev()}. This method will return the new value of
-   * {@link #current()}.
+   * and accessible via {@link #prev()}. This method will return the new value
+   * of {@link #current()}.
    * @param time The current simulation time.
    * @return The new current parcel or {@link Optional#absent()} if there are no
    *         parcels to visit.
