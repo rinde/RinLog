@@ -351,23 +351,6 @@ public final class GendreauExperiments {
     }
   }
 
-  static class RandomSolverCreator implements SolverCreator {
-
-    RandomSolverCreator() {}
-
-    @Override
-    public Solver create(long seed) {
-      return new MultiVehicleSolverAdapter(
-          ArraysSolverValidator.wrap(new RandomMVArraysSolver(
-              new MersenneTwister(seed))), SI.SECOND);
-    }
-
-    @Override
-    public String toString() {
-      return "Random";
-    }
-  }
-
   class RandomBB implements MASConfigurator {
     @Override
     public MASConfiguration configure(long seed) {
