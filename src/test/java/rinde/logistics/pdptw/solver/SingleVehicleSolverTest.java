@@ -40,7 +40,7 @@ import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.pdptw.common.StatsTracker.StatisticsDTO;
+import rinde.sim.pdptw.common.StatisticsDTO;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
@@ -220,8 +220,10 @@ public class SingleVehicleSolverTest {
       debuggers = newArrayList();
     }
 
+    @Override
     public Creator<AddVehicleEvent> getVehicleCreator() {
       return new Creator<AddVehicleEvent>() {
+        @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
           final Communicator c = new RandomBidder(123);
           sim.register(c);

@@ -24,10 +24,6 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
-  private final List<DefaultParcel> history;
-  private boolean initialized;
-  private boolean updated;
-
   /**
    * Reference to the {@link RoadModel}.
    */
@@ -43,6 +39,10 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * for.
    */
   protected Optional<DefaultVehicle> vehicle;
+
+  private final List<DefaultParcel> history;
+  private boolean initialized;
+  private boolean updated;
 
   /**
    * New abstract route planner.

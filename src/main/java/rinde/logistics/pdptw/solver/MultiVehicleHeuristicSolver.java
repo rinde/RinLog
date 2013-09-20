@@ -29,8 +29,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
   private static final int TRAVEL_TIME_WEIGHT = 1;
   private static final int TARDINESS_WEIGHT = 1;
-  private static final boolean DEBUG = false;
-  private static final boolean STRICT_MODE = false;
+  private static final boolean DEBUG = true;
+  private static final boolean STRICT_MODE = true;
 
   private final RandomGenerator rand;
   private final int listLength;
@@ -109,8 +109,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     sols = solveWithLateAcceptance(n, v, travelTime, releaseDates, dueDates,
         servicePairs, serviceTimes, vehicleTravelTimes, inventories,
         remainingServiceTimes, currentDestinations, pickupToDeliveryMap,
-        deliveryToPickupMap, fixedVehicleAssignment, listLength,
-        maxNrOfNonImprovements);
+        deliveryToPickupMap, fixedVehicleAssignment);
     return sols;
   }
 
@@ -119,8 +118,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
       int[][] servicePairs, int[] serviceTimes, int[][] vehicleTravelTimes,
       int[][] inventories, int[] remainingServiceTimes,
       int[] currentDestinations, int[] pickupToDeliveryMap,
-      int[] deliveryToPickupMap, int[] fixedVehicleAssignment, int L,
-      int maxNrOfNonImprovements) {
+      int[] deliveryToPickupMap, int[] fixedVehicleAssignment) {
 
     /* Determine a random feasible vehicle assignment */
     final int[] initialVehicleAssignment = randomFeasibleAssignment(n, v,
@@ -149,8 +147,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     final double obj0 = getTotalObjective(sol0);
 
     /* initialize LA list with initial objective value */
-    final double[] laList = new double[L];
-    for (int l = 0; l < L; l++) {
+    final double[] laList = new double[listLength];
+    for (int l = 0; l < listLength; l++) {
       laList[l] = obj0;
     }
 
@@ -160,7 +158,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     double currentObj = obj0;
     SolutionObject[] currentSol = sol0;
 
-    List<Integer> bestPerm = new ArrayList<Integer>(perm0);
+    // List<Integer> bestPerm = new ArrayList<Integer>(perm0);
     int[] bestVehicleAssignment = Arrays.copyOf(initialVehicleAssignment,
         initialVehicleAssignment.length);
     double bestObj = obj0;
@@ -172,8 +170,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     while (!stagnation) {
       if (DEBUG) {
         if (it % 100 == 0) {
-          System.out.println("[" + it + "] Current:\t " + currentObj
-              + "\tbest:\t" + bestObj);
+          System.out.println("[" + it + "] Current:\t " + (currentObj / 60d)
+              + "\tbest:\t" + (bestObj / 60d));
         }
       }
 
@@ -328,7 +326,17 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
         throw new RuntimeException("Found a negative objective value: "
             + newObj);
       }
-      if (newObj <= laList[it % L]) {
+
+      // ADDED BY RINDE
+      // only for checking feasibility
+      if (STRICT_MODE) {
+        ArraysSolverValidator.validateOutputs(newSol, travelTime, releaseDates,
+            dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
+            inventories, remainingServiceTimes, currentDestinations);
+      }
+      // END ADDED BY RINDE
+
+      if (newObj <= laList[it % listLength]) {
         // accept
         currentPerm = newPerm;
         currentVehicleAssignment = newVehicleAssignment;
@@ -340,21 +348,21 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
         if (newObj < bestObj) {
           // better than best
           bestSol = copySolution(newSol);
-          bestPerm = new ArrayList<Integer>(newPerm);
+          // bestPerm = new ArrayList<Integer>(newPerm);
           bestObj = newObj;
           bestVehicleAssignment = Arrays.copyOf(newVehicleAssignment,
               newVehicleAssignment.length);
           nrOfNonImprovements = 0;
           if (DEBUG) {
             System.out.println("Found new best solution with objective: "
-                + newObj);
+                + (newObj / 60d));
           }
         }
 
       }
       nrOfNonImprovements++;
 
-      laList[it % L] = currentObj;
+      laList[it % listLength] = currentObj;
       it++;
       if (nrOfNonImprovements > maxNrOfNonImprovements) {
         stagnation = true;

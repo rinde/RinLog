@@ -91,9 +91,16 @@ public abstract class AbstractBidder implements Bidder {
   }
 
   @Override
-  public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
+  public final void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
     roadModel = Optional.of((PDPRoadModel) rm);
     pdpModel = Optional.of(pm);
     vehicle = Optional.of(v);
+    afterInit();
   }
+
+  /**
+   * This method can optionally be overridden to execute additional code right
+   * after {@link #init(RoadModel, PDPModel, DefaultVehicle)} is called.
+   */
+  protected void afterInit() {}
 }

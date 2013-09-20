@@ -11,19 +11,33 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import rinde.logistics.pdptw.mas.Truck;
+import rinde.sim.core.SimulatorAPI;
+import rinde.sim.core.SimulatorUser;
+import rinde.sim.pdptw.central.Solvers;
+import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.common.DefaultParcel;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
  */
-public class SolverBidder extends AbstractBidder {
+public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
   private final SingleVehicleArraysSolver solver;
+  private Optional<SVSolverHandle> solverHandle;
+  private Optional<SimulatorAPI> simulator;
 
+  /**
+   * @param sol
+   */
   public SolverBidder(SingleVehicleArraysSolver sol) {
     solver = sol;
+    solverHandle = Optional.absent();
+    simulator = Optional.absent();
   }
 
   // TODO figure out what happens when the vehicle is moving towards a parcel
@@ -31,13 +45,15 @@ public class SolverBidder extends AbstractBidder {
   @Override
   public double getBidFor(DefaultParcel p, long time) {
 
-    ((Truck) vehicle.get()).getRoute();
-
     // TODO optimize baseline, baseline can be remembered from last assigned
     // parcel
 
     // TODO coordinate with route planner if it uses the same solver?
     // or create cached solver wrapper?
+
+    final ImmutableList<DefaultParcel> route = ImmutableList
+        .copyOf(((Truck) vehicle.get()).getRoute());
+    solverHandle.get().convert(assignedParcels, route);
 
     // compute insertion cost
     final double baseline = computeBid(null, time);
@@ -69,5 +85,20 @@ public class SolverBidder extends AbstractBidder {
     // final SolutionObject so = solver.solve(ao.travelTime, ao.releaseDates,
     // ao.dueDates, ao.servicePairs, ao.serviceTimes, null);
     return 0;// so.objectiveValue;
+  }
+
+  @Override
+  public void setSimulator(SimulatorAPI api) {
+    simulator = Optional.of(api);
+  }
+
+  @Override
+  protected void afterInit() {
+
+  }
+
+  private void initSolver() {
+    solverHandle = Optional.of(Solvers.singleVehicleSolver(null,
+        roadModel.get(), pdpModel.get(), simulator.get(), vehicle.get()));
   }
 }

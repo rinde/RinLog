@@ -37,6 +37,7 @@ import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
 import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
+import rinde.sim.pdptw.common.StatisticsDTO;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.Experiment;
 import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
@@ -44,6 +45,7 @@ import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
+import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
@@ -69,17 +71,23 @@ public final class GendreauExperiments {
 
     // final Gendreau06Scenario scenario = Gendreau06Parser.parse(
     // "files/scenarios/gendreau06/req_rapide_1_240_24", 10);
-    // final MASConfiguration configuration = Central.solverConfigurator(
-    // new HeuristicSolverCreator(200, 20000), "-Online").configure(
-    // -3577649692547979120L);
-    //
-    // // Central.solverConfigurator(
-    // // new RandomSolverCreator()).configure(6035094637740532013L);
-    // final Gendreau06ObjectiveFunction objFunc = new
-    // Gendreau06ObjectiveFunction();
-    // Experiment.performSingleRun(scenario, configuration, objFunc, false);
 
-    onlineExperiment();
+    final Gendreau06Scenario scenario = (Gendreau06Scenario) (new Gendreau06Scenarios(
+        "files/scenarios/gendreau06/", false,
+        GendreauProblemClass.LONG_LOW_FREQ)).provide().get(0);
+
+    final MASConfiguration configuration = Central.solverConfigurator(
+        new HeuristicSolverCreator(1, 20000), "-Offline").configure(
+        -3577649692547979120L);
+
+    // Central.solverConfigurator(
+    // new RandomSolverCreator()).configure(6035094637740532013L);
+    final Gendreau06ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final StatisticsDTO stats = Experiment.performSingleRun(scenario,
+        configuration, objFunc, false);
+    System.out.println(objFunc.printHumanReadableFormat(stats));
+
+    // onlineExperiment();
     // offlineExperiment();
   }
 
