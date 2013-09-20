@@ -161,16 +161,24 @@ public final class GendreauExperiments {
       final StringBuilder sb = table.get(config, pc);
 
       final GendreauProblemClass gpc = (GendreauProblemClass) pc;
-      sb.append(r.seed).append(",")/* seed */
-      .append(r.scenario.getProblemInstanceId()).append(",")/* instance */
-      .append(gpc.duration).append(",") /* duration */
-      .append(gpc.frequency).append(",")/* frequency */
-      .append(obj.computeCost(r.stats)).append(',')/* cost */
-      .append(obj.tardiness(r.stats)).append(',')/* tardiness */
-      .append(obj.travelTime(r.stats)).append(',')/* travelTime */
-      .append(obj.overTime(r.stats)).append(',')/* overTime */
-      .append(r.stats.computationTime) /* computation time */
-      .append("\n");
+      /* seed */
+      sb.append(r.seed).append(",")
+      /* instance */
+      .append(r.scenario.getProblemInstanceId()).append(",")
+      /* duration */
+      .append(gpc.duration).append(",")
+      /* frequency */
+      .append(gpc.frequency).append(",")
+      /* cost */
+      .append(obj.computeCost(r.stats)).append(',')
+      /* tardiness */
+      .append(obj.tardiness(r.stats)).append(',')
+      /* travelTime */
+      .append(obj.travelTime(r.stats)).append(',')
+      /* overTime */
+      .append(obj.overTime(r.stats)).append(',')
+      /* computation time */
+      .append(r.stats.computationTime).append("\n");
 
     }
 
@@ -242,8 +250,7 @@ public final class GendreauExperiments {
   }
 
   // random auctioneer with random solver route planner
-  public static class RandomAuctioneerHeuristicSolver implements
-      MASConfigurator {
+  static class RandomAuctioneerHeuristicSolver implements MASConfigurator {
 
     @Override
     public MASConfiguration configure(long seed) {
@@ -319,7 +326,7 @@ public final class GendreauExperiments {
     }
   }
 
-  public static class HeuristicSolverCreator implements SolverCreator {
+  static class HeuristicSolverCreator implements SolverCreator {
 
     private final int listLength;
     private final int maxIterations;
@@ -344,9 +351,9 @@ public final class GendreauExperiments {
     }
   }
 
-  public static class RandomSolverCreator implements SolverCreator {
+  static class RandomSolverCreator implements SolverCreator {
 
-    public RandomSolverCreator() {}
+    RandomSolverCreator() {}
 
     @Override
     public Solver create(long seed) {
@@ -361,7 +368,7 @@ public final class GendreauExperiments {
     }
   }
 
-  public static class RandomBB implements MASConfigurator {
+  class RandomBB implements MASConfigurator {
     @Override
     public MASConfiguration configure(long seed) {
       final RandomGenerator rng = new MersenneTwister(seed);
