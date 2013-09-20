@@ -5,18 +5,13 @@ package rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.util.Collection;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.measure.Measure;
-import javax.measure.unit.SI;
 
-import rinde.sim.pdptw.central.Solvers;
-import rinde.sim.pdptw.central.Solvers.StateContext;
-import rinde.sim.pdptw.central.arrays.ArraysSolvers;
-import rinde.sim.pdptw.central.arrays.ArraysSolvers.ArraysObject;
+import rinde.logistics.pdptw.mas.Truck;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
-import rinde.sim.pdptw.central.arrays.SolutionObject;
 import rinde.sim.pdptw.common.DefaultParcel;
 
 /**
@@ -36,6 +31,8 @@ public class SolverBidder extends AbstractBidder {
   @Override
   public double getBidFor(DefaultParcel p, long time) {
 
+    ((Truck) vehicle.get()).getRoute();
+
     // TODO optimize baseline, baseline can be remembered from last assigned
     // parcel
 
@@ -48,6 +45,14 @@ public class SolverBidder extends AbstractBidder {
     return additional - baseline;
   }
 
+  double computeInsertionCost(Collection<DefaultParcel> route,
+      DefaultParcel newParcel) {
+    return 0;
+
+    // find cheapest insertion point
+
+  }
+
   private double computeBid(@Nullable DefaultParcel p, long time) {
     final Set<DefaultParcel> availableParcels = newLinkedHashSet(assignedParcels);
     if (p != null) {
@@ -56,13 +61,13 @@ public class SolverBidder extends AbstractBidder {
     if (availableParcels.isEmpty()) {
       return 0;
     }
-    final StateContext sc = Solvers.convert(roadModel.get(), pdpModel.get(),
-        vehicle.get(), availableParcels,
-        Measure.valueOf(time, SI.MILLI(SI.SECOND)), null);
-    final ArraysObject ao = ArraysSolvers.toSingleVehicleArrays(sc.state,
-        SI.MILLI(SI.SECOND));
-    final SolutionObject so = solver.solve(ao.travelTime, ao.releaseDates,
-        ao.dueDates, ao.servicePairs, ao.serviceTimes, null);
-    return so.objectiveValue;
+    // final StateContext sc = Solvers.convert(roadModel.get(), pdpModel.get(),
+    // vehicle.get(), availableParcels,
+    // Measure.valueOf(time, SI.MILLI(SI.SECOND)), null);
+    // final ArraysObject ao = ArraysSolvers.toSingleVehicleArrays(sc.state,
+    // SI.MILLI(SI.SECOND));
+    // final SolutionObject so = solver.solve(ao.travelTime, ao.releaseDates,
+    // ao.dueDates, ao.servicePairs, ao.serviceTimes, null);
+    return 0;// so.objectiveValue;
   }
 }
