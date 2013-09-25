@@ -29,8 +29,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
   private static final int TRAVEL_TIME_WEIGHT = 1;
   private static final int TARDINESS_WEIGHT = 1;
-  private static final boolean DEBUG = false;
-  private static final boolean STRICT_MODE = false;
+  private final boolean debug;
+  private final boolean strictMode;
 
   private final RandomGenerator rand;
   private final int listLength;
@@ -39,13 +39,16 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
   public MultiVehicleHeuristicSolver(RandomGenerator rand, int listLength,
       int maxNrOfNonImprovements) {
+    this(rand, listLength, maxNrOfNonImprovements, false, false);
+  }
+
+  public MultiVehicleHeuristicSolver(RandomGenerator rand, int listLength,
+      int maxNrOfNonImprovements, boolean debug, boolean strictMode) {
     this.rand = rand;
     this.listLength = listLength;
     this.maxNrOfNonImprovements = maxNrOfNonImprovements;
-  }
-
-  public MultiVehicleHeuristicSolver(RandomGenerator rand) {
-    this(rand, 2000, 10000);
+    this.debug = debug;
+    this.strictMode = strictMode;
   }
 
   @Override
@@ -137,7 +140,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
     // ADDED BY RINDE
     // only for checking feasibility of initial permutation
-    if (STRICT_MODE) {
+    if (strictMode) {
       ArraysSolverValidator.validateOutputs(sol0, travelTime, releaseDates,
           dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
           inventories, remainingServiceTimes, currentDestinations);
@@ -168,7 +171,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     boolean stagnation = false;
     int it = 0;
     while (!stagnation) {
-      if (DEBUG) {
+      if (debug) {
         if (it % 100 == 0) {
           System.out.println("[" + it + "] Current:\t " + (currentObj / 60d)
               + "\tbest:\t" + (bestObj / 60d));
@@ -329,7 +332,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
       // ADDED BY RINDE
       // only for checking feasibility
-      if (STRICT_MODE) {
+      if (strictMode) {
         ArraysSolverValidator.validateOutputs(newSol, travelTime, releaseDates,
             dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
             inventories, remainingServiceTimes, currentDestinations);
@@ -353,7 +356,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
           bestVehicleAssignment = Arrays.copyOf(newVehicleAssignment,
               newVehicleAssignment.length);
           nrOfNonImprovements = 0;
-          if (DEBUG) {
+          if (debug) {
             System.out.println("Found new best solution with objective: "
                 + (newObj / 60d));
           }
@@ -473,7 +476,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     int totalTravelTime = 0;
     final int[] arrivalTimes = new int[route.size()];
     int previousT = Math.max(releaseDates[0], remainingServiceTimes[j]);
-    arrivalTimes[0] = previousT;
+    arrivalTimes[0] = 0;// previousT;
     for (int i = 1; i < route.size(); i++) {
       final int next = route.get(i);
       int tt = 0;

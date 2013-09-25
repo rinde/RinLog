@@ -23,21 +23,18 @@ import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.HeuristicSolver;
-import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import rinde.logistics.pdptw.solver.HeuristicSolverCreator;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.model.Model;
 import rinde.sim.pdptw.central.Central;
-import rinde.sim.pdptw.central.Central.SolverCreator;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
-import rinde.sim.pdptw.central.arrays.MultiVehicleSolverAdapter;
 import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
 import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
-import rinde.sim.pdptw.common.StatisticsDTO;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.Experiment;
 import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
@@ -45,7 +42,6 @@ import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
@@ -69,25 +65,7 @@ public final class GendreauExperiments {
 
   public static void main(String[] args) throws IOException {
 
-    // final Gendreau06Scenario scenario = Gendreau06Parser.parse(
-    // "files/scenarios/gendreau06/req_rapide_1_240_24", 10);
-
-    final Gendreau06Scenario scenario = (Gendreau06Scenario) (new Gendreau06Scenarios(
-        "files/scenarios/gendreau06/", false,
-        GendreauProblemClass.LONG_LOW_FREQ)).provide().get(0);
-
-    final MASConfiguration configuration = Central.solverConfigurator(
-        new HeuristicSolverCreator(1, 20000), "-Offline").configure(
-        -3577649692547979120L);
-
-    // Central.solverConfigurator(
-    // new RandomSolverCreator()).configure(6035094637740532013L);
-    final Gendreau06ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
-    final StatisticsDTO stats = Experiment.performSingleRun(scenario,
-        configuration, objFunc, false);
-    System.out.println(objFunc.printHumanReadableFormat(stats));
-
-    // onlineExperiment();
+    onlineExperiment();
     // offlineExperiment();
   }
 
@@ -115,10 +93,8 @@ public final class GendreauExperiments {
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
         "files/scenarios/gendreau06/", true, GendreauProblemClass.values());
     final ExperimentResults onlineResults = Experiment
-        .build(new Gendreau06ObjectiveFunction())
-        .withRandomSeed(123)
-        .repeat(REPETITIONS)
-        .withThreads(THREADS)
+        .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
+        .repeat(REPETITIONS).withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
         // .addConfigurator(new RandomBB())
         // .addConfigurator(new RandomAuctioneerHeuristicSolver())
@@ -127,11 +103,11 @@ public final class GendreauExperiments {
         // .addConfigurator(
         // Central.solverConfigurator(new RandomSolverCreator(), "-Online"))
         .addConfigurator(
-            Central.solverConfigurator(new HeuristicSolverCreator(200, 5000),
-                "-Online"))
-        .addConfigurator(
-            Central.solverConfigurator(new HeuristicSolverCreator(400, 10000),
-                "-Online"))
+            Central.solverConfigurator(
+                new HeuristicSolverCreator(500, 1000000), "-Online"))
+        // .addConfigurator(
+        // Central.solverConfigurator(new HeuristicSolverCreator(400, 10000),
+        // "-Online"))
 
         .perform();
 
@@ -323,31 +299,6 @@ public final class GendreauExperiments {
     @Override
     public String toString() {
       return getClass().getSimpleName();
-    }
-  }
-
-  static class HeuristicSolverCreator implements SolverCreator {
-
-    private final int listLength;
-    private final int maxIterations;
-
-    public HeuristicSolverCreator(int listLength, int maxIterations) {
-      this.listLength = listLength;
-      this.maxIterations = maxIterations;
-    }
-
-    @Override
-    public Solver create(long seed) {
-      return SolverValidator
-          .wrap(new MultiVehicleSolverAdapter(ArraysSolverValidator
-              .wrap(new MultiVehicleHeuristicSolver(new MersenneTwister(seed),
-                  listLength, maxIterations)), SI.SECOND));
-    }
-
-    @Override
-    public String toString() {
-      return new StringBuilder("Heuristic-").append(listLength).append("-")
-          .append(maxIterations).toString();
     }
   }
 
