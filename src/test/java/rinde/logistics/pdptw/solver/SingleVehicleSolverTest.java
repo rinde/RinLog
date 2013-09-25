@@ -99,7 +99,7 @@ public class SingleVehicleSolverTest {
     assertTrue("invalid result", objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputMemory();
+    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
 
@@ -138,7 +138,7 @@ public class SingleVehicleSolverTest {
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputMemory();
+    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
@@ -186,7 +186,7 @@ public class SingleVehicleSolverTest {
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputMemory();
+    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;

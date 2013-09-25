@@ -99,11 +99,11 @@ public class MultiVehicleSolverTest {
       final ImmutableList<ImmutableList<ParcelDTO>> routes = solver
           .solve(state);
 
-      checkArgument(mvhSolver.getOutputMemory().size() == 1);
+      checkArgument(mvhSolver.getOutputs().size() == 1);
 
       System.out.println("total obj: "
           + ArraysSolvers.computeTotalObjectiveValue(mvhSolver
-              .getOutputMemory().get(0), SI.SECOND, NonSI.MINUTE));
+              .getOutputs().get(0), SI.SECOND, NonSI.MINUTE));
 
       System.out.println(routes);
       return routes;

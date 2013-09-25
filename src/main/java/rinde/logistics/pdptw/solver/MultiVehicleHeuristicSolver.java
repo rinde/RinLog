@@ -492,8 +492,9 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     }
 
     /* compute total tardiness */
-    final int totalTardiness = ArraysSolvers.computeSumTardiness(
-        Ints.toArray(route), arrivalTimes, serviceTimes, dueDates);
+    final int totalTardiness = ArraysSolvers.computeRouteTardiness(
+        Ints.toArray(route), arrivalTimes, serviceTimes, dueDates,
+        remainingServiceTimes[j]);
 
     // calculate objective value for vehicle j
     final int objectiveValue = totalTardiness * TARDINESS_WEIGHT
