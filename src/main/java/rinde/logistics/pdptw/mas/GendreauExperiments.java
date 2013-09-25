@@ -17,8 +17,8 @@ import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import rinde.logistics.pdptw.mas.comm.BlackboardCommModel;
 import rinde.logistics.pdptw.mas.comm.BlackboardUser;
 import rinde.logistics.pdptw.mas.comm.Communicator;
+import rinde.logistics.pdptw.mas.comm.InsertionCostBidder;
 import rinde.logistics.pdptw.mas.comm.RandomBidder;
-import rinde.logistics.pdptw.mas.comm.SolverBidder;
 import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
@@ -58,7 +58,7 @@ import com.google.common.io.Files;
  */
 public final class GendreauExperiments {
 
-  private static final int THREADS = 2;
+  private static final int THREADS = 1;
   private static final int REPETITIONS = 1;
 
   private GendreauExperiments() {}
@@ -95,16 +95,16 @@ public final class GendreauExperiments {
     final ExperimentResults onlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
         .repeat(REPETITIONS).withThreads(THREADS)
-        .addScenarioProvider(onlineScenarios)
+        .addScenarioProvider(onlineScenarios).showGui()
         // .addConfigurator(new RandomBB())
         // .addConfigurator(new RandomAuctioneerHeuristicSolver())
         // .addConfigurator(new RandomRandom())
-        // .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
+        .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
         // .addConfigurator(
         // Central.solverConfigurator(new RandomSolverCreator(), "-Online"))
-        .addConfigurator(
-            Central.solverConfigurator(
-                new HeuristicSolverCreator(500, 1000000), "-Online"))
+        // .addConfigurator(
+        // Central.solverConfigurator(
+        // new HeuristicSolverCreator(500, 1000000), "-Online"))
         // .addConfigurator(
         // Central.solverConfigurator(new HeuristicSolverCreator(400, 10000),
         // "-Online"))
@@ -201,12 +201,11 @@ public final class GendreauExperiments {
           return new Creator<AddVehicleEvent>() {
             @Override
             public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new SolverBidder(
-                  ArraysSolverValidator.wrap(new HeuristicSolver(
-                      new MersenneTwister(rng.nextLong()))));
+              final Communicator c = new InsertionCostBidder(
+                  new Gendreau06ObjectiveFunction());
               final RoutePlanner r = new SolverRoutePlanner(wrapSafe(
                   new HeuristicSolver(new MersenneTwister(rng.nextLong())),
-                  SI.SECOND));
+                  SI.MILLI(SI.SECOND)));
               return sim.register(new Truck(event.vehicleDTO, r, c));
             }
           };
