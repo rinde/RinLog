@@ -17,6 +17,7 @@ import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A {@link RoutePlanner} implementation that uses a {@link Solver} that
@@ -76,6 +77,14 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   @Override
   public Optional<DefaultParcel> current() {
     return Optional.fromNullable((DefaultParcel) route.peek());
+  }
+
+  @Override
+  public Optional<ImmutableList<DefaultParcel>> currentRoute() {
+    if (route.isEmpty()) {
+      return Optional.absent();
+    }
+    return Optional.of(ImmutableList.copyOf(route));
   }
 
   @Override

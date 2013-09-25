@@ -16,6 +16,7 @@ import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A partial {@link RoutePlanner} implementation, it already implements much of
@@ -81,6 +82,14 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     }
     nextImpl(time);
     return current();
+  }
+
+  @Override
+  public Optional<ImmutableList<DefaultParcel>> currentRoute() {
+    if (current().isPresent()) {
+      return Optional.of(ImmutableList.of(current().get()));
+    }
+    return Optional.absent();
   }
 
   @Override

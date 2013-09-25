@@ -12,6 +12,7 @@ import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This is a route planner interface. It is unusual in the sense that it reveals
@@ -87,6 +88,8 @@ public interface RoutePlanner {
    *         {@link Optional#absent()} when there are no parcels to go to.
    */
   Optional<DefaultParcel> current();
+
+  Optional<ImmutableList<DefaultParcel>> currentRoute();
 
   /**
    * Indicates that the current location has been visited. Computes the next

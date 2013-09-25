@@ -3,8 +3,6 @@
  */
 package rinde.logistics.pdptw.mas;
 
-import static java.util.Arrays.asList;
-
 import java.util.LinkedList;
 
 import rinde.logistics.pdptw.mas.comm.Communicator;
@@ -74,9 +72,8 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         }
       }
 
-      final Optional<DefaultParcel> cur = routePlanner.current();
-      if (cur.isPresent()) {
-        setRoute(asList(cur.get()));
+      if (routePlanner.current().isPresent()) {
+        setRoute(routePlanner.currentRoute().get());
       } else {
         setRoute(new LinkedList<DefaultParcel>());
       }
