@@ -29,8 +29,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
   private static final int TRAVEL_TIME_WEIGHT = 1;
   private static final int TARDINESS_WEIGHT = 1;
-  private static final boolean DEBUG = true;
-  private static final boolean STRICT_MODE = true;
+  private static final boolean DEBUG = false;
+  private static final boolean STRICT_MODE = false;
 
   private final RandomGenerator rand;
   private final int listLength;
