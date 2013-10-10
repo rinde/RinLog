@@ -15,8 +15,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import rinde.logistics.pdptw.mas.comm.BlackboardCommModel;
-import rinde.logistics.pdptw.mas.comm.BlackboardUser;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.event.ListenerEventHistory;
