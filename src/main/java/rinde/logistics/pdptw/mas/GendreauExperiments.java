@@ -58,8 +58,8 @@ import com.google.common.io.Files;
  */
 public final class GendreauExperiments {
 
-  private static final int THREADS = 1;
-  private static final int REPETITIONS = 1;
+  private static final int THREADS = 16;
+  private static final int REPETITIONS = 10;
 
   private GendreauExperiments() {}
 
@@ -95,11 +95,12 @@ public final class GendreauExperiments {
     final ExperimentResults onlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
         .repeat(REPETITIONS).withThreads(THREADS)
-        .addScenarioProvider(onlineScenarios).showGui()
+        .addScenarioProvider(onlineScenarios)
+        // .showGui()
         // .addConfigurator(new RandomBB())
         // .addConfigurator(new RandomAuctioneerHeuristicSolver())
         // .addConfigurator(new RandomRandom())
-        .addConfigurator(new HeuristicAuctioneerHeuristicSolver())
+        .addConfigurator(new InsertionCostAuctioneerHeuristicSolver())
         // .addConfigurator(
         // Central.solverConfigurator(new RandomSolverCreator(), "-Online"))
         // .addConfigurator(
@@ -190,7 +191,7 @@ public final class GendreauExperiments {
         ArraysSolverValidator.wrap(solver), timeUnit));
   }
 
-  public static class HeuristicAuctioneerHeuristicSolver implements
+  public static class InsertionCostAuctioneerHeuristicSolver implements
       MASConfigurator {
     @Override
     public MASConfiguration configure(long seed) {
