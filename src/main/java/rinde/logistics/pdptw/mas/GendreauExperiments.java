@@ -6,60 +6,47 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.measure.quantity.Duration;
 import javax.measure.unit.SI;
-import javax.measure.unit.Unit;
 
 import org.apache.commons.math3.random.MersenneTwister;
-import org.apache.commons.math3.random.RandomGenerator;
 
-import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import rinde.logistics.pdptw.mas.comm.BlackboardCommModel;
-import rinde.logistics.pdptw.mas.comm.BlackboardUser;
-import rinde.logistics.pdptw.mas.comm.Communicator;
 import rinde.logistics.pdptw.mas.comm.InsertionCostBidder;
 import rinde.logistics.pdptw.mas.comm.RandomBidder;
 import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
-import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import rinde.logistics.pdptw.solver.HeuristicSolver;
 import rinde.logistics.pdptw.solver.HeuristicSolverCreator;
-import rinde.sim.core.Simulator;
-import rinde.sim.core.model.Model;
+import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
-import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
-import rinde.sim.pdptw.central.arrays.SingleVehicleArraysSolver;
-import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
-import rinde.sim.pdptw.common.AddVehicleEvent;
-import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
+import rinde.sim.pdptw.central.arrays.MultiVehicleSolverAdapter;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
-import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.Experiment;
 import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
 import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
-import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
+import rinde.sim.util.SupplierRng;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
 
 /**
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * 
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public final class GendreauExperiments {
 
+  private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
+
   private static final int THREADS = 16;
-  private static final int REPETITIONS = 10;
+  private static final int REPETITIONS = 1;
+  private static final long SEED = 123L;
 
   private GendreauExperiments() {}
 
@@ -72,7 +59,7 @@ public final class GendreauExperiments {
   static void offlineExperiment() {
     System.out.println("offline");
     final Gendreau06Scenarios offlineScenarios = new Gendreau06Scenarios(
-        "files/scenarios/gendreau06/", false, GendreauProblemClass.values());
+        SCENARIOS_PATH, false, GendreauProblemClass.values());
     final ExperimentResults offlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction())
         .addScenarioProvider(offlineScenarios)
@@ -91,16 +78,37 @@ public final class GendreauExperiments {
   static void onlineExperiment() {
     System.out.println("online");
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
-        "files/scenarios/gendreau06/", true, GendreauProblemClass.values());
+        SCENARIOS_PATH, true, GendreauProblemClass.values());
     final ExperimentResults onlineResults = Experiment
-        .build(new Gendreau06ObjectiveFunction()).withRandomSeed(123)
-        .repeat(REPETITIONS).withThreads(THREADS)
+        .build(new Gendreau06ObjectiveFunction())
+        .withRandomSeed(SEED)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
+
         // .showGui()
         // .addConfigurator(new RandomBB())
         // .addConfigurator(new RandomAuctioneerHeuristicSolver())
         // .addConfigurator(new RandomRandom())
-        .addConfigurator(new InsertionCostAuctioneerHeuristicSolver())
+
+        .addConfigurator(
+            new BlackboardMASSupplier(new SolverRoutePlannerSupplier(50, 100)))
+
+        .addConfigurator(
+            new BlackboardMASSupplier(new RandomRoutePlannerSupplier()))
+
+        .addConfigurator(
+            new AuctionMASSupplier(new SolverRoutePlannerSupplier(50, 100),
+                new InsertionCostBidderSupplier()))
+
+        .addConfigurator(
+            new AuctionMASSupplier(new SolverRoutePlannerSupplier(50, 100),
+                new RandomBidderSupplier()))
+
+        // .addConfigurator(new InsertionCostAuctioneerHeuristicSolver(500,
+        // 10000))
+        // .addConfigurator(
+        // new InsertionCostAuctioneerHeuristicSolver(500, 100000))
         // .addConfigurator(
         // Central.solverConfigurator(new RandomSolverCreator(), "-Online"))
         // .addConfigurator(
@@ -117,14 +125,14 @@ public final class GendreauExperiments {
 
   static void writeGendreauResults(ExperimentResults results) {
 
-    final Table<MASConfigurator, ProblemClass, StringBuilder> table = HashBasedTable
+    final Table<SupplierRng<MASConfiguration>, ProblemClass, StringBuilder> table = HashBasedTable
         .create();
 
     checkArgument(results.objectiveFunction instanceof Gendreau06ObjectiveFunction);
     final Gendreau06ObjectiveFunction obj = (Gendreau06ObjectiveFunction) results.objectiveFunction;
 
     for (final SimulationResult r : results.results) {
-      final MASConfigurator config = r.masConfigurator;
+      final SupplierRng<MASConfiguration> config = r.masConfigurator;
       final ProblemClass pc = r.scenario.getProblemClass();
 
       if (!table.contains(config, pc)) {
@@ -159,10 +167,10 @@ public final class GendreauExperiments {
 
     }
 
-    final Set<Cell<MASConfigurator, ProblemClass, StringBuilder>> set = table
+    final Set<Cell<SupplierRng<MASConfiguration>, ProblemClass, StringBuilder>> set = table
         .cellSet();
 
-    for (final Cell<MASConfigurator, ProblemClass, StringBuilder> cell : set) {
+    for (final Cell<SupplierRng<MASConfiguration>, ProblemClass, StringBuilder> cell : set) {
 
       try {
         final File dir = new File("files/results/gendreau"
@@ -185,151 +193,71 @@ public final class GendreauExperiments {
     }
   }
 
-  public static Solver wrapSafe(SingleVehicleArraysSolver solver,
-      Unit<Duration> timeUnit) {
-    return SolverValidator.wrap(new SingleVehicleSolverAdapter(
-        ArraysSolverValidator.wrap(solver), timeUnit));
+  static SolverRoutePlanner createSolverRoutePlanner(long seed, int listLength,
+      int maxNrOfImprovements) {
+    return new SolverRoutePlanner(
+        SolverValidator.wrap(new MultiVehicleSolverAdapter(
+            ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
+                new MersenneTwister(seed), listLength, maxNrOfImprovements)),
+            SI.SECOND)));
   }
 
-  public static class InsertionCostAuctioneerHeuristicSolver implements
-      MASConfigurator {
+  static class InsertionCostBidderSupplier implements
+      SupplierRng<InsertionCostBidder> {
     @Override
-    public MASConfiguration configure(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-      return new DefaultMASConfiguration() {
-        @Override
-        public Creator<AddVehicleEvent> getVehicleCreator() {
-          return new Creator<AddVehicleEvent>() {
-            @Override
-            public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new InsertionCostBidder(
-                  new Gendreau06ObjectiveFunction());
-              final RoutePlanner r = new SolverRoutePlanner(wrapSafe(
-                  new HeuristicSolver(new MersenneTwister(rng.nextLong())),
-                  SI.MILLI(SI.SECOND)));
-              return sim.register(new Truck(event.vehicleDTO, r, c));
-            }
-          };
-        }
-
-        @Override
-        public ImmutableList<? extends Model<?>> getModels() {
-          return ImmutableList.of(new AuctionCommModel());
-        }
-      };
+    public InsertionCostBidder get(long seed) {
+      return new InsertionCostBidder(new Gendreau06ObjectiveFunction());
     }
 
     @Override
     public String toString() {
-      return getClass().getSimpleName();
+      return "Insertion-Cost-Bidder";
     }
   }
 
-  // random auctioneer with random solver route planner
-  static class RandomAuctioneerHeuristicSolver implements MASConfigurator {
-
+  static class RandomBidderSupplier implements SupplierRng<RandomBidder> {
     @Override
-    public MASConfiguration configure(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-      return new DefaultMASConfiguration() {
-        @Override
-        public Creator<AddVehicleEvent> getVehicleCreator() {
-          return new Creator<AddVehicleEvent>() {
-            @Override
-            public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new RandomBidder(rng.nextLong());
-              return sim
-                  .register(new Truck(event.vehicleDTO,
-                      new SolverRoutePlanner(SolverValidator
-                          .wrap(new SingleVehicleSolverAdapter(
-                              ArraysSolverValidator.wrap(new HeuristicSolver(
-                                  new MersenneTwister(rng.nextLong()))),
-                              SI.SECOND))), c));
-            }
-          };
-        }
-
-        @Override
-        public ImmutableList<? extends Model<?>> getModels() {
-          return ImmutableList.of(new AuctionCommModel());
-        }
-      };
+    public RandomBidder get(long seed) {
+      return new RandomBidder(seed);
     }
 
     @Override
     public String toString() {
-      return getClass().getSimpleName();
+      return "Random-Bidder";
     }
   }
 
-  /**
-   * <ul>
-   * <li>RandomRoutePlanner</li>
-   * <li>AuctionCommModel</li>
-   * <li>RandomBidder</li>
-   * </ul>
-   * 
-   * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
-   */
-  public static class RandomRandom implements MASConfigurator {
+  static class SolverRoutePlannerSupplier implements
+      SupplierRng<SolverRoutePlanner> {
+    final int listLength;
+    final int maxNrOfImprovements;
+
+    SolverRoutePlannerSupplier(int ll, int maxImprovements) {
+      listLength = ll;
+      maxNrOfImprovements = maxImprovements;
+    }
+
     @Override
-    public MASConfiguration configure(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-
-      return new DefaultMASConfiguration() {
-        @Override
-        public ImmutableList<? extends Model<?>> getModels() {
-          return ImmutableList.of(new AuctionCommModel());
-        }
-
-        @Override
-        public Creator<AddVehicleEvent> getVehicleCreator() {
-          return new Creator<AddVehicleEvent>() {
-            @Override
-            public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new RandomBidder(rng.nextLong());
-              return sim.register(new Truck(event.vehicleDTO,
-                  new RandomRoutePlanner(rng.nextLong()), c));
-            }
-          };
-        }
-      };
+    public SolverRoutePlanner get(long seed) {
+      return createSolverRoutePlanner(seed, listLength, maxNrOfImprovements);
     }
 
     @Override
     public String toString() {
-      return getClass().getSimpleName();
+      return "Solver-Route-Planner-" + listLength + "-" + maxNrOfImprovements;
     }
   }
 
-  class RandomBB implements MASConfigurator {
+  static class RandomRoutePlannerSupplier implements
+      SupplierRng<RandomRoutePlanner> {
     @Override
-    public MASConfiguration configure(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-
-      return new DefaultMASConfiguration() {
-        @Override
-        public Creator<AddVehicleEvent> getVehicleCreator() {
-          return new Creator<AddVehicleEvent>() {
-            @Override
-            public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new BlackboardUser();
-              return sim.register(new Truck(event.vehicleDTO,
-                  new RandomRoutePlanner(rng.nextLong()), c));
-            }
-          };
-        }
-
-        @Override
-        public ImmutableList<? extends Model<?>> getModels() {
-          return ImmutableList.of(new BlackboardCommModel());
-        }
-      };
+    public RandomRoutePlanner get(long seed) {
+      return new RandomRoutePlanner(seed);
     }
 
     @Override
     public String toString() {
-      return getClass().getSimpleName();
+      return "Random-Route-Planner";
     }
   }
 }

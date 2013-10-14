@@ -102,6 +102,7 @@ public class CommTest implements TickListener {
 
     public TestConfiguration(CommunicationModelCreator cmc,
         CommunicatorCreator cc) {
+      super(0L);
       commModel = cmc.create();
       commCr = cc;
       communicators = newArrayList();
@@ -121,7 +122,7 @@ public class CommTest implements TickListener {
           communicators.add(comm);
           assertTrue("communicator should be registered", sim.register(comm));
           return sim.register(new Truck(event.vehicleDTO,
-              new RandomRoutePlanner(123), comm));
+              new RandomRoutePlanner(randomSeed), comm));
         }
       };
     }

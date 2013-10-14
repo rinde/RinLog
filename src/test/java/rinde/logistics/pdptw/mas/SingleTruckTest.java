@@ -14,8 +14,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.apache.commons.math3.random.MersenneTwister;
-import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.After;
 import org.junit.Test;
 
@@ -43,10 +41,10 @@ import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
-import rinde.sim.pdptw.experiment.MASConfigurator;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
+import rinde.sim.util.SupplierRng;
 import rinde.sim.util.TimeWindow;
 import rinde.sim.util.fsm.AbstractState;
 import rinde.sim.util.fsm.State;
@@ -74,8 +72,7 @@ public class SingleTruckTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
 
-    prob = ExperimentTest.init(scen, new TestRandomRandom().configure(123),
-        false);
+    prob = ExperimentTest.init(scen, new TestRandomRandom().get(123), false);
     simulator = prob.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -230,12 +227,10 @@ public class SingleTruckTest {
 
   }
 
-  public static class TestRandomRandom implements MASConfigurator {
+  public static class TestRandomRandom implements SupplierRng<MASConfiguration> {
     @Override
-    public MASConfiguration configure(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-
-      return new DefaultMASConfiguration() {
+    public MASConfiguration get(long seed) {
+      return new DefaultMASConfiguration(seed) {
         @Override
         public ImmutableList<? extends Model<?>> getModels() {
           return ImmutableList.of(new AuctionCommModel());

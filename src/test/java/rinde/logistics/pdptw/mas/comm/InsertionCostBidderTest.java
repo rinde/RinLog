@@ -61,7 +61,7 @@ public class InsertionCostBidderTest {
    */
   @Test
   public void testPlusTwoInsertions() {
-    final List<ImmutableList<String>> strings = InsertionCostBidder
+    List<ImmutableList<String>> strings = InsertionCostBidder
         .plusTwoInsertions(ImmutableList.of(A, B, C), Z, 0);
     assertEquals(10, strings.size());
     assertEquals(asList(Z, Z, A, B, C), strings.get(0));
@@ -79,5 +79,10 @@ public class InsertionCostBidderTest {
     assertEquals(asList(A, B, C, Z, Z), strings.get(9));
 
     assertEquals(strings.size(), newHashSet(strings).size());
+
+    strings = InsertionCostBidder.plusTwoInsertions(
+        ImmutableList.<String> of(), Z, 0);
+    assertEquals(1, strings.size());
+    assertEquals(asList(Z, Z), strings.get(0));
   }
 }

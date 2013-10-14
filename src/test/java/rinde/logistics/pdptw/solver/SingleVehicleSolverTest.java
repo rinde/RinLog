@@ -215,6 +215,7 @@ public class SingleVehicleSolverTest {
 
     public TestConfigurator(SingleVehicleArraysSolver solver,
         Unit<Duration> timeUnit) {
+      super(123L);
       this.solver = solver;
       this.timeUnit = timeUnit;
       debuggers = newArrayList();
@@ -225,7 +226,7 @@ public class SingleVehicleSolverTest {
       return new Creator<AddVehicleEvent>() {
         @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
-          final Communicator c = new RandomBidder(123);
+          final Communicator c = new RandomBidder(randomSeed);
           sim.register(c);
 
           final SVASDebugger sd = ArraysSolverDebugger.wrap(
