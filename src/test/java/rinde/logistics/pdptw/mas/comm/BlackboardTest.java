@@ -6,6 +6,7 @@ package rinde.logistics.pdptw.mas.comm;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType.CHANGE;
 
@@ -69,7 +70,23 @@ public class BlackboardTest {
       assertEquals(asList(CHANGE, CHANGE), listeners.get(i)
           .getEventTypeHistory());
     }
+  }
 
+  /**
+   * Test the check for double claims.
+   */
+  @Test
+  public void claimFail() {
+    final DefaultParcel p = create();
+    model.receiveParcel(p, 0);
+    users.get(0).claim(p);
+    boolean fail = false;
+    try {
+      users.get(0).claim(p);
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    assertTrue(fail);
   }
 
   DefaultParcel create() {

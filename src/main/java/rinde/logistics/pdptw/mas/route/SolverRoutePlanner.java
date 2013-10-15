@@ -15,6 +15,8 @@ import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -90,5 +92,20 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   @Override
   protected void nextImpl(long time) {
     route.poll();
+  }
+
+  public static SupplierRng<SolverRoutePlanner> supplier(
+      final SupplierRng<? extends Solver> solverSupplier) {
+    return new DefaultSupplierRng<SolverRoutePlanner>() {
+      @Override
+      public SolverRoutePlanner get(long seed) {
+        return new SolverRoutePlanner(solverSupplier.get(seed));
+      }
+
+      @Override
+      public String toString() {
+        return super.toString() + solverSupplier.toString();
+      }
+    };
   }
 }

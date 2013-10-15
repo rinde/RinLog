@@ -10,6 +10,8 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Set;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 /**
  * This is an implementation of a blackboard communication model. It allows
@@ -24,7 +26,7 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   private final Set<DefaultParcel> unclaimedParcels;
 
   /**
-   * New empty blackboard comm model.
+   * New empty blackboard communication model.
    */
   public BlackboardCommModel() {
     unclaimedParcels = newLinkedHashSet();
@@ -37,7 +39,8 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
    * @param p The parcel that is claimed.
    */
   public void claim(BlackboardUser claimer, DefaultParcel p) {
-    checkArgument(unclaimedParcels.contains(p));
+    checkArgument(unclaimedParcels.contains(p), "Parcel %s must be unclaimed.",
+        p);
     unclaimedParcels.remove(p);
     for (final BlackboardUser bu : communicators) {
       if (bu != claimer) {
@@ -69,8 +72,12 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
     return true;
   }
 
-  @Override
-  public Class<BlackboardUser> getSupportedType() {
-    return BlackboardUser.class;
+  public static SupplierRng<BlackboardCommModel> supplier() {
+    return new DefaultSupplierRng<BlackboardCommModel>() {
+      @Override
+      public BlackboardCommModel get(long seed) {
+        return new BlackboardCommModel();
+      }
+    };
   }
 }

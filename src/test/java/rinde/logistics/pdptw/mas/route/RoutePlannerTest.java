@@ -121,7 +121,7 @@ public class RoutePlannerTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events);
 
-    problem = ExperimentTest.init(scen, new TestConfiguration(123), false);
+    problem = ExperimentTest.init(scen, new TestConfiguration(), 123, false);
     simulator = problem.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -283,9 +283,6 @@ public class RoutePlannerTest {
   }
 
   class TestConfiguration extends DefaultMASConfiguration {
-    protected TestConfiguration(long seed) {
-      super(seed);
-    }
 
     @Override
     public Creator<AddVehicleEvent> getVehicleCreator() {

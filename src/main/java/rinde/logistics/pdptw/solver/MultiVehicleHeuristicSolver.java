@@ -9,13 +9,19 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.measure.unit.SI;
 
+import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
+import rinde.sim.pdptw.central.Solver;
+import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
 import rinde.sim.pdptw.central.arrays.ArraysSolvers;
 import rinde.sim.pdptw.central.arrays.MultiVehicleArraysSolver;
+import rinde.sim.pdptw.central.arrays.MultiVehicleSolverAdapter;
 import rinde.sim.pdptw.central.arrays.SolutionObject;
+import rinde.sim.util.SupplierRng;
 
 import com.google.common.primitives.Ints;
 
@@ -643,5 +649,56 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
       }
     }
     return assignment;
+  }
+
+  public static SupplierRng<Solver> supplier(int pListLength,
+      int pMaxNrOfNonImprovements) {
+    return new Supplier(pListLength, pMaxNrOfNonImprovements);
+  }
+
+  public static SupplierRng<Solver> supplier(int pListLength,
+      int pMaxNrOfNonImprovements, boolean pDebug, boolean pStrictMode) {
+    return new Supplier(pListLength, pMaxNrOfNonImprovements, pDebug,
+        pStrictMode);
+  }
+
+  private static class Supplier implements SupplierRng<Solver> {
+
+    private final int listLength;
+    private final int maxNrOfNonImprovements;
+    private final boolean debug;
+    private final boolean strictMode;
+
+    /**
+     * Create a new instance with the specified list length and maximum number
+     * of non-improvements.
+     * @param pListLength see {@link MultiVehicleHeuristicSolver}.
+     * @param pMaxNrOfNonImprovements see {@link MultiVehicleHeuristicSolver}.
+     */
+    Supplier(int pListLength, int pMaxNrOfNonImprovements) {
+      this(pListLength, pMaxNrOfNonImprovements, false, false);
+    }
+
+    Supplier(int pListLength, int pMaxNrOfNonImprovements, boolean pDebug,
+        boolean pStrictMode) {
+      listLength = pListLength;
+      maxNrOfNonImprovements = pMaxNrOfNonImprovements;
+      debug = pDebug;
+      strictMode = pStrictMode;
+    }
+
+    @Override
+    public Solver get(long seed) {
+      return SolverValidator.wrap(new MultiVehicleSolverAdapter(
+          ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
+              new MersenneTwister(seed), listLength, maxNrOfNonImprovements,
+              debug, strictMode)), SI.SECOND));
+    }
+
+    @Override
+    public String toString() {
+      return new StringBuilder("Heuristic-").append(listLength).append("-")
+          .append(maxNrOfNonImprovements).toString();
+    }
   }
 }

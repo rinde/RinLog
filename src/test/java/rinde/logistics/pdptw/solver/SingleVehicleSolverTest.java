@@ -47,6 +47,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
+import rinde.sim.util.SupplierRng;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.collect.ImmutableList;
@@ -91,7 +92,7 @@ public class SingleVehicleSolverTest {
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
         new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
@@ -131,7 +132,7 @@ public class SingleVehicleSolverTest {
     }
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
         new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
@@ -178,7 +179,7 @@ public class SingleVehicleSolverTest {
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc,
+    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
         new Gendreau06ObjectiveFunction(), false);
     assertEquals(1, tc.debuggers.size());
 
@@ -215,7 +216,6 @@ public class SingleVehicleSolverTest {
 
     public TestConfigurator(SingleVehicleArraysSolver solver,
         Unit<Duration> timeUnit) {
-      super(123L);
       this.solver = solver;
       this.timeUnit = timeUnit;
       debuggers = newArrayList();
@@ -226,7 +226,7 @@ public class SingleVehicleSolverTest {
       return new Creator<AddVehicleEvent>() {
         @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
-          final Communicator c = new RandomBidder(randomSeed);
+          final Communicator c = new RandomBidder(123);
           sim.register(c);
 
           final SVASDebugger sd = ArraysSolverDebugger.wrap(
@@ -240,8 +240,8 @@ public class SingleVehicleSolverTest {
     }
 
     @Override
-    public ImmutableList<? extends Model<?>> getModels() {
-      return ImmutableList.of(new AuctionCommModel());
+    public ImmutableList<? extends SupplierRng<? extends Model<?>>> getModels() {
+      return ImmutableList.of(AuctionCommModel.supplier());
     }
   }
 

@@ -8,6 +8,8 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.Iterator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 /**
  * A communication model that supports auctions.
@@ -42,8 +44,12 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
     bestBidder.receiveParcel(p);
   }
 
-  @Override
-  public Class<Bidder> getSupportedType() {
-    return Bidder.class;
+  public static SupplierRng<AuctionCommModel> supplier() {
+    return new DefaultSupplierRng<AuctionCommModel>() {
+      @Override
+      public AuctionCommModel get(long seed) {
+        return new AuctionCommModel();
+      }
+    };
   }
 }

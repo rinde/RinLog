@@ -17,6 +17,8 @@ import rinde.sim.pdptw.central.Solvers.StateContext;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -121,5 +123,15 @@ public class InsertionCostBidder extends AbstractBidder implements
       solverHandle = Optional.of(Solvers.singleVehicleSolver(null,
           roadModel.get(), pdpModel.get(), simulator.get(), vehicle.get()));
     }
+  }
+
+  public static SupplierRng<InsertionCostBidder> supplier(
+      final ObjectiveFunction objFunc) {
+    return new DefaultSupplierRng<InsertionCostBidder>() {
+      @Override
+      public InsertionCostBidder get(long seed) {
+        return new InsertionCostBidder(objFunc);
+      }
+    };
   }
 }

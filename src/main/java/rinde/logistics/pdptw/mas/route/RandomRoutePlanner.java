@@ -16,6 +16,8 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
 
@@ -73,4 +75,12 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
     return Optional.fromNullable(assignedParcels.peek());
   }
 
+  public static SupplierRng<RandomRoutePlanner> supplier() {
+    return new DefaultSupplierRng<RandomRoutePlanner>() {
+      @Override
+      public RandomRoutePlanner get(long seed) {
+        return new RandomRoutePlanner(seed);
+      }
+    };
+  }
 }

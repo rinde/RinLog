@@ -9,7 +9,7 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.List;
 
-import rinde.sim.core.model.Model;
+import rinde.sim.core.model.AbstractModel;
 import rinde.sim.core.model.ModelProvider;
 import rinde.sim.core.model.ModelReceiver;
 import rinde.sim.core.model.pdp.PDPModel;
@@ -27,8 +27,8 @@ import rinde.sim.pdptw.common.DefaultParcel;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  * @param <T> The type of {@link Communicator} this model expects.
  */
-public abstract class AbstractCommModel<T extends Communicator> implements
-    ModelReceiver, Model<T> {
+public abstract class AbstractCommModel<T extends Communicator> extends
+    AbstractModel<T> implements ModelReceiver {
   /**
    * The list of registered communicators.
    */

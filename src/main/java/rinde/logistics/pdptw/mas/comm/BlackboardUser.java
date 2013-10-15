@@ -12,6 +12,8 @@ import rinde.sim.event.EventDispatcher;
 import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
 
@@ -74,5 +76,14 @@ public class BlackboardUser implements Communicator {
   // not needed
   @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {}
+
+  public static SupplierRng<BlackboardUser> supplier() {
+    return new DefaultSupplierRng<BlackboardUser>() {
+      @Override
+      public BlackboardUser get(long seed) {
+        return new BlackboardUser();
+      }
+    };
+  }
 
 }

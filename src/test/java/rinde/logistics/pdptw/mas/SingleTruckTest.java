@@ -31,14 +31,11 @@ import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.core.model.pdp.Vehicle;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.AddParcelEvent;
-import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
-import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.common.RouteFollowingVehicle;
 import rinde.sim.pdptw.common.VehicleDTO;
-import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
@@ -72,7 +69,11 @@ public class SingleTruckTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
 
-    prob = ExperimentTest.init(scen, new TestRandomRandom().get(123), false);
+    final MASConfiguration randomRandom = new TestTruckConfiguration(
+        RandomRoutePlanner.supplier(), RandomBidder.supplier(),
+        ImmutableList.of(AuctionCommModel.supplier()));
+
+    prob = ExperimentTest.init(scen, randomRandom, 123, false);
     simulator = prob.getSimulator();
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -194,6 +195,20 @@ public class SingleTruckTest {
     simulator.start();
   }
 
+  public static class TestTruckConfiguration extends TruckConfiguration {
+    public TestTruckConfiguration(
+        SupplierRng<? extends RoutePlanner> routePlannerSupplier,
+        SupplierRng<? extends Communicator> communicatorSupplier,
+        ImmutableList<? extends SupplierRng<? extends Model<?>>> modelSuppliers) {
+      super(routePlannerSupplier, communicatorSupplier, modelSuppliers);
+    }
+
+    @Override
+    protected Truck createTruck(VehicleDTO dto, RoutePlanner rp, Communicator c) {
+      return new TestTruck(dto, rp, c);
+    }
+  }
+
   public static class TestTruck extends Truck {
 
     public TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
@@ -223,32 +238,6 @@ public class SingleTruckTest {
     @Override
     public Collection<DefaultParcel> getRoute() {
       return super.getRoute();
-    }
-
-  }
-
-  public static class TestRandomRandom implements SupplierRng<MASConfiguration> {
-    @Override
-    public MASConfiguration get(long seed) {
-      return new DefaultMASConfiguration(seed) {
-        @Override
-        public ImmutableList<? extends Model<?>> getModels() {
-          return ImmutableList.of(new AuctionCommModel());
-        }
-
-        @Override
-        public Creator<AddVehicleEvent> getVehicleCreator() {
-          return new Creator<AddVehicleEvent>() {
-            @Override
-            public boolean create(Simulator sim, AddVehicleEvent event) {
-              final Communicator c = new RandomBidder(rng.nextLong());
-              sim.register(c);
-              return sim.register(new TestTruck(event.vehicleDTO,
-                  new RandomRoutePlanner(rng.nextLong()), c));
-            }
-          };
-        }
-      };
     }
   }
 }

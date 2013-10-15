@@ -7,6 +7,8 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 /**
  * A {@link Bidder} implementation that creates random bids.
@@ -27,5 +29,14 @@ public class RandomBidder extends AbstractBidder {
   @Override
   public double getBidFor(DefaultParcel p, long time) {
     return rng.nextDouble();
+  }
+
+  public static SupplierRng<RandomBidder> supplier() {
+    return new DefaultSupplierRng<RandomBidder>() {
+      @Override
+      public RandomBidder get(long seed) {
+        return new RandomBidder(seed);
+      }
+    };
   }
 }
