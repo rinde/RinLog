@@ -195,8 +195,8 @@ public class SingleTruckTest {
     simulator.start();
   }
 
-  public static class TestTruckConfiguration extends TruckConfiguration {
-    public TestTruckConfiguration(
+  static class TestTruckConfiguration extends TruckConfiguration {
+    TestTruckConfiguration(
         SupplierRng<? extends RoutePlanner> routePlannerSupplier,
         SupplierRng<? extends Communicator> communicatorSupplier,
         ImmutableList<? extends SupplierRng<? extends Model<?>>> modelSuppliers) {
@@ -209,9 +209,9 @@ public class SingleTruckTest {
     }
   }
 
-  public static class TestTruck extends Truck {
+  static class TestTruck extends Truck {
 
-    public TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
+    TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
       super(pDto, rp, c);
     }
 

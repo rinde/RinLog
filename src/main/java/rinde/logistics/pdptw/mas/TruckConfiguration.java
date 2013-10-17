@@ -13,11 +13,33 @@ import rinde.sim.util.SupplierRng;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * A {@link rinde.sim.pdptw.experiment.MASConfiguration} that configures a
+ * simulation to use a {@link Truck} instance as vehicle.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class TruckConfiguration extends DefaultMASConfiguration {
+  /**
+   * Supplier for {@link RoutePlanner} instances.
+   */
   protected final SupplierRng<? extends RoutePlanner> rpSupplier;
+
+  /**
+   * Supplier for {@link Communicator} instances.
+   */
   protected final SupplierRng<? extends Communicator> cSupplier;
+
+  /**
+   * Suppliers for {@link Model}s.
+   */
   protected final ImmutableList<? extends SupplierRng<? extends Model<?>>> mSuppliers;
 
+  /**
+   * Instantiate a new configuration.
+   * @param routePlannerSupplier {@link #rpSupplier}.
+   * @param communicatorSupplier {@link #cSupplier}.
+   * @param modelSuppliers {@link #mSuppliers}.
+   */
   public TruckConfiguration(
       SupplierRng<? extends RoutePlanner> routePlannerSupplier,
       SupplierRng<? extends Communicator> communicatorSupplier,
