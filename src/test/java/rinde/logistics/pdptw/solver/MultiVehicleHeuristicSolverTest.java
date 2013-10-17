@@ -46,8 +46,8 @@ public class MultiVehicleHeuristicSolverTest {
         .build(new Gendreau06ObjectiveFunction())
         .addConfiguration(
         // not good settings, but fast!
-            Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(50,
-                100, false, true)))
+            Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(
+                50, 100, false, true)))
         .addScenario(
             Gendreau06Parser.parse(
                 "files/scenarios/gendreau06/req_rapide_1_240_24", 10))
@@ -91,4 +91,5 @@ public class MultiVehicleHeuristicSolverTest {
       assertEquals(arrObjVal, objVal, 0.01);
     }
   }
+
 }

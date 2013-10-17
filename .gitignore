@@ -1,3 +1,4 @@
 /target
 /files/results/*
 org.sonar.ide.eclipse.core.prefs
+*.log
