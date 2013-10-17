@@ -66,10 +66,10 @@ public class TruckConfiguration extends DefaultMASConfiguration {
   /**
    * Factory method that can be overridden by subclasses that want to use their
    * own {@link Truck} implementation.
-   * @param dto
-   * @param rp
-   * @param c
-   * @return
+   * @param dto The {@link VehicleDTO} containing the vehicle information.
+   * @param rp The {@link RoutePlanner} to use in the truck.
+   * @param c The {@link Communicator} to use in the truck.
+   * @return The newly created truck.
    */
   protected Truck createTruck(VehicleDTO dto, RoutePlanner rp, Communicator c) {
     return new Truck(dto, rp, c);
