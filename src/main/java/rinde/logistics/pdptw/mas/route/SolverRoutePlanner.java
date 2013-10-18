@@ -104,7 +104,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
       @Override
       public String toString() {
-        return super.toString() + solverSupplier.toString();
+        return super.toString() + "-" + solverSupplier.toString();
       }
     };
   }

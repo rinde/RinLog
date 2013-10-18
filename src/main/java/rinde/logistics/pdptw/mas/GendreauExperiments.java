@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
+import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
+import rinde.logistics.pdptw.mas.comm.SolverBidder;
+import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
@@ -20,6 +23,7 @@ import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
@@ -32,7 +36,7 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 2;
+  private static final int THREADS = 16;
   private static final int REPETITIONS = 10;
   private static final long SEED = 123L;
 
@@ -70,9 +74,12 @@ public final class GendreauExperiments {
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
 
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
-        SCENARIOS_PATH, true, GendreauProblemClass.values());
-    final ExperimentResults onlineResults = Experiment.build(objFunc)
-        .withRandomSeed(SEED).repeat(REPETITIONS).withThreads(THREADS)
+        SCENARIOS_PATH, true, GendreauProblemClass.SHORT_LOW_FREQ);
+    final ExperimentResults onlineResults = Experiment
+        .build(objFunc)
+        .withRandomSeed(SEED)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
 
         // .showGui()
@@ -96,11 +103,26 @@ public final class GendreauExperiments {
         // RandomBidder.supplier(), ImmutableList.of(AuctionCommModel
         // .supplier())))
         //
-        // .addConfiguration(
-        // new TruckConfiguration(SolverRoutePlanner
-        // .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
-        // InsertionCostBidder.supplier(objFunc), ImmutableList
-        // .of(AuctionCommModel.supplier())))
+        .addConfiguration(
+            new TruckConfiguration(SolverRoutePlanner
+                .supplier(MultiVehicleHeuristicSolver.supplier(50, 1000)),
+                SolverBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(50, 100)),
+                ImmutableList.of(AuctionCommModel.supplier())))
+
+        .addConfiguration(
+            new TruckConfiguration(SolverRoutePlanner
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+                SolverBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(50, 100)),
+                ImmutableList.of(AuctionCommModel.supplier())))
+
+        .addConfiguration(
+            new TruckConfiguration(SolverRoutePlanner
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+                SolverBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(20, 5000)),
+                ImmutableList.of(AuctionCommModel.supplier())))
 
         /*
          * BLACKBOARD
@@ -115,9 +137,9 @@ public final class GendreauExperiments {
          * CENTRAL
          */
 
-        .addConfiguration(
-            Central.solverConfiguration(
-                MultiVehicleHeuristicSolver.supplier(50, 100), "-Online"))
+        // .addConfiguration(
+        // Central.solverConfiguration(
+        // MultiVehicleHeuristicSolver.supplier(5000, 100000), "-Online"))
 
         .perform();
 
