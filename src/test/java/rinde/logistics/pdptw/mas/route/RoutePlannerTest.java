@@ -113,6 +113,9 @@ public class RoutePlannerTest {
     }
   }
 
+  /**
+   * Tests whether a complete route is correctly followed.
+   */
   @Test
   public void testRouteCompleteness() {
     assertFalse(routePlanner.prev().isPresent());

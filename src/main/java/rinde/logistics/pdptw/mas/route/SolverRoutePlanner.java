@@ -98,6 +98,13 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     route.poll();
   }
 
+  /**
+   * @param solverSupplier A {@link SupplierRng} that supplies the
+   *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
+   *          .
+   * @return A {@link SupplierRng} that supplies {@link SolverRoutePlanner}
+   *         instances.
+   */
   public static SupplierRng<SolverRoutePlanner> supplier(
       final SupplierRng<? extends Solver> solverSupplier) {
     return new DefaultSupplierRng<SolverRoutePlanner>() {

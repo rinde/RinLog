@@ -23,6 +23,10 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * A {@link Bidder} that uses a {@link Solver} for computing the bid value.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
   private final ObjectiveFunction objectiveFunction;
@@ -30,6 +34,13 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
   private Optional<SVSolverHandle> solverHandle;
   private Optional<SimulatorAPI> simulator;
 
+  /**
+   * Creates a new bidder using the specified solver and objective function.
+   * @param objFunc The {@link ObjectiveFunction} to use to calculate the bid
+   *          value.
+   * @param s The solver used to compute the (near) optimal schedule when
+   *          calculating a bid.
+   */
   public SolverBidder(ObjectiveFunction objFunc, Solver s) {
     objectiveFunction = objFunc;
     solver = s;

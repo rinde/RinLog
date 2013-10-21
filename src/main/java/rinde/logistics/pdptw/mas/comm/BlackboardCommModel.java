@@ -72,6 +72,10 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
     return true;
   }
 
+  /**
+   * @return A {@link SupplierRng} that supplies {@link BlackboardCommModel}
+   *         instances.
+   */
   public static SupplierRng<BlackboardCommModel> supplier() {
     return new DefaultSupplierRng<BlackboardCommModel>() {
       @Override

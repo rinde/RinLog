@@ -77,6 +77,10 @@ public class BlackboardUser implements Communicator {
   @Override
   public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {}
 
+  /**
+   * @return A {@link SupplierRng} that supplies {@link BlackboardUser}
+   *         instances.
+   */
   public static SupplierRng<BlackboardUser> supplier() {
     return new DefaultSupplierRng<BlackboardUser>() {
       @Override
@@ -85,5 +89,4 @@ public class BlackboardUser implements Communicator {
       }
     };
   }
-
 }

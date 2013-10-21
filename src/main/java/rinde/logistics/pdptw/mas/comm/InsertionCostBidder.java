@@ -24,8 +24,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
+ * A bidder implementation that creates bids based on an 'insertion cost'
+ * heuristic. This heuristic simply generates all possible insertions for the
+ * new parcel in the current schedule. For each parcel the cost is calculated
+ * and the cheapest insertion is selected. The bid value returned by
+ * {@link #getBidFor(DefaultParcel, long)} is
+ * <code>cheapestInsertion - baseline</code>, where <code>baseline</code> is the
+ * cost of the current plan without the new parcel.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
- * 
  */
 public class InsertionCostBidder extends AbstractBidder implements
     SimulatorUser {
@@ -35,7 +41,7 @@ public class InsertionCostBidder extends AbstractBidder implements
   private Optional<SimulatorAPI> simulator;
 
   /**
-   * @param sol
+   * @param objFunc The objective function used to calculate the bid value.
    */
   public InsertionCostBidder(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
@@ -62,18 +68,18 @@ public class InsertionCostBidder extends AbstractBidder implements
     final List<ImmutableList<ParcelDTO>> routes = plusTwoInsertions(dtoRoute,
         p.dto, startIndex);
 
-    double lowestCost = Double.POSITIVE_INFINITY;
+    double cheapestInsertion = Double.POSITIVE_INFINITY;
     for (int i = 0; i < routes.size(); i++) {
       if (!(i == 0 && isCommitted)) {
         final ImmutableList<ParcelDTO> r = routes.get(i);
         final double cost = objectiveFunction.computeCost(Solvers.computeStats(
             context.state, ImmutableList.of(r)));
-        if (cost < lowestCost) {
-          lowestCost = cost;
+        if (cost < cheapestInsertion) {
+          cheapestInsertion = cost;
         }
       }
     }
-    return lowestCost - baseline;
+    return cheapestInsertion - baseline;
   }
 
   static <T> ImmutableList<ImmutableList<T>> plusOneInsertions(
@@ -117,6 +123,7 @@ public class InsertionCostBidder extends AbstractBidder implements
     initSolver();
   }
 
+  @SuppressWarnings("null")
   private void initSolver() {
     if (simulator.isPresent() && roadModel.isPresent()
         && !solverHandle.isPresent()) {
@@ -125,6 +132,11 @@ public class InsertionCostBidder extends AbstractBidder implements
     }
   }
 
+  /**
+   * @param objFunc The objective function used to calculate the bid value.
+   * @return A {@link SupplierRng} that supplies {@link InsertionCostBidder}
+   *         instances.
+   */
   public static SupplierRng<InsertionCostBidder> supplier(
       final ObjectiveFunction objFunc) {
     return new DefaultSupplierRng<InsertionCostBidder>() {

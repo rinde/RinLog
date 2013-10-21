@@ -31,6 +31,9 @@ public class RandomBidder extends AbstractBidder {
     return rng.nextDouble();
   }
 
+  /**
+   * @return A {@link SupplierRng} that supplies {@link RandomBidder} instances.
+   */
   public static SupplierRng<RandomBidder> supplier() {
     return new DefaultSupplierRng<RandomBidder>() {
       @Override

@@ -44,6 +44,10 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
     bestBidder.receiveParcel(p);
   }
 
+  /**
+   * @return A {@link SupplierRng} that supplies {@link AuctionCommModel}
+   *         instances.
+   */
   public static SupplierRng<AuctionCommModel> supplier() {
     return new DefaultSupplierRng<AuctionCommModel>() {
       @Override

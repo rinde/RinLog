@@ -4,7 +4,6 @@
 package rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.List;
@@ -18,6 +17,8 @@ import rinde.sim.core.model.pdp.PDPModelEvent;
 import rinde.sim.event.Event;
 import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
+
+import com.google.common.base.Optional;
 
 /**
  * This class provides a common base for classes that implement a communication
@@ -43,8 +44,8 @@ public abstract class AbstractCommModel<T extends Communicator> extends
 
   @Override
   public void registerModelProvider(ModelProvider mp) {
-    final PDPModel pm = mp.getModel(PDPModel.class);
-    checkState(pm != null);
+    final PDPModel pm = Optional.fromNullable(mp.getModel(PDPModel.class))
+        .get();
     pm.getEventAPI().addListener(new Listener() {
       @Override
       public void handleEvent(Event e) {
