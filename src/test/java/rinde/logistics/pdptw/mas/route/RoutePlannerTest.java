@@ -15,8 +15,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.measure.unit.NonSI;
-
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Before;
@@ -25,7 +23,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import rinde.logistics.pdptw.solver.HeuristicSolver;
+import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.TimeLapseFactory;
@@ -34,8 +32,7 @@ import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.core.model.pdp.Vehicle;
 import rinde.sim.core.model.road.RoadModel;
-import rinde.sim.pdptw.central.arrays.ArraysSolverValidator;
-import rinde.sim.pdptw.central.arrays.SingleVehicleSolverAdapter;
+import rinde.sim.pdptw.central.arrays.RandomMVArraysSolver;
 import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
@@ -49,6 +46,7 @@ import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
+import rinde.sim.util.SupplierRng;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +57,7 @@ import com.google.common.collect.ImmutableSet;
  */
 @RunWith(Parameterized.class)
 public class RoutePlannerTest {
-  protected final RPBuilder rpBuilder;
+  protected final SupplierRng<RoutePlanner> supplier;
   protected RoutePlanner routePlanner;
   protected DynamicPDPTWProblem problem;
   protected RoadModel roadModel;
@@ -67,50 +65,27 @@ public class RoutePlannerTest {
   protected Simulator simulator;
   protected DefaultVehicle truck;
 
-  public RoutePlannerTest(RPBuilder rp) {
-    rpBuilder = rp;
+  public RoutePlannerTest(SupplierRng<RoutePlanner> rp) {
+    supplier = rp;
   }
 
   @Parameters
   public static Collection<Object[]> configs() {
-    return Arrays.asList(new Object[][] {
-    /* */
-    { new RPBuilder() {
-      @Override
-      public RoutePlanner build() {
-        return new RandomRoutePlanner(123);
-      }
-    } }, /* */
-    { new RPBuilder() {
-      @Override
-      public RoutePlanner build() {
-        return new SolverRoutePlanner(new SingleVehicleSolverAdapter(
-            ArraysSolverValidator.wrap(new HeuristicSolver(new MersenneTwister(
-                123))), NonSI.MINUTE));
-      }
-    } }, /* */
-    { new RPBuilder() {
-      @Override
-      public RoutePlanner build() {
-        return new TestRoutePlanner();
-      }
-    } } });
-  }
-
-  protected interface RPBuilder {
-    RoutePlanner build();
+    return Arrays
+        .asList(new Object[][] {
+            { RandomRoutePlanner.supplier() },
+            { SolverRoutePlanner.supplier(MultiVehicleHeuristicSolver.supplier(
+                50, 100)) },
+            { SolverRoutePlanner.supplier(RandomMVArraysSolver.solverSupplier()) },
+            { GotoClosestRoutePlanner.supplier() },
+            { TestRoutePlanner.supplier() } });
   }
 
   @Before
   public void setUp() {
-    routePlanner = rpBuilder.build();
-
-    int numOnMap = 10;
-    int numInCargo = 10;
-    if (routePlanner instanceof SolverRoutePlanner) {
-      numOnMap = 2;
-      numInCargo = 4;
-    }
+    routePlanner = supplier.get(123);
+    final int numOnMap = 10;
+    final int numInCargo = 10;
 
     final RandomGenerator rng = new MersenneTwister(123);
     final List<TimedEvent> events = newLinkedList();
@@ -142,8 +117,12 @@ public class RoutePlannerTest {
   public void testRouteCompleteness() {
     assertFalse(routePlanner.prev().isPresent());
     assertFalse(routePlanner.current().isPresent());
+    assertFalse(routePlanner.currentRoute().isPresent());
     assertFalse(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
+    if (routePlanner instanceof AbstractRoutePlanner) {
+      assertFalse(((AbstractRoutePlanner) routePlanner).isUpdated());
+    }
 
     routePlanner.init(roadModel, pdpModel, truck);
 
@@ -151,6 +130,9 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
+    if (routePlanner instanceof AbstractRoutePlanner) {
+      assertFalse(((AbstractRoutePlanner) routePlanner).isUpdated());
+    }
 
     final Collection<DefaultParcel> onMap = roadModel
         .getObjectsOfType(DefaultParcel.class);
@@ -160,8 +142,13 @@ public class RoutePlannerTest {
 
     assertFalse(routePlanner.prev().isPresent());
     assertTrue(routePlanner.current().isPresent());
+    assertEquals(routePlanner.current().get(), routePlanner.currentRoute()
+        .get().get(0));
     assertTrue(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
+    if (routePlanner instanceof AbstractRoutePlanner) {
+      assertTrue(((AbstractRoutePlanner) routePlanner).isUpdated());
+    }
 
     while (routePlanner.hasNext()) {
       visited.add(routePlanner.current().get());
@@ -248,12 +235,40 @@ public class RoutePlannerTest {
     routePlanner.next(0);
   }
 
+  /**
+   * Tests update and init with empty truck and no parcels on map.
+   */
   @Test
   public void testEmpty() {
-    routePlanner.init(roadModel, pdpModel, truck);
+    final TestTruck emptyTruck = new TestTruck(new VehicleDTO(new Point(0, 0),
+        10, 10, new TimeWindow(0, 1)));
+    simulator.register(emptyTruck);
+
+    routePlanner.init(roadModel, pdpModel, emptyTruck);
 
     final Collection<DefaultParcel> s1 = ImmutableSet.of();
     routePlanner.update(s1, 0);
+    assertFalse(routePlanner.current().isPresent());
+    assertFalse(routePlanner.currentRoute().isPresent());
+    assertFalse(routePlanner.hasNext());
+    assertTrue(routePlanner.getHistory().isEmpty());
+    assertFalse(routePlanner.prev().isPresent());
+
+    final Collection<DefaultParcel> onMap = roadModel
+        .getObjectsOfType(DefaultParcel.class);
+    routePlanner.update(onMap, 0);
+    assertTrue(routePlanner.current().isPresent());
+    assertTrue(routePlanner.currentRoute().isPresent());
+    assertTrue(routePlanner.hasNext());
+    assertTrue(routePlanner.getHistory().isEmpty());
+    assertFalse(routePlanner.prev().isPresent());
+
+    routePlanner.update(s1, 0);
+    assertFalse(routePlanner.current().isPresent());
+    assertFalse(routePlanner.currentRoute().isPresent());
+    assertFalse(routePlanner.hasNext());
+    assertTrue(routePlanner.getHistory().isEmpty());
+    assertFalse(routePlanner.prev().isPresent());
   }
 
   static Parcel createParcel(RandomGenerator rng) {

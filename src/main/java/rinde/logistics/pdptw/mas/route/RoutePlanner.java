@@ -89,6 +89,14 @@ public interface RoutePlanner {
    */
   Optional<DefaultParcel> current();
 
+  /**
+   * Should return the route that is currently planned by this
+   * {@link RoutePlanner}. This route is not necessarily complete, i.e. it may
+   * contain only a subset of the assigned parcels. If the route is present the
+   * first {@link DefaultParcel} of the list must always be {@link #current()}.
+   * @return The currently planned route, returns {@link Optional#absent()} when
+   *         {@link RoutePlanner#current()} returns {@link Optional#absent()}.
+   */
   Optional<ImmutableList<DefaultParcel>> currentRoute();
 
   /**

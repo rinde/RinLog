@@ -3,13 +3,11 @@
  */
 package rinde.logistics.pdptw.mas.route;
 
-import static com.google.common.collect.Lists.newArrayListWithCapacity;
-import static com.google.common.collect.Lists.newLinkedList;
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 
 import org.apache.commons.math3.random.MersenneTwister;
@@ -20,6 +18,8 @@ import rinde.sim.util.SupplierRng;
 import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 /**
  * A {@link RoutePlanner} implementation that creates random routes.
@@ -27,7 +27,8 @@ import com.google.common.base.Optional;
  */
 public class RandomRoutePlanner extends AbstractRoutePlanner {
 
-  private Queue<DefaultParcel> assignedParcels;
+  private final Multiset<DefaultParcel> assignedParcels;
+  private Optional<DefaultParcel> current;
   private final Random rng;
 
   /**
@@ -35,46 +36,57 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
    * @param seed The random seed.
    */
   public RandomRoutePlanner(long seed) {
+    assignedParcels = HashMultiset.create();
+    current = Optional.absent();
     rng = new RandomAdaptor(new MersenneTwister(seed));
-    assignedParcels = newLinkedList();
   }
 
   @Override
-  protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
+  protected final void doUpdate(Collection<DefaultParcel> onMap, long time) {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     final Collection<DefaultParcel> inCargo = Collections.checkedCollection(
         (Collection) pdpModel.get().getContents(vehicle.get()),
         DefaultParcel.class);
-    if (onMap.isEmpty() && inCargo.isEmpty()) {
-      assignedParcels.clear();
+    assignedParcels.clear();
+    for (final DefaultParcel dp : onMap) {
+      assignedParcels.add(dp, 2);
+    }
+    assignedParcels.addAll(inCargo);
+    updateCurrent();
+  }
+
+  private void updateCurrent() {
+    if (assignedParcels.isEmpty()) {
+      current = Optional.absent();
     } else {
-      final List<DefaultParcel> ps = newArrayListWithCapacity((onMap.size() * 2)
-          + inCargo.size());
-      // Parcels on map need to be visited twice, once for pickup, once
-      // for delivery.
-      ps.addAll(onMap);
-      ps.addAll(onMap);
-      ps.addAll(inCargo);
-      Collections.shuffle(ps, rng);
-      assignedParcels = newLinkedList(ps);
+      final List<DefaultParcel> list = newArrayList(assignedParcels
+          .elementSet());
+      current = Optional.of(list.get(rng.nextInt(list.size())));
     }
   }
 
   @Override
-  public void nextImpl(long time) {
-    assignedParcels.poll();
+  public final void nextImpl(long time) {
+    if (current.isPresent()) {
+      assignedParcels.remove(current.get());
+    }
+    updateCurrent();
   }
 
   @Override
-  public boolean hasNext() {
+  public final boolean hasNext() {
     return !assignedParcels.isEmpty();
   }
 
   @Override
-  public Optional<DefaultParcel> current() {
-    return Optional.fromNullable(assignedParcels.peek());
+  public final Optional<DefaultParcel> current() {
+    return current;
   }
 
+  /**
+   * @return A {@link SupplierRng} that supplies {@link RandomRoutePlanner}
+   *         instances.
+   */
   public static SupplierRng<RandomRoutePlanner> supplier() {
     return new DefaultSupplierRng<RandomRoutePlanner>() {
       @Override

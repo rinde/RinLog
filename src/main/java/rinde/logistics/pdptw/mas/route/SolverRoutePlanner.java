@@ -49,7 +49,11 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    route = solverHandle.get().solve(onMap);
+    if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
+      route.clear();
+    } else {
+      route = solverHandle.get().solve(onMap);
+    }
   }
 
   @Override

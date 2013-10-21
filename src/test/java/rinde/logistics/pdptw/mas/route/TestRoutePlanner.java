@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.Queue;
 
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.util.SupplierRng;
+import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
 
@@ -25,10 +27,12 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
     route = newLinkedList();
   }
 
+  @Override
   public Optional<DefaultParcel> current() {
     return Optional.fromNullable(route.peek());
   }
 
+  @Override
   public boolean hasNext() {
     return !route.isEmpty();
   }
@@ -50,4 +54,12 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
     route.poll();
   }
 
+  public static SupplierRng<TestRoutePlanner> supplier() {
+    return new DefaultSupplierRng<TestRoutePlanner>() {
+      @Override
+      public TestRoutePlanner get(long seed) {
+        return new TestRoutePlanner();
+      }
+    };
+  }
 }

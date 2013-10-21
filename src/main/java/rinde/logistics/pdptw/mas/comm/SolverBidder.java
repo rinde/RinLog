@@ -2,14 +2,15 @@ package rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
-import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
+import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.Solver;
+import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
 import rinde.sim.pdptw.central.Solvers.StateContext;
@@ -40,8 +41,8 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
   public double getBidFor(DefaultParcel p, long time) {
     final Set<DefaultParcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
-    final Collection<DefaultParcel> currentRoute = ((Truck) vehicle.get())
-        .getRoute();
+    final ImmutableList<DefaultParcel> currentRoute = ImmutableList
+        .copyOf(((Truck) vehicle.get()).getRoute());
     final ImmutableList<ParcelDTO> dtoRoute = Solvers.toDtoList(currentRoute);
     final StateContext context = solverHandle.get().convert(parcels, null);
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
@@ -55,9 +56,18 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
       }
     }
 
+    // check whether the RoutePlanner produces routes compatible with the solver
+    boolean fail = false;
+    try {
+      final GlobalStateObject gso = solverHandle.get().convert(parcels,
+          currentRoute).state;
+      SolverValidator.checkRoute(gso.vehicles.get(0), 0);
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    // if the route is not compatible, don't use routes at all
     final Queue<DefaultParcel> newRoute = solverHandle.get().solve(parcels,
-        ImmutableList.copyOf(currentRoute));
-
+        fail ? null : currentRoute);
     final double newCost = objectiveFunction.computeCost(Solvers.computeStats(
         context.state, ImmutableList.of(Solvers.toDtoList(newRoute))));
 
