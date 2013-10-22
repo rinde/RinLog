@@ -89,7 +89,7 @@ public class CommTest implements TickListener {
   @Override
   public void afterTick(TimeLapse timeLapse) {}
 
-  static class CommTestModel extends AbstractModel<Communicator> {
+  protected static class CommTestModel extends AbstractModel<Communicator> {
     final List<Communicator> communicators;
 
     CommTestModel() {
@@ -107,7 +107,7 @@ public class CommTest implements TickListener {
       throw new UnsupportedOperationException();
     }
 
-    static SupplierRng<CommTestModel> supplier() {
+    public static SupplierRng<CommTestModel> supplier() {
       return new SupplierRng<CommTestModel>() {
         @Override
         public CommTestModel get(long seed) {
