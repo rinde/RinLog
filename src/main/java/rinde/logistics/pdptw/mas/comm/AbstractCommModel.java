@@ -49,7 +49,7 @@ public abstract class AbstractCommModel<T extends Communicator> extends
     pm.getEventAPI().addListener(new Listener() {
       @Override
       public void handleEvent(Event e) {
-        final PDPModelEvent event = ((PDPModelEvent) e);
+        final PDPModelEvent event = (PDPModelEvent) e;
         checkArgument(event.parcel instanceof DefaultParcel,
             "This class is only compatible with DefaultParcel and subclasses.");
         final DefaultParcel dp = (DefaultParcel) event.parcel;

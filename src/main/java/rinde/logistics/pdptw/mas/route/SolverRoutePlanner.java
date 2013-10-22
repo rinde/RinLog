@@ -12,7 +12,8 @@ import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.Solvers;
-import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
+import rinde.sim.pdptw.central.Solvers.SimulationSolver;
+import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
 import rinde.sim.util.SupplierRng;
@@ -32,7 +33,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
   private final Solver solver;
   private Queue<? extends DefaultParcel> route;
-  private Optional<SVSolverHandle> solverHandle;
+  private Optional<SimulationSolver> solverHandle;
   private Optional<SimulatorAPI> simulator;
 
   /**
@@ -52,7 +53,8 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
-      route = solverHandle.get().solve(onMap);
+      route = solverHandle.get()
+          .solve(SolveArgs.create().noCurrentRoutes().useParcels(onMap)).get(0);
     }
   }
 
@@ -64,9 +66,9 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
   private void initSolver() {
     if (!solverHandle.isPresent() && isInitialized() && simulator.isPresent()) {
-      solverHandle = Optional.of(Solvers.singleVehicleSolver(solver,
-          (PDPRoadModel) roadModel.get(), pdpModel.get(), simulator.get(),
-          vehicle.get()));
+      solverHandle = Optional.of(Solvers.solverBuilder(solver)
+          .with((PDPRoadModel) roadModel.get()).with(pdpModel.get())
+          .with(simulator.get()).with(vehicle.get()).buildSingle());
     }
   }
 

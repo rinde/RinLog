@@ -12,7 +12,8 @@ import rinde.logistics.pdptw.mas.Truck;
 import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
 import rinde.sim.pdptw.central.Solvers;
-import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
+import rinde.sim.pdptw.central.Solvers.SimulationConverter;
+import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.central.Solvers.StateContext;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
@@ -37,7 +38,7 @@ public class InsertionCostBidder extends AbstractBidder implements
     SimulatorUser {
 
   private final ObjectiveFunction objectiveFunction;
-  private Optional<SVSolverHandle> solverHandle;
+  private Optional<SimulationConverter> converter;
   private Optional<SimulatorAPI> simulator;
 
   /**
@@ -45,7 +46,7 @@ public class InsertionCostBidder extends AbstractBidder implements
    */
   public InsertionCostBidder(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
-    solverHandle = Optional.absent();
+    converter = Optional.absent();
     simulator = Optional.absent();
   }
 
@@ -55,7 +56,8 @@ public class InsertionCostBidder extends AbstractBidder implements
     parcels.add(p);
     final ImmutableList<ParcelDTO> dtoRoute = Solvers
         .toDtoList(((Truck) vehicle.get()).getRoute());
-    final StateContext context = solverHandle.get().convert(parcels, null);
+    final StateContext context = converter.get().convert(
+        SolveArgs.create().useParcels(parcels).noCurrentRoutes());
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
         context.state, ImmutableList.of(dtoRoute)));
 
@@ -123,12 +125,12 @@ public class InsertionCostBidder extends AbstractBidder implements
     initSolver();
   }
 
-  @SuppressWarnings("null")
   private void initSolver() {
     if (simulator.isPresent() && roadModel.isPresent()
-        && !solverHandle.isPresent()) {
-      solverHandle = Optional.of(Solvers.singleVehicleSolver(null,
-          roadModel.get(), pdpModel.get(), simulator.get(), vehicle.get()));
+        && !converter.isPresent()) {
+      converter = Optional.of(Solvers.converterBuilder().with(roadModel.get())
+          .with(pdpModel.get()).with(simulator.get()).with(vehicle.get())
+          .buildSingle());
     }
   }
 

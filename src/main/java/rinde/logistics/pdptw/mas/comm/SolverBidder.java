@@ -12,7 +12,8 @@ import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.Solvers;
-import rinde.sim.pdptw.central.Solvers.SVSolverHandle;
+import rinde.sim.pdptw.central.Solvers.SimulationSolver;
+import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.central.Solvers.StateContext;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
@@ -31,8 +32,11 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
   private final ObjectiveFunction objectiveFunction;
   private final Solver solver;
-  private Optional<SVSolverHandle> solverHandle;
-  private Optional<SimulatorAPI> simulator;
+  private Optional<SimulationSolver> solverHandle;
+  /**
+   * A reference to the simulator.
+   */
+  protected Optional<SimulatorAPI> simulator;
 
   /**
    * Creates a new bidder using the specified solver and objective function.
@@ -55,7 +59,8 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
     final ImmutableList<DefaultParcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
     final ImmutableList<ParcelDTO> dtoRoute = Solvers.toDtoList(currentRoute);
-    final StateContext context = solverHandle.get().convert(parcels, null);
+    final StateContext context = solverHandle.get().convert(
+        SolveArgs.create().noCurrentRoutes().useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
         context.state, ImmutableList.of(dtoRoute)));
 
@@ -68,17 +73,16 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
     }
 
     // check whether the RoutePlanner produces routes compatible with the solver
-    boolean fail = false;
+    final SolveArgs args = SolveArgs.create().useParcels(parcels)
+        .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
-      final GlobalStateObject gso = solverHandle.get().convert(parcels,
-          currentRoute).state;
+      final GlobalStateObject gso = solverHandle.get().convert(args).state;
       SolverValidator.checkRoute(gso.vehicles.get(0), 0);
     } catch (final IllegalArgumentException e) {
-      fail = true;
+      args.noCurrentRoutes();
     }
     // if the route is not compatible, don't use routes at all
-    final Queue<DefaultParcel> newRoute = solverHandle.get().solve(parcels,
-        fail ? null : currentRoute);
+    final Queue<DefaultParcel> newRoute = solverHandle.get().solve(args).get(0);
     final double newCost = objectiveFunction.computeCost(Solvers.computeStats(
         context.state, ImmutableList.of(Solvers.toDtoList(newRoute))));
 
@@ -99,8 +103,10 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
   private void initSolver() {
     if (simulator.isPresent() && roadModel.isPresent()
         && !solverHandle.isPresent()) {
-      solverHandle = Optional.of(Solvers.singleVehicleSolver(solver,
-          roadModel.get(), pdpModel.get(), simulator.get(), vehicle.get()));
+      solverHandle = Optional.of(Solvers.solverBuilder(solver)
+          .with(roadModel.get()).with(pdpModel.get()).with(simulator.get())
+          .with(vehicle.get()).buildSingle());
+
     }
   }
 
