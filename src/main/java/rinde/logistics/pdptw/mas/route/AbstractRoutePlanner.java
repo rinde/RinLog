@@ -41,6 +41,10 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected Optional<DefaultVehicle> vehicle;
 
+  /**
+   * Indicates that this route planner has been updated (via a call to
+   * {@link #update(Collection, long)}) at least once.
+   */
   protected boolean updated;
 
   private final List<DefaultParcel> history;

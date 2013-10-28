@@ -99,10 +99,16 @@ public class Truck extends RouteFollowingVehicle implements Listener,
     }
   }
 
+  /**
+   * @return The {@link Communicator} of this {@link Truck}.
+   */
   public Communicator getCommunicator() {
     return communicator;
   }
 
+  /**
+   * @return The {@link RoutePlanner} of this {@link Truck}.
+   */
   public RoutePlanner getRoutePlanner() {
     return routePlanner;
   }

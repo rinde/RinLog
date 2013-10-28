@@ -30,13 +30,14 @@ import com.google.common.collect.ImmutableList;
  */
 public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
-  private final ObjectiveFunction objectiveFunction;
-  private final Solver solver;
-  private Optional<SimulationSolver> solverHandle;
   /**
    * A reference to the simulator.
    */
   protected Optional<SimulatorAPI> simulator;
+
+  private final ObjectiveFunction objectiveFunction;
+  private final Solver solver;
+  private Optional<SimulationSolver> solverHandle;
 
   /**
    * Creates a new bidder using the specified solver and objective function.

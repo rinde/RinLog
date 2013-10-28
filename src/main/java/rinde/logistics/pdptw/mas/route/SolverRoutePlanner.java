@@ -48,6 +48,12 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     simulator = Optional.absent();
   }
 
+  /**
+   * Calling this method overrides the route of this planner. This method has
+   * similar effect as {@link #update(Collection, long)} except that no
+   * computations are done.
+   * @param r The new route.
+   */
   public void changeRoute(Queue<? extends DefaultParcel> r) {
     updated = true;
     route = newLinkedList(r);
