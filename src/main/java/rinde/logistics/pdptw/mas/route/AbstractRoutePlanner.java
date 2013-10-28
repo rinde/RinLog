@@ -41,9 +41,10 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected Optional<DefaultVehicle> vehicle;
 
+  protected boolean updated;
+
   private final List<DefaultParcel> history;
   private boolean initialized;
-  private boolean updated;
 
   /**
    * New abstract route planner.

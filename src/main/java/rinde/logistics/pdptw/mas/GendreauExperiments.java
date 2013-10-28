@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import rinde.logistics.pdptw.mas.comm.SolverBidder;
-import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
+import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
@@ -37,8 +36,8 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 16;
-  private static final int REPETITIONS = 10;
+  private static final int THREADS = 1;
+  private static final int REPETITIONS = 1;
   private static final long SEED = 123L;
 
   private GendreauExperiments() {}
@@ -95,19 +94,28 @@ public final class GendreauExperiments {
         // InsertionCostBidder.supplier(objFunc), ImmutableList
         // .of(AuctionCommModel.supplier())))
 
-        .addConfiguration(
-            new TruckConfiguration(RandomRoutePlanner.supplier(), SolverBidder
-                .supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(50, 100)),
-                ImmutableList.of(AuctionCommModel.supplier())))
+        // .addConfiguration(
+        // new TruckConfiguration(RandomRoutePlanner.supplier(), SolverBidder
+        // .supplier(objFunc,
+        // MultiVehicleHeuristicSolver.supplier(50, 100)),
+        // ImmutableList.of(AuctionCommModel.supplier())))
 
         //
+        // .addConfiguration(
+        // new TruckConfiguration(SolverRoutePlanner
+        // .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
+        // SolverBidder.supplier(objFunc,
+        // MultiVehicleHeuristicSolver.supplier(50, 100)),
+        // ImmutableList.of(AuctionCommModel.supplier())))
+
         .addConfiguration(
             new TruckConfiguration(SolverRoutePlanner
                 .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
-                SolverBidder.supplier(objFunc,
+                NegotiatingBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(50, 100),
                     MultiVehicleHeuristicSolver.supplier(50, 100)),
                 ImmutableList.of(AuctionCommModel.supplier())))
+
         //
 
         // .addConfiguration(

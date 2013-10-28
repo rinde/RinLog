@@ -74,7 +74,9 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void claim(DefaultParcel p) {
-    checkArgument(assignedParcels.contains(p));
+    checkArgument(assignedParcels.contains(p),
+        "Can not claim parcel %s which is not in assigned parcels: %s.", p,
+        assignedParcels);
     assignedParcels.remove(p);
   }
 

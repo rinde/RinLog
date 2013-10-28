@@ -99,6 +99,14 @@ public class Truck extends RouteFollowingVehicle implements Listener,
     }
   }
 
+  public Communicator getCommunicator() {
+    return communicator;
+  }
+
+  public RoutePlanner getRoutePlanner() {
+    return routePlanner;
+  }
+
   @Override
   public void setSimulator(SimulatorAPI api) {
     api.register(communicator);

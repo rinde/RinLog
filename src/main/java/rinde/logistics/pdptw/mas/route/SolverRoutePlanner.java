@@ -48,13 +48,24 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     simulator = Optional.absent();
   }
 
+  public void changeRoute(Queue<? extends DefaultParcel> r) {
+    updated = true;
+    route = newLinkedList(r);
+  }
+
   @Override
   protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
-      route = solverHandle.get()
-          .solve(SolveArgs.create().noCurrentRoutes().useParcels(onMap)).get(0);
+      route = solverHandle
+          .get()
+          .solve(
+              SolveArgs
+                  .create()
+                  .useCurrentRoutes(
+                      ImmutableList.of(ImmutableList.copyOf(route)))
+                  .useParcels(onMap)).get(0);
     }
   }
 
