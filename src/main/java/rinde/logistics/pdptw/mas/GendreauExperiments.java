@@ -36,8 +36,8 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 1;
-  private static final int REPETITIONS = 1;
+  private static final int THREADS = 16;
+  private static final int REPETITIONS = 10;
   private static final long SEED = 123L;
 
   private GendreauExperiments() {}
@@ -110,10 +110,10 @@ public final class GendreauExperiments {
 
         .addConfiguration(
             new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
                 NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(50, 100),
-                    MultiVehicleHeuristicSolver.supplier(50, 100)),
+                    MultiVehicleHeuristicSolver.supplier(20, 10000),
+                    MultiVehicleHeuristicSolver.supplier(200, 50000)),
                 ImmutableList.of(AuctionCommModel.supplier())))
 
         //
