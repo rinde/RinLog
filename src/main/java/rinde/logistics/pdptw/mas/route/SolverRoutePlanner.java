@@ -10,7 +10,9 @@ import java.util.Queue;
 
 import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
+import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.Solver;
+import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.SimulationSolver;
 import rinde.sim.pdptw.central.Solvers.SolveArgs;
@@ -64,14 +66,15 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
-      route = solverHandle
-          .get()
-          .solve(
-              SolveArgs
-                  .create()
-                  .useCurrentRoutes(
-                      ImmutableList.of(ImmutableList.copyOf(route)))
-                  .useParcels(onMap)).get(0);
+      final SolveArgs args = SolveArgs.create().useParcels(onMap)
+          .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
+      try {
+        final GlobalStateObject gso = solverHandle.get().convert(args).state;
+        SolverValidator.checkRoute(gso.vehicles.get(0), 0);
+      } catch (final IllegalArgumentException e) {
+        args.noCurrentRoutes();
+      }
+      route = solverHandle.get().solve(args).get(0);
     }
   }
 
