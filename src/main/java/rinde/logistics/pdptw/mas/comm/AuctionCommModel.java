@@ -4,8 +4,13 @@
 package rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Iterator;
+import java.util.List;
+
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
@@ -16,32 +21,45 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public class AuctionCommModel extends AbstractCommModel<Bidder> {
+  private final RandomGenerator rng;
 
   /**
    * New instance.
+   * @param seed The seed to use for the random number generator.
    */
-  public AuctionCommModel() {}
+  public AuctionCommModel(long seed) {
+    rng = new MersenneTwister(seed);
+  }
 
   @Override
   protected void receiveParcel(DefaultParcel p, long time) {
     checkState(!communicators.isEmpty(), "there are no bidders..");
     final Iterator<Bidder> it = communicators.iterator();
-    Bidder bestBidder = it.next();
+    final List<Bidder> bestBidders = newArrayList();
+    bestBidders.add(it.next());
+
     // if there are no other bidders, there is no need to organize an
     // auction at all (mainly used in test cases)
     if (it.hasNext()) {
-      double bestValue = bestBidder.getBidFor(p, time);
-
+      double bestValue = bestBidders.get(0).getBidFor(p, time);
       while (it.hasNext()) {
         final Bidder cur = it.next();
         final double curValue = cur.getBidFor(p, time);
         if (curValue < bestValue) {
           bestValue = curValue;
-          bestBidder = cur;
+          bestBidders.clear();
+          bestBidders.add(cur);
+        } else if (Math.abs(curValue - bestValue) < 0.0001) {
+          bestBidders.add(cur);
         }
       }
     }
-    bestBidder.receiveParcel(p);
+
+    if (bestBidders.size() > 1) {
+      bestBidders.get(rng.nextInt(bestBidders.size())).receiveParcel(p);
+    } else {
+      bestBidders.get(0).receiveParcel(p);
+    }
   }
 
   /**
@@ -52,7 +70,7 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
     return new DefaultSupplierRng<AuctionCommModel>() {
       @Override
       public AuctionCommModel get(long seed) {
-        return new AuctionCommModel();
+        return new AuctionCommModel(seed);
       }
     };
   }
