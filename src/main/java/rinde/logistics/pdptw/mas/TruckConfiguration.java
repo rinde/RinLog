@@ -20,17 +20,20 @@ import com.google.common.collect.ImmutableList;
  */
 public class TruckConfiguration extends DefaultMASConfiguration {
   /**
-   * Supplier for {@link RoutePlanner} instances.
+   * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
+   * <i>every</i> {@link Truck}.
    */
   protected final SupplierRng<? extends RoutePlanner> rpSupplier;
 
   /**
-   * Supplier for {@link Communicator} instances.
+   * Supplier for {@link Communicator} instances, it supplies a new instance for
+   * <i>every</i> {@link Truck}.
    */
   protected final SupplierRng<? extends Communicator> cSupplier;
 
   /**
-   * Suppliers for {@link Model}s.
+   * Suppliers for {@link Model}s, for each model a new instance is created for
+   * each simulation.
    */
   protected final ImmutableList<? extends SupplierRng<? extends Model<?>>> mSuppliers;
 
@@ -82,6 +85,6 @@ public class TruckConfiguration extends DefaultMASConfiguration {
 
   @Override
   public String toString() {
-    return rpSupplier + "-" + cSupplier + "-" + Joiner.on("-").join(mSuppliers);
+    return Joiner.on("-").join(rpSupplier, cSupplier, mSuppliers.toArray());
   }
 }
