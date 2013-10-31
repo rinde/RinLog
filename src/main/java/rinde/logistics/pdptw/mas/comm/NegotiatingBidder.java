@@ -15,8 +15,6 @@ import javax.annotation.Nullable;
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.sim.core.graph.Point;
-import rinde.sim.core.model.pdp.PDPModel;
-import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.SolveArgs;
@@ -39,7 +37,7 @@ public class NegotiatingBidder extends SolverBidder {
 
   private final Solver negotiationSolver;
   private final int negotiators;
-  private final SelectNegotiatorsHeuristic heuristic;
+  final SelectNegotiatorsHeuristic heuristic;
 
   public NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
       int numOfNegotiators, SelectNegotiatorsHeuristic h) {
@@ -51,11 +49,9 @@ public class NegotiatingBidder extends SolverBidder {
   }
 
   private List<Truck> findTrucks() {
-    final Point reference = roadModel.get().getPosition(vehicle.get());
+    final Point reference = convertToPos((Truck) vehicle.get());
     final List<TruckDist> pos = newArrayList(Collections2.transform(roadModel
-        .get().getObjectsOfType(Truck.class),
-        new ToTruckDistFunc(roadModel.get(), pdpModel.get(), reference,
-            heuristic)));
+        .get().getObjectsOfType(Truck.class), new ToTruckDistFunc(reference)));
 
     Collections.sort(pos);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,
@@ -79,38 +75,37 @@ public class NegotiatingBidder extends SolverBidder {
     }
   }
 
-  private static class ToTruckDistFunc implements Function<Truck, TruckDist> {
-    private final RoadModel roadModel;
-    private final PDPModel pdpModel;
+  class ToTruckDistFunc implements Function<Truck, TruckDist> {
     private final Point reference;
-    private final SelectNegotiatorsHeuristic heuristic;
 
-    ToTruckDistFunc(RoadModel rm, PDPModel pm, Point ref,
-        SelectNegotiatorsHeuristic h) {
-      roadModel = rm;
-      pdpModel = pm;
+    ToTruckDistFunc(Point ref) {
       reference = ref;
-      heuristic = h;
     }
 
     @Override
     @Nullable
     public TruckDist apply(@Nullable Truck t) {
-      checkArgument(t != null);
-      Point p;
-      if (t.getRoute().isEmpty()
-          || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
-        p = roadModel.getPosition(t);
-      } else {
-        final DefaultParcel firstDestination = t.getRoute().iterator().next();
-        if (pdpModel.getParcelState(firstDestination).isPickedUp()) {
-          p = firstDestination.dto.destinationLocation;
-        } else {
-          p = firstDestination.dto.pickupLocation;
-        }
+      if (t == null) {
+        throw new IllegalArgumentException("Null is not allowed.");
       }
-      return new TruckDist(t, Point.distance(p, reference));
+      return new TruckDist(t, Point.distance(convertToPos(t), reference));
     }
+  }
+
+  Point convertToPos(Truck t) {
+    Point p;
+    if (t.getRoute().isEmpty()
+        || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
+      p = roadModel.get().getPosition(t);
+    } else {
+      final DefaultParcel firstDestination = t.getRoute().iterator().next();
+      if (pdpModel.get().getParcelState(firstDestination).isPickedUp()) {
+        p = firstDestination.dto.destinationLocation;
+      } else {
+        p = firstDestination.dto.pickupLocation;
+      }
+    }
+    return p;
   }
 
   private static class TruckDist implements Comparable<TruckDist> {
@@ -202,7 +197,7 @@ public class NegotiatingBidder extends SolverBidder {
         return Joiner.on('-').join(
             Arrays.<Object> asList(super.toString(),
                 bidderSolverSupplier.toString(), negoSolverSupplier.toString(),
-                numOfNegotiators, heuristic));
+                numOfNegotiators, heuristic.toString().replaceAll("_", "-")));
       }
     };
   }
