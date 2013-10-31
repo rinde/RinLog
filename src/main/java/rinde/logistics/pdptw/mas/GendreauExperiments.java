@@ -8,6 +8,7 @@ import java.util.Set;
 
 import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
+import rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotiatorsHeuristic;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
@@ -36,8 +37,8 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 1;
-  private static final int REPETITIONS = 10;
+  private static final int THREADS = 2;
+  private static final int REPETITIONS = 1;
   private static final long SEED = 123L;
 
   private GendreauExperiments() {}
@@ -75,8 +76,11 @@ public final class GendreauExperiments {
 
     final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
         SCENARIOS_PATH, true, GendreauProblemClass.SHORT_LOW_FREQ);
-    final Experiment.Builder builder = Experiment.build(objFunc)
-        .withRandomSeed(SEED).repeat(REPETITIONS).withThreads(THREADS)
+    final Experiment.Builder builder = Experiment
+        .build(objFunc)
+        .withRandomSeed(SEED)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addScenarioProvider(onlineScenarios)
 
         // .showGui()
@@ -108,12 +112,39 @@ public final class GendreauExperiments {
         // MultiVehicleHeuristicSolver.supplier(50, 100)),
         // ImmutableList.of(AuctionCommModel.supplier())))
 
+        // .addConfiguration(
+        // new TruckConfiguration(SolverRoutePlanner
+        // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+        // NegotiatingBidder.supplier(objFunc,
+        // MultiVehicleHeuristicSolver.supplier(20, 10000),
+        // MultiVehicleHeuristicSolver.supplier(200, 50000), 3),
+        // ImmutableList.of(AuctionCommModel.supplier())))
+
         .addConfiguration(
             new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(20, 5000)),
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
                 NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 1000),
-                    MultiVehicleHeuristicSolver.supplier(20, 5000)),
+                    MultiVehicleHeuristicSolver.supplier(20, 10000),
+                    MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+                ImmutableList.of(AuctionCommModel.supplier())))
+
+        .addConfiguration(
+            new TruckConfiguration(SolverRoutePlanner
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+                NegotiatingBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(20, 10000),
+                    MultiVehicleHeuristicSolver.supplier(200, 50000), 3,
+                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+                ImmutableList.of(AuctionCommModel.supplier())))
+
+        .addConfiguration(
+            new TruckConfiguration(SolverRoutePlanner
+                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+                NegotiatingBidder.supplier(objFunc,
+                    MultiVehicleHeuristicSolver.supplier(20, 10000),
+                    MultiVehicleHeuristicSolver.supplier(200, 50000), 4,
+                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
                 ImmutableList.of(AuctionCommModel.supplier())));
 
     //
@@ -168,15 +199,16 @@ public final class GendreauExperiments {
     // Central.solverConfiguration(
     // MultiVehicleHeuristicSolver.supplier(500, 10000), "-Online"));
 
-    final int[] listSize = new int[] { 1, 10, 50, 100, 500, 1000, 5000, 10000 };
-    final int[] maxIter = new int[] { 100000, 200000, 300000 };
-
-    for (final int i : listSize) {
-      for (final int j : maxIter) {
-        builder.addConfiguration(Central.solverConfiguration(
-            MultiVehicleHeuristicSolver.supplier(i, j), "-Online"));
-      }
-    }
+    // final int[] listSize = new int[] { 1, 10, 50, 100, 500, 1000, 5000, 10000
+    // };
+    // final int[] maxIter = new int[] { 100000, 200000, 300000 };
+    //
+    // for (final int i : listSize) {
+    // for (final int j : maxIter) {
+    // builder.addConfiguration(Central.solverConfiguration(
+    // MultiVehicleHeuristicSolver.supplier(i, j), "-Online"));
+    // }
+    // }
 
     final ExperimentResults onlineResults = builder.perform();
     writeGendreauResults(onlineResults);
