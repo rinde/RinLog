@@ -37,17 +37,20 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   private Queue<? extends DefaultParcel> route;
   private Optional<SimulationSolver> solverHandle;
   private Optional<SimulatorAPI> simulator;
+  private final boolean reuseCurRoutes;
 
   /**
    * Create a route planner that uses the specified {@link Solver} to compute
    * the best route.
    * @param s {@link Solver} used for route planning.
+   * @param reuseCurrentRoutes Whether to reuse the current routes.
    */
-  public SolverRoutePlanner(Solver s) {
+  public SolverRoutePlanner(Solver s, boolean reuseCurrentRoutes) {
     solver = s;
     route = newLinkedList();
     solverHandle = Optional.absent();
     simulator = Optional.absent();
+    reuseCurRoutes = reuseCurrentRoutes;
   }
 
   /**
@@ -66,13 +69,16 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
-      final SolveArgs args = SolveArgs.create().useParcels(onMap)
-          .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
-      try {
-        final GlobalStateObject gso = solverHandle.get().convert(args).state;
-        SolverValidator.checkRoute(gso.vehicles.get(0), 0);
-      } catch (final IllegalArgumentException e) {
-        args.noCurrentRoutes();
+      final SolveArgs args = SolveArgs.create().useParcels(onMap);
+
+      if (reuseCurRoutes) {
+        args.useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
+        try {
+          final GlobalStateObject gso = solverHandle.get().convert(args).state;
+          SolverValidator.checkRoute(gso.vehicles.get(0), 0);
+        } catch (final IllegalArgumentException e) {
+          args.noCurrentRoutes();
+        }
       }
       route = solverHandle.get().solve(args).get(0);
     }
@@ -121,6 +127,20 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   }
 
   /**
+   * Supplier for {@link SolverRoutePlanner} that does not reuse the current
+   * routes.
+   * @param solverSupplier A {@link SupplierRng} that supplies the
+   *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
+   *          .
+   * @return A {@link SupplierRng} that supplies {@link SolverRoutePlanner}
+   *         instances.
+   */
+  public static SupplierRng<SolverRoutePlanner> supplierWithoutCurrentRoutes(
+      final SupplierRng<? extends Solver> solverSupplier) {
+    return new SRPSupplier(solverSupplier, false);
+  }
+
+  /**
    * @param solverSupplier A {@link SupplierRng} that supplies the
    *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
    *          .
@@ -129,16 +149,28 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    */
   public static SupplierRng<SolverRoutePlanner> supplier(
       final SupplierRng<? extends Solver> solverSupplier) {
-    return new DefaultSupplierRng<SolverRoutePlanner>() {
-      @Override
-      public SolverRoutePlanner get(long seed) {
-        return new SolverRoutePlanner(solverSupplier.get(seed));
-      }
+    return new SRPSupplier(solverSupplier, true);
+  }
 
-      @Override
-      public String toString() {
-        return super.toString() + "-" + solverSupplier.toString();
-      }
-    };
+  private static class SRPSupplier extends
+      DefaultSupplierRng<SolverRoutePlanner> {
+    final SupplierRng<? extends Solver> solverSupplier;
+    final boolean reuseCurrentRoutes;
+
+    SRPSupplier(final SupplierRng<? extends Solver> ss, final boolean rr) {
+      solverSupplier = ss;
+      reuseCurrentRoutes = rr;
+    }
+
+    @Override
+    public SolverRoutePlanner get(long seed) {
+      return new SolverRoutePlanner(solverSupplier.get(seed),
+          reuseCurrentRoutes);
+    }
+
+    @Override
+    public String toString() {
+      return super.toString() + "-" + solverSupplier.toString();
+    }
   }
 }

@@ -234,7 +234,7 @@ public class SingleVehicleSolverTest {
           debuggers.add(sd);
           return sim.register(new Truck(event.vehicleDTO,
               new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
-                  timeUnit)), c));
+                  timeUnit), true), c));
         }
       };
     }
