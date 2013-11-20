@@ -88,12 +88,12 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       // we know this is safe since it can only be one type of event
       @SuppressWarnings("unchecked")
       final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
-      if (event.event == StateEvent.GOTO) {
+      if (event.event == DefaultEvent.GOTO) {
         final DefaultParcel cur = getRoute().iterator().next();
         if (pdpModel.get().getParcelState(cur) != ParcelState.IN_CARGO) {
           communicator.claim(cur);
         }
-      } else if (event.event == StateEvent.DONE) {
+      } else if (event.event == DefaultEvent.DONE) {
         routePlanner.next(getCurrentTime().getTime());
       }
     }
