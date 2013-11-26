@@ -63,20 +63,33 @@ public class Truck extends RouteFollowingVehicle implements Listener,
   protected void preTick(TimeLapse time) {
     if (stateMachine.stateIs(waitState)) {
       if (changed) {
-        changed = false;
-        routePlanner.update(communicator.getParcels(), getCurrentTime()
-            .getTime());
-        final Optional<DefaultParcel> cur = routePlanner.current();
-        if (cur.isPresent()) {
-          communicator.waitFor(cur.get());
-        }
+        updateAssignmentAndRoutePlanner();
       }
+      updateRoute();
+    }
+  }
 
-      if (routePlanner.current().isPresent()) {
-        setRoute(routePlanner.currentRoute().get());
-      } else {
-        setRoute(new LinkedList<DefaultParcel>());
-      }
+  /**
+   * Updates the {@link RoutePlanner} with the assignment of the
+   * {@link Communicator}.
+   */
+  protected void updateAssignmentAndRoutePlanner() {
+    changed = false;
+    routePlanner.update(communicator.getParcels(), getCurrentTime().getTime());
+    final Optional<DefaultParcel> cur = routePlanner.current();
+    if (cur.isPresent()) {
+      communicator.waitFor(cur.get());
+    }
+  }
+
+  /**
+   * Updates the route based on the {@link RoutePlanner}.
+   */
+  protected void updateRoute() {
+    if (routePlanner.current().isPresent()) {
+      setRoute(routePlanner.currentRoute().get());
+    } else {
+      setRoute(new LinkedList<DefaultParcel>());
     }
   }
 
@@ -95,6 +108,11 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         }
       } else if (event.event == DefaultEvent.DONE) {
         routePlanner.next(getCurrentTime().getTime());
+      }
+
+      if (event.newState == waitState && changed) {
+        updateAssignmentAndRoutePlanner();
+        updateRoute();
       }
     }
   }
