@@ -259,6 +259,52 @@ public class SingleTruckTest {
     assertEquals(before + 1, after);
   }
 
+  /**
+   * Tests that the truck updates its route/assignment at the earliest possible
+   * time after the CHANGE event is received but not earlier.
+   */
+  @Test
+  public void intermediateChange2() {
+    final ParcelDTO parcel1dto = new ParcelDTO(new Point(1, 1),
+        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
+        1, 1000, 3000);
+    final ParcelDTO parcel2dto = new ParcelDTO(new Point(1, 2),
+        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
+        1, 1000, 3000);
+
+    setUp(asList(parcel1dto, parcel2dto), 1, null);
+
+    final DebugRoutePlanner drp = (DebugRoutePlanner) truck.getRoutePlanner();
+    assertEquals(0, drp.getUpdateCount());
+    simulator.tick();
+    assertEquals(1, drp.getUpdateCount());
+
+    // introduce new parcel
+    final ParcelDTO parcel3dto = new ParcelDTO(new Point(1, 3),
+        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
+        1, 1000, 3000);
+    simulator.register(new DefaultParcel(parcel3dto));
+
+    // goto
+    while (truck.getState().equals(truck.getGotoState())) {
+      simulator.tick();
+    }
+    assertEquals(1, drp.getUpdateCount());
+    // introduce new parcel
+    final ParcelDTO parcel4dto = new ParcelDTO(new Point(1, 4),
+        new Point(3, 4), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
+        1, 1000, 3000);
+    simulator.register(new DefaultParcel(parcel4dto));
+    // service
+    while (truck.getState().equals(truck.getServiceState())) {
+      assertEquals(1, drp.getUpdateCount());
+      simulator.tick();
+    }
+
+    assertEquals(2,
+        ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
+  }
+
   static class TestTruckConfiguration extends TruckConfiguration {
     TestTruckConfiguration(
         SupplierRng<? extends RoutePlanner> routePlannerSupplier,
