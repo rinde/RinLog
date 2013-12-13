@@ -175,6 +175,8 @@ public class NegotiatingBidder extends SolverBidder {
       final List<DefaultParcel> l = newArrayList(route);
       checkArgument(!newAssignedParcels.retainAll(route), "", l,
           newAssignedParcels);
+
+      // FIXME update all trucks by dispatching events? or is this not needed???
     }
     checkArgument(list.size() == ps.size());
     checkArgument(newLinkedHashSet(list).equals(ps));
