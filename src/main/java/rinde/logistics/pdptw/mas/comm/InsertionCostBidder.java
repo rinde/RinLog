@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import rinde.logistics.pdptw.mas.Truck;
+import rinde.logistics.pdptw.solver.Insertions;
 import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
 import rinde.sim.pdptw.central.Solvers;
@@ -67,8 +68,8 @@ public class InsertionCostBidder extends AbstractBidder implements
         : 1;
 
     final boolean isCommitted = context.state.vehicles.get(0).destination != null;
-    final List<ImmutableList<ParcelDTO>> routes = plusTwoInsertions(dtoRoute,
-        p.dto, startIndex);
+    final List<ImmutableList<ParcelDTO>> routes = Insertions.plusTwoInsertions(
+        dtoRoute, p.dto, startIndex);
 
     double cheapestInsertion = Double.POSITIVE_INFINITY;
     for (int i = 0; i < routes.size(); i++) {
@@ -82,36 +83,6 @@ public class InsertionCostBidder extends AbstractBidder implements
       }
     }
     return cheapestInsertion - baseline;
-  }
-
-  static <T> ImmutableList<ImmutableList<T>> plusOneInsertions(
-      ImmutableList<T> list, T item) {
-    return plusOneInsertions(list, item, 0);
-  }
-
-  static <T> ImmutableList<ImmutableList<T>> plusOneInsertions(
-      ImmutableList<T> list, T item, int startIndex) {
-    final ImmutableList.Builder<ImmutableList<T>> inserted = ImmutableList
-        .builder();
-    for (int i = startIndex; i < list.size() + 1; i++) {
-      final ImmutableList<T> firstHalf = list.subList(0, i);
-      final ImmutableList<T> secondHalf = list.subList(i, list.size());
-      inserted.add(ImmutableList.<T> builder().addAll(firstHalf).add(item)
-          .addAll(secondHalf).build());
-    }
-    return inserted.build();
-  }
-
-  static <T> ImmutableList<ImmutableList<T>> plusTwoInsertions(
-      ImmutableList<T> list, T item, int startIndex) {
-    final ImmutableList<ImmutableList<T>> plusOneInsertions = plusOneInsertions(
-        list, item, startIndex);
-    final ImmutableList.Builder<ImmutableList<T>> plusTwoInsertions = ImmutableList
-        .builder();
-    for (final ImmutableList<T> l : plusOneInsertions) {
-      plusTwoInsertions.addAll(plusOneInsertions(l, item, l.indexOf(item) + 1));
-    }
-    return plusTwoInsertions.build();
   }
 
   @Override
