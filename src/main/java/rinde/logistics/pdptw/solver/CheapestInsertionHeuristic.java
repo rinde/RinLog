@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 
 public class CheapestInsertionHeuristic implements Solver {
 
+  // TODO this state is not really necessary
   private final Set<ParcelDTO> knownParcels;
   private final ObjectiveFunction objectiveFunction;
 
