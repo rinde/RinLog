@@ -77,6 +77,7 @@ public class InsertionsTest {
 
     assertEquals(strings.size(), newHashSet(strings).size());
 
+    // test empty
     strings = Insertions.plusTwoInsertions(ImmutableList.<String> of(), Z, 0);
     assertEquals(1, strings.size());
     assertEquals(asList(Z, Z), strings.get(0));
