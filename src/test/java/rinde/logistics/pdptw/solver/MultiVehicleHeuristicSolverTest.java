@@ -6,6 +6,7 @@ package rinde.logistics.pdptw.solver;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -49,9 +50,8 @@ public class MultiVehicleHeuristicSolverTest {
             Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(
                 50, 100, false, true)))
         .addScenario(
-            Gendreau06Parser.parse(
-                "files/scenarios/gendreau06/req_rapide_1_240_24", 10))
-        .perform();
+            Gendreau06Parser.parse(new File(
+                "files/scenarios/gendreau06/req_rapide_1_240_24"))).perform();
   }
 
   /**

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
@@ -21,7 +22,8 @@ import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
 import rinde.sim.pdptw.experiment.Experiment.SimulationResult;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import rinde.sim.pdptw.gendreau06.Gendreau06Scenarios;
+import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
+import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
 import com.google.common.base.Charsets;
@@ -53,11 +55,14 @@ public final class GendreauExperiments {
 
   static void offlineExperiment() {
     System.out.println("offline");
-    final Gendreau06Scenarios offlineScenarios = new Gendreau06Scenarios(
-        SCENARIOS_PATH, false, GendreauProblemClass.values());
+
+    final List<Gendreau06Scenario> offlineScenarios = Gendreau06Parser.parser()
+        .addDirectory(SCENARIOS_PATH).offline()
+        .filter(GendreauProblemClass.values()).parse();
+
     final ExperimentResults offlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction())
-        .addScenarioProvider(offlineScenarios)
+        .addScenarios(offlineScenarios)
         .withRandomSeed(321)
         .repeat(REPETITIONS)
         .withThreads(THREADS)
@@ -76,14 +81,16 @@ public final class GendreauExperiments {
     System.out.println("online");
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
 
-    final Gendreau06Scenarios onlineScenarios = new Gendreau06Scenarios(
-        SCENARIOS_PATH, true, GendreauProblemClass.SHORT_LOW_FREQ);
+    final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser.parser()
+        .addDirectory(SCENARIOS_PATH)
+        .filter(GendreauProblemClass.SHORT_LOW_FREQ).parse();
+
     final Experiment.Builder builder = Experiment
         .build(objFunc)
         .withRandomSeed(SEED)
         .repeat(REPETITIONS)
         .withThreads(THREADS)
-        .addScenarioProvider(onlineScenarios)
+        .addScenarios(onlineScenarios)
 
         // .showGui()
 

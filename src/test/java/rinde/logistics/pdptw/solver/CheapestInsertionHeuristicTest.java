@@ -3,6 +3,7 @@ package rinde.logistics.pdptw.solver;
 import static org.junit.Assert.assertEquals;
 import static rinde.logistics.pdptw.solver.CheapestInsertionHeuristic.modifySchedule;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
@@ -28,8 +29,8 @@ public class CheapestInsertionHeuristicTest {
     final ExperimentResults er = Experiment
         .build(objFunc)
         .addScenario(
-            Gendreau06Parser.parse(
-                "files/scenarios/gendreau06/req_rapide_1_240_24", 10))
+            Gendreau06Parser.parse(new File(
+                "files/scenarios/gendreau06/req_rapide_1_240_24")))
         .addConfiguration(
             Central.solverConfiguration(SolverValidator
                 .wrap(CheapestInsertionHeuristic.supplier(objFunc)))).repeat(3)

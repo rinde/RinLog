@@ -7,6 +7,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -47,9 +48,9 @@ public class CommTest implements TickListener {
 
   @Test
   public void test() throws IOException {
-    problem = ExperimentTest.init(Gendreau06Parser.parse(
-        "files/scenarios/gendreau06/req_rapide_1_240_24", 10), configuration,
-        123, false);
+    problem = ExperimentTest.init(Gendreau06Parser.parse(new File(
+        "files/scenarios/gendreau06/req_rapide_1_240_24")), configuration, 123,
+        false);
 
     problem.getSimulator().tick();
     problem.getSimulator().addTickListener(this);
