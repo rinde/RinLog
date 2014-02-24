@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Set;
 
 import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import rinde.logistics.pdptw.mas.comm.InsertionCostBidder;
 import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
 import rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotiatorsHeuristic;
 import rinde.logistics.pdptw.mas.comm.SolverBidder;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
+import rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
@@ -166,8 +166,9 @@ public final class GendreauExperiments {
         .addConfiguration(
             new TruckConfiguration(SolverRoutePlanner
                 .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                InsertionCostBidder.supplier(objFunc), ImmutableList
-                    .of(AuctionCommModel.supplier())));
+                SolverBidder.supplier(objFunc,
+                    CheapestInsertionHeuristic.supplier(objFunc)),
+                ImmutableList.of(AuctionCommModel.supplier())));
 
     /*
      * BLACKBOARD
