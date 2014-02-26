@@ -17,24 +17,52 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class CheapestInsertionHeuristic implements Solver {
 
-  // TODO this state is not really necessary
-  private final Set<ParcelDTO> knownParcels;
   private final ObjectiveFunction objectiveFunction;
 
   public CheapestInsertionHeuristic(ObjectiveFunction objFunc) {
-    knownParcels = newLinkedHashSet();
     objectiveFunction = objFunc;
   }
 
+  static ImmutableSet<ParcelDTO> unassignedParcels(GlobalStateObject state) {
+    final Set<ParcelDTO> set = newLinkedHashSet(state.availableParcels);
+    for (final VehicleStateObject vso : state.vehicles) {
+      if (vso.route.isPresent()) {
+        set.removeAll(vso.route.get());
+      }
+    }
+    return ImmutableSet.copyOf(set);
+  }
+
+  // operations
+  // - convert global state object to single vehicle state object
+  // - compute objective value of single vehicle state object
+  // -
+
+  // iterate over search neighborhood
+
+  // create efficient datastructure for modifying schedules?
+  // should allow partial evaluation? i.e. per vehicle obj value. decomposition
+
+  // convert GlobalStateObject to only include single vehicle
+
+  // store objValue per vehicle/route
+  // re-evaluate routes that change, and calculate difference
+
+  // how to know what has changed? track insertions?
+
+  // operations:
+  // insertion1
+  // insertion2
+  // deletion1
+  // deletion2
+  // swap (deletion and insertion)
+
   @Override
   public ImmutableList<ImmutableList<ParcelDTO>> solve(GlobalStateObject state) {
-    final ImmutableSet<ParcelDTO> newParcels = Sets.difference(
-        state.availableParcels, knownParcels).immutableCopy();
-    knownParcels.addAll(newParcels);
+    final ImmutableSet<ParcelDTO> newParcels = unassignedParcels(state);
 
     // construct schedule
     final ImmutableList.Builder<ImmutableList<ParcelDTO>> b = ImmutableList
@@ -56,7 +84,7 @@ public class CheapestInsertionHeuristic implements Solver {
         final int startIndex = state.vehicles.get(i).destination == null ? 0
             : 1;
         final List<ImmutableList<ParcelDTO>> insertions = Insertions
-            .plusTwoInsertions(schedule.get(i), p, startIndex);
+            .insertions(schedule.get(i), p, startIndex, 2);
 
         for (int j = 0; j < insertions.size(); j++) {
           final ImmutableList<ParcelDTO> r = insertions.get(j);
