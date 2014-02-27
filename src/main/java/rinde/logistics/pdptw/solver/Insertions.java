@@ -69,6 +69,37 @@ public final class Insertions {
     return ArithmeticUtils.binomialCoefficient(n + k - 1, k);
   }
 
+  /**
+   * Inserts <code>item</code> in the specified indices in the
+   * <code>originalList</code>.
+   * @param originalList The list which will be inserted by <code>item</code>.
+   * @param insertionIndices List of insertion indices in ascending order.
+   * @param item The item to insert.
+   * @return A list based on the original list but inserted with item in the
+   *         specified places.
+   */
+  public static <T> ImmutableList<T> insert(List<T> originalList,
+      List<Integer> insertionIndices, T item) {
+    checkArgument(!insertionIndices.isEmpty(),
+        "At least one insertion index must be defined.");
+    int prev = 0;
+    final ImmutableList.Builder<T> builder = ImmutableList.<T> builder();
+    for (int i = 0; i < insertionIndices.size(); i++) {
+      final int cur = insertionIndices.get(i);
+      checkArgument(cur >= 0 && cur <= originalList.size(),
+          "The specified indices must be >= 0 and <= %s (list size).",
+          originalList.size());
+      checkArgument(cur >= prev,
+          "The specified indices must be in ascending order. Received %s.",
+          insertionIndices);
+      builder.addAll(originalList.subList(prev, cur));
+      builder.add(item);
+      prev = cur;
+    }
+    builder.addAll(originalList.subList(prev, originalList.size()));
+    return builder.build();
+  }
+
   static class InsertionsIterator<T> implements Iterator<ImmutableList<T>> {
     private final InsertionIndexGenerator indexIterator;
     private final ImmutableList<T> originalList;
@@ -79,7 +110,8 @@ public final class Insertions {
       originalList = l;
       startIndex = si;
       item = it;
-      indexIterator = new InsertionIndexGenerator(nrOfInsertions, l.size() - startIndex);
+      indexIterator = new InsertionIndexGenerator(nrOfInsertions, l.size()
+          - startIndex);
     }
 
     @Override
