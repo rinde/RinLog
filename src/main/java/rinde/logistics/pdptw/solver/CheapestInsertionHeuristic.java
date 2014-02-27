@@ -3,7 +3,7 @@ package rinde.logistics.pdptw.solver;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.Set;
 
 import rinde.sim.pdptw.central.GlobalStateObject;
@@ -36,35 +36,13 @@ public class CheapestInsertionHeuristic implements Solver {
     return ImmutableSet.copyOf(set);
   }
 
-  // operations
-  // - convert global state object to single vehicle state object
-  // - compute objective value of single vehicle state object
-  // -
-
-  // iterate over search neighborhood
-
-  // create efficient datastructure for modifying schedules?
-  // should allow partial evaluation? i.e. per vehicle obj value. decomposition
-
-  // convert GlobalStateObject to only include single vehicle
-
-  // store objValue per vehicle/route
-  // re-evaluate routes that change, and calculate difference
-
-  // how to know what has changed? track insertions?
-
-  // operations:
-  // insertion1
-  // insertion2
-  // deletion1
-  // deletion2
-  // swap (deletion and insertion)
-
   @Override
   public ImmutableList<ImmutableList<ParcelDTO>> solve(GlobalStateObject state) {
-    final ImmutableSet<ParcelDTO> newParcels = unassignedParcels(state);
+    return decomposed(state);
+  }
 
-    // construct schedule
+  static ImmutableList<ImmutableList<ParcelDTO>> createSchedule(
+      GlobalStateObject state) {
     final ImmutableList.Builder<ImmutableList<ParcelDTO>> b = ImmutableList
         .builder();
     for (final VehicleStateObject vso : state.vehicles) {
@@ -74,34 +52,60 @@ public class CheapestInsertionHeuristic implements Solver {
         b.add(ImmutableList.<ParcelDTO> of());
       }
     }
-    ImmutableList<ImmutableList<ParcelDTO>> schedule = b.build();
+    return b.build();
+  }
 
+  ImmutableList<Double> decomposedCost(GlobalStateObject state,
+      ImmutableList<ImmutableList<ParcelDTO>> schedule) {
+    final ImmutableList.Builder<Double> builder = ImmutableList.builder();
+    for (int i = 0; i < schedule.size(); i++) {
+      builder.add(objectiveFunction.computeCost(Solvers.computeStats(
+          state.withSingleVehicle(i), ImmutableList.of(schedule.get(i)))));
+    }
+    return builder.build();
+  }
+
+  ImmutableList<ImmutableList<ParcelDTO>> decomposed(GlobalStateObject state) {
+    ImmutableList<ImmutableList<ParcelDTO>> schedule = createSchedule(state);
+    ImmutableList<Double> costs = decomposedCost(state, schedule);
+    final ImmutableSet<ParcelDTO> newParcels = unassignedParcels(state);
     // all new parcels need to be inserted in the plan
     for (final ParcelDTO p : newParcels) {
       double cheapestInsertion = Double.POSITIVE_INFINITY;
-      ImmutableList<ImmutableList<ParcelDTO>> bestSchedule = schedule;
+      ImmutableList<ParcelDTO> cheapestRoute = null;
+      double cheapestRouteCost = 0;
+      int cheapestRouteIndex = -1;
+
       for (int i = 0; i < state.vehicles.size(); i++) {
         final int startIndex = state.vehicles.get(i).destination == null ? 0
             : 1;
-        final List<ImmutableList<ParcelDTO>> insertions = Insertions
-            .insertions(schedule.get(i), p, startIndex, 2);
+        final Iterator<ImmutableList<ParcelDTO>> insertions = Insertions
+            .insertionsIterator(schedule.get(i), p, startIndex, 2);
 
-        for (int j = 0; j < insertions.size(); j++) {
-          final ImmutableList<ParcelDTO> r = insertions.get(j);
-          // compute cost using entire schedule
-          final ImmutableList<ImmutableList<ParcelDTO>> newSchedule = modifySchedule(
-              schedule, r, i);
-          final double cost = objectiveFunction.computeCost(Solvers
-              .computeStats(state, newSchedule));
-          if (cost < cheapestInsertion) {
-            cheapestInsertion = cost;
-            bestSchedule = newSchedule;
+        while (insertions.hasNext()) {
+          final ImmutableList<ParcelDTO> r = insertions.next();
+          final double absCost = objectiveFunction.computeCost(Solvers
+              .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
+
+          final double insertionCost = absCost - costs.get(i);
+          if (insertionCost < cheapestInsertion) {
+            cheapestInsertion = insertionCost;
+            cheapestRoute = r;
+            cheapestRouteIndex = i;
+            cheapestRouteCost = absCost;
           }
         }
       }
-      schedule = bestSchedule;
+      schedule = modifySchedule(schedule, cheapestRoute, cheapestRouteIndex);
+      costs = modifyCosts(costs, cheapestRouteCost, cheapestRouteIndex);
     }
     return schedule;
+  }
+
+  static ImmutableList<Double> modifyCosts(ImmutableList<Double> costs,
+      double newCost, int index) {
+    return ImmutableList.<Double> builder().addAll(costs.subList(0, index))
+        .add(newCost).addAll(costs.subList(index + 1, costs.size())).build();
   }
 
   // replaces one route
@@ -143,4 +147,5 @@ public class CheapestInsertionHeuristic implements Solver {
       }
     };
   }
+
 }
