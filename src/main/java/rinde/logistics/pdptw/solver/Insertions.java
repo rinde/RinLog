@@ -80,6 +80,7 @@ public final class Insertions {
    */
   public static <T> ImmutableList<T> insert(List<T> originalList,
       List<Integer> insertionIndices, T item) {
+    // TODO this method should be reused in the rest of the code
     checkArgument(!insertionIndices.isEmpty(),
         "At least one insertion index must be defined.");
     int prev = 0;
