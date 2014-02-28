@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import rinde.opt.localsearch.Swaps.Evaluator;
@@ -56,6 +57,7 @@ public class SwapsTest {
         new StringListEvaluator());
   }
 
+  @Ignore
   @Test
   public void generateTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
