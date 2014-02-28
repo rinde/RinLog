@@ -17,7 +17,6 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import rinde.opt.localsearch.Insertions;
 import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 
 import com.google.common.collect.ImmutableList;
@@ -198,7 +197,8 @@ public class InsertionsTest {
    */
   @Test(expected = UnsupportedOperationException.class)
   public void insertionIndexGeneratorRemoveFail() {
-    ((Iterator<List<Integer>>) new InsertionIndexGenerator(1, 0)).remove();
+    ((Iterator<ImmutableList<Integer>>) new InsertionIndexGenerator(1, 0))
+        .remove();
   }
 
   /**
@@ -206,7 +206,8 @@ public class InsertionsTest {
    */
   @Test
   public void insertionIndexGeneratorNextFail() {
-    final Iterator<List<Integer>> iig = new InsertionIndexGenerator(1, 0);
+    final Iterator<ImmutableList<Integer>> iig = new InsertionIndexGenerator(1,
+        0);
     iig.next();
     boolean fail = false;
     try {

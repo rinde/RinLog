@@ -5,9 +5,15 @@ import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Collections2.filter;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import rinde.opt.localsearch.Insertions.Insertion;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -17,58 +23,118 @@ public class Swaps {
 
   private Swaps() {}
 
-  static class Schedule<C, T> {
-    public final C context;
-    public final ImmutableList<ImmutableList<T>> routes;
-    public final ImmutableList<Double> objectiveValues;
-    public final double objectiveValue;
-    public final Evaluator<C, T> evaluator;
+  public interface Evaluator<C, T> {
 
-    static <C, T> Schedule<C, T> create(C context,
-        ImmutableList<ImmutableList<T>> routes,
-        ImmutableList<Double> objectiveValues, double globalObjectiveValue,
-        Evaluator<C, T> routeEvaluator) {
-      return new Schedule<C, T>(context, routes, objectiveValues,
-          globalObjectiveValue, routeEvaluator);
-    }
+    double eval(C context, int routeIndex, ImmutableList<T> newRoute);
 
-    static <C, T> Schedule<C, T> create(C context,
-        ImmutableList<ImmutableList<T>> routes, Evaluator<C, T> routeEvaluator) {
-      final ImmutableList.Builder<Double> costsBuilder = ImmutableList
-          .builder();
-      double sumCost = 0;
-      for (int i = 0; i < routes.size(); i++) {
-        final double cost = routeEvaluator.eval(context, i, routes.get(i));
-        costsBuilder.add(cost);
-        sumCost += cost;
-      }
+  }
 
-      return new Schedule<C, T>(context, routes, costsBuilder.build(), sumCost,
-          routeEvaluator);
-    }
+  static class Swap<T> {
+    final T item;
+    final int fromRow;
+    final Insertion insertion;
 
-    private Schedule(C s, ImmutableList<ImmutableList<T>> r,
-        ImmutableList<Double> ovs, double ov, Evaluator<C, T> eval) {
-      checkArgument(r.size() == ovs.size());
-      context = s;
-      routes = r;
-      objectiveValues = ovs;
-      objectiveValue = ov;
-      evaluator = eval;
+    Swap(T i, int from, Insertion ins) {
+      item = i;
+      fromRow = from;
+      insertion = ins;
     }
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(this).add("context", context)
-          .add("routes", routes).add("objectiveValues", objectiveValues)
-          .add("objectiveValue", objectiveValue).add("evaluator", evaluator)
-          .toString();
+      return Objects.toStringHelper(this).add("item", item)
+          .add("fromRow", fromRow).add("insertion", insertion).toString();
     }
   }
 
-  public interface Evaluator<C, T> {
+  static class SwapIterator<T> implements Iterator<Swap<T>> {
 
-    double eval(C context, int routeIndex, ImmutableList<T> newRoute);
+    final Set<T> seen = newLinkedHashSet();
+    final Iterator<Iterator<Insertion>> iterators;
+    final Iterator<Integer> rows;
+    final Iterator<T> items;
+
+    Iterator<Insertion> current;
+
+    private int currentRow;
+    private T currentItem;
+
+    public SwapIterator(Schedule<?, T> schedule,
+        ImmutableList<Integer> startIndices) {
+      final ImmutableList.Builder<Iterator<Insertion>> builder = ImmutableList
+          .builder();
+      final ImmutableList.Builder<T> itemsB = ImmutableList.builder();
+      final ImmutableList.Builder<Integer> rowsB = ImmutableList.builder();
+
+      for (int i = 0; i < schedule.routes.size(); i++) {
+
+        final ImmutableList<T> row = schedule.routes.get(i);
+        for (final T t : row) {
+          if (!seen.contains(t)) {
+            seen.add(t);
+
+            // FIXME find way to elegantly avoid already existing insertions
+            // perhaps by providing a list of exceptions to Insertions.iterator?
+            final int occurrences = Collections.frequency(row, t);
+
+            itemsB.add(t);
+            rowsB.add(i);
+            builder.add(Insertions.iterator(schedule, i, occurrences,
+                startIndices));
+          }
+        }
+      }
+      iterators = builder.build().iterator();
+      items = itemsB.build().iterator();
+      rows = rowsB.build().iterator();
+      if (iterators.hasNext()) {
+        current = iterators.next();
+        currentRow = rows.next();
+        currentItem = items.next();
+      }
+
+    }
+
+    @Override
+    public boolean hasNext() {
+      return iterators.hasNext() || current.hasNext();
+    }
+
+    @Override
+    public Swap<T> next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
+
+      if (!current.hasNext()) {
+        current = iterators.next();
+        currentRow = rows.next();
+        currentItem = items.next();
+      }
+
+      final Insertion insertion = current.next();
+
+      return new Swap<T>(currentItem, currentRow, insertion);
+    }
+
+    @Deprecated
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+  }
+
+  static <C, T> Iterator<Swap<T>> generate(Schedule<C, T> schedule,
+      ImmutableList<Integer> startIndices) {
+
+    return new SwapIterator<T>(schedule, startIndices);
+    // for each T, find # occurrences, insertion points
+    // compute number of possible insertions in other places
+
+    // generate insertions for an entire schedule
+
+    // Insertions.insertionsIterator(list, item, startIndex, numOfInsertions)
 
   }
 

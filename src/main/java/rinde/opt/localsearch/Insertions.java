@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.ArithmeticUtils;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
@@ -18,6 +19,77 @@ import com.google.common.primitives.Ints;
 public final class Insertions {
 
   private Insertions() {}
+
+  static class Insertion {
+    public final int row;
+    public final ImmutableList<Integer> insertionIndices;
+
+    Insertion(int r, ImmutableList<Integer> indices) {
+      row = r;
+      insertionIndices = indices;
+    }
+
+    @Override
+    public String toString() {
+      return Objects.toStringHelper(this).add("row", row)
+          .add("insertionIndices", insertionIndices).toString();
+    }
+  }
+
+  static <C, T> Iterator<Insertion> iterator(Schedule<C, T> schedule, int row,
+      int occurrences, ImmutableList<Integer> startIndices) {
+
+    return new ScheduleInsertionIterator<C, T>(schedule, row, occurrences,
+        startIndices);
+  }
+
+  static class ScheduleInsertionIterator<C, T> implements Iterator<Insertion> {
+    final Schedule<C, T> schedule;
+    final int row;
+    final int occurrences;
+
+    int currentRow;
+    Iterator<ImmutableList<Integer>> currentIterator;
+
+    ScheduleInsertionIterator(Schedule<C, T> s, int r, int occ,
+        ImmutableList<Integer> startIndices) {
+      schedule = s;
+      row = r;
+      occurrences = occ;
+      currentRow = 0;
+      createIterator();
+    }
+
+    void createIterator() {
+      final int size = schedule.routes.get(currentRow).size()
+          - ((currentRow == row) ? occurrences : 0);
+      currentIterator = new InsertionIndexGenerator(occurrences, size);
+    }
+
+    @Override
+    public boolean hasNext() {
+      return currentRow < schedule.routes.size() && currentIterator.hasNext();
+    }
+
+    @Override
+    public Insertion next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
+      if (!currentIterator.hasNext()) {
+        currentRow++;
+        createIterator();
+      }
+      return new Insertion(currentRow, currentIterator.next());
+    }
+
+    @Deprecated
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+  }
 
   /**
    * Creates an {@link Iterator} for a list of lists, each list contains a
@@ -40,9 +112,9 @@ public final class Insertions {
   }
 
   /**
-   * Creates an {@link Iterator} for a list of lists, each list contains a
-   * specified number of insertions of <code>item</code> at a different position
-   * in the list. Only creates insertions starting at <code>startIndex</code>.
+   * Creates a list of lists, each list contains a specified number of
+   * insertions of <code>item</code> at a different position in the list. Only
+   * creates insertions starting at <code>startIndex</code>.
    * @param list The original list.
    * @param item The item to be inserted.
    * @param startIndex Must be >= 0 && <= list size.
@@ -146,7 +218,8 @@ public final class Insertions {
     }
   }
 
-  static class InsertionIndexGenerator implements Iterator<List<Integer>> {
+  static class InsertionIndexGenerator implements
+      Iterator<ImmutableList<Integer>> {
     private final int[] insertionPositions;
     private final int originalListSize;
     private final long length;
@@ -164,7 +237,7 @@ public final class Insertions {
     }
 
     @Override
-    public List<Integer> next() {
+    public ImmutableList<Integer> next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }

@@ -12,13 +12,14 @@ import static rinde.opt.localsearch.Swaps.removeAll;
 import static rinde.opt.localsearch.Swaps.replace;
 import static rinde.opt.localsearch.Swaps.swap;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import rinde.opt.localsearch.Swaps.Evaluator;
-import rinde.opt.localsearch.Swaps.Schedule;
+import rinde.opt.localsearch.Swaps.Swap;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +38,7 @@ public class SwapsTest {
   static final String F = "F";
   static final String G = "G";
 
+  @SuppressWarnings("null")
   Schedule<SortDirection, String> schedule;
 
   enum SortDirection {
@@ -46,11 +48,34 @@ public class SwapsTest {
   /**
    * Creates a schedule for testing.
    */
+  @SuppressWarnings("unchecked")
   @Before
   public void setUp() {
     schedule = Schedule.create(SortDirection.ASCENDING,
         list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)),
         new StringListEvaluator());
+  }
+
+  @Test
+  public void generateTest() {
+    final Schedule<SortDirection, String> s = Schedule.create(
+        SortDirection.ASCENDING, list(list(A, B), list(C, D)),
+        new StringListEvaluator());
+    System.out.println(ImmutableList.copyOf(Swaps.generate(s,
+        ImmutableList.of(0, 0))));
+
+    final Iterator<Swap<String>> it = Swaps.generate(s, ImmutableList.of(0, 0));
+    while (it.hasNext()) {
+      final Swap<String> swapOperation = it.next();
+      System.out.println(swapOperation);
+      final ImmutableList<ImmutableList<String>> routes = Swaps.swap(s,
+          swapOperation.item, swapOperation.fromRow,
+          swapOperation.insertion.row,
+          swapOperation.insertion.insertionIndices, 100).get().routes;
+
+      System.out.println(routes);
+
+    }
   }
 
   /**
