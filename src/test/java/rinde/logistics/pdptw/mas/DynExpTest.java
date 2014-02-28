@@ -17,11 +17,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
-import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
-import rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotiatorsHeuristic;
-import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPScenarioEvent;
 import rinde.sim.pdptw.central.Central;
@@ -100,19 +96,25 @@ public class DynExpTest {
         // Central.solverConfiguration(RandomSolver.supplier(), "-Random"))
 
         // NEGOTIATION
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 10000),
-                    MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
-                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
-                ImmutableList.of(AuctionCommModel.supplier())))
+        // .addConfiguration(
+        // new TruckConfiguration(SolverRoutePlanner
+        // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+        // NegotiatingBidder.supplier(objFunc,
+        // MultiVehicleHeuristicSolver.supplier(20, 10000),
+        // MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+        // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+        // ImmutableList.of(AuctionCommModel.supplier())))
 
-        // CENTRAL
+        // CHEAPEST INSERTION CENTRAL
         .addConfiguration(
             Central.solverConfiguration(
-                MultiVehicleHeuristicSolver.supplier(50, 1000), "-Online"))
+                CheapestInsertionHeuristic.supplier(objFunc),
+                "-CheapestInsertion"))
+
+        // CENTRAL
+        // .addConfiguration(
+        // Central.solverConfiguration(
+        // MultiVehicleHeuristicSolver.supplier(50, 1000), "-Online"))
 
         .perform();
 

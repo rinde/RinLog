@@ -6,6 +6,7 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import rinde.opt.localsearch.Insertions;
 import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.GlobalStateObject.VehicleStateObject;
 import rinde.sim.pdptw.central.Solver;

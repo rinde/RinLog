@@ -1,4 +1,4 @@
-package rinde.logistics.pdptw.solver;
+package rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -87,9 +87,10 @@ public final class Insertions {
     final ImmutableList.Builder<T> builder = ImmutableList.<T> builder();
     for (int i = 0; i < insertionIndices.size(); i++) {
       final int cur = insertionIndices.get(i);
-      checkArgument(cur >= 0 && cur <= originalList.size(),
-          "The specified indices must be >= 0 and <= %s (list size).",
-          originalList.size());
+      checkArgument(
+          cur >= 0 && cur <= originalList.size(),
+          "The specified indices must be >= 0 and <= %s (list size), it is %s.",
+          originalList.size(), cur);
       checkArgument(cur >= prev,
           "The specified indices must be in ascending order. Received %s.",
           insertionIndices);

@@ -1,15 +1,15 @@
 /**
  * 
  */
-package rinde.logistics.pdptw.solver;
+package rinde.opt.localsearch;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static rinde.logistics.pdptw.solver.Insertions.insert;
-import static rinde.logistics.pdptw.solver.Insertions.insertions;
-import static rinde.logistics.pdptw.solver.Insertions.insertionsIterator;
+import static rinde.opt.localsearch.Insertions.insert;
+import static rinde.opt.localsearch.Insertions.insertions;
+import static rinde.opt.localsearch.Insertions.insertionsIterator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +17,8 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import rinde.logistics.pdptw.solver.Insertions.InsertionIndexGenerator;
+import rinde.opt.localsearch.Insertions;
+import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
