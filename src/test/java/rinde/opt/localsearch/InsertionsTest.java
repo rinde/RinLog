@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static rinde.opt.localsearch.Insertions.insert;
 import static rinde.opt.localsearch.Insertions.insertions;
 import static rinde.opt.localsearch.Insertions.insertionsIterator;
+import static rinde.opt.localsearch.Insertions.iterator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +18,10 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
+import rinde.opt.localsearch.Insertions.Insertion;
 import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
+import rinde.opt.localsearch.SwapsTest.SortDirection;
+import rinde.opt.localsearch.SwapsTest.StringListEvaluator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -197,7 +201,7 @@ public class InsertionsTest {
    */
   @Test(expected = UnsupportedOperationException.class)
   public void insertionIndexGeneratorRemoveFail() {
-    ((Iterator<ImmutableList<Integer>>) new InsertionIndexGenerator(1, 0))
+    ((Iterator<ImmutableList<Integer>>) new InsertionIndexGenerator(1, 0, 0))
         .remove();
   }
 
@@ -207,7 +211,7 @@ public class InsertionsTest {
   @Test
   public void insertionIndexGeneratorNextFail() {
     final Iterator<ImmutableList<Integer>> iig = new InsertionIndexGenerator(1,
-        0);
+        0, 0);
     iig.next();
     boolean fail = false;
     try {
@@ -277,7 +281,28 @@ public class InsertionsTest {
     insert(InsertionsTest.list(A, B, C), ImmutableList.<Integer> of(), D);
   }
 
+  @Test
+  public void scheduleIteratorTest() {
+    final Schedule<SortDirection, String> s = Schedule.create(
+        SortDirection.ASCENDING, list(list(A, B), list(C, D)),
+        new StringListEvaluator());
+
+    final List<Insertion> insertions = ImmutableList.copyOf(iterator(s,
+        new Insertion(0, list(1)), list(0, 2)));
+    assertEquals(3, insertions.size());
+    assertEquals(new Insertion(0, ImmutableList.of(0)), insertions.get(0));
+    assertEquals(new Insertion(0, ImmutableList.of(2)), insertions.get(1));
+    assertEquals(new Insertion(1, ImmutableList.of(2)), insertions.get(2));
+
+  }
+
+  /**
+   * Short hand for creating immutable lists.
+   * @param items The items of the list.
+   * @return An {@link ImmutableList}.
+   */
   public static <T> ImmutableList<T> list(T... items) {
     return ImmutableList.copyOf(items);
   }
+
 }

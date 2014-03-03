@@ -1,15 +1,20 @@
 package rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.math3.util.ArithmeticUtils;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.primitives.Ints;
 
 /**
@@ -34,53 +39,65 @@ public final class Insertions {
       return Objects.toStringHelper(this).add("row", row)
           .add("insertionIndices", insertionIndices).toString();
     }
-  }
 
-  static <C, T> Iterator<Insertion> iterator(Schedule<C, T> schedule, int row,
-      int occurrences, ImmutableList<Integer> startIndices) {
-
-    return new ScheduleInsertionIterator<C, T>(schedule, row, occurrences,
-        startIndices);
-  }
-
-  static class ScheduleInsertionIterator<C, T> implements Iterator<Insertion> {
-    final Schedule<C, T> schedule;
-    final int row;
-    final int occurrences;
-
-    int currentRow;
-    Iterator<ImmutableList<Integer>> currentIterator;
-
-    ScheduleInsertionIterator(Schedule<C, T> s, int r, int occ,
-        ImmutableList<Integer> startIndices) {
-      schedule = s;
-      row = r;
-      occurrences = occ;
-      currentRow = 0;
-      createIterator();
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(row, insertionIndices);
     }
 
-    void createIterator() {
-      final int size = schedule.routes.get(currentRow).size()
-          - ((currentRow == row) ? occurrences : 0);
-      currentIterator = new InsertionIndexGenerator(occurrences, size);
+    @Override
+    public boolean equals(@Nullable Object other) {
+      if (other == null) {
+        return false;
+      }
+      if (getClass() != other.getClass()) {
+        return false;
+      }
+      final Insertion ins = (Insertion) other;
+      return Objects.equal(row, ins.row)
+          && Objects.equal(insertionIndices, ins.insertionIndices);
+    }
+  }
+
+  static <C, T> Iterator<Insertion> iterator(Schedule<C, T> schedule,
+      Insertion insertion, ImmutableList<Integer> startIndices) {
+    final List<Iterator<Insertion>> iterators = newArrayList();
+    for (int i = 0; i < schedule.routes.size(); i++) {
+      final InsertionGenerator ig = new InsertionGenerator(i,
+          startIndices.get(i), new InsertionIndexGenerator(
+              insertion.insertionIndices.size(), schedule.routes.get(i).size(),
+              startIndices.get(i)));
+      if (i == insertion.row) {
+        iterators.add(Iterators.filter(ig,
+            Predicates.not(Predicates.equalTo(insertion))));
+      } else {
+        iterators.add(ig);
+      }
+    }
+    return Iterators.concat(iterators.iterator());
+  }
+
+  // adapter for InsertionIndexGenerator
+  static class InsertionGenerator implements Iterator<Insertion> {
+
+    final int row;
+    final int startIndex;
+    final InsertionIndexGenerator indexGenerator;
+
+    InsertionGenerator(int r, int si, InsertionIndexGenerator iig) {
+      row = r;
+      startIndex = si;
+      indexGenerator = iig;
     }
 
     @Override
     public boolean hasNext() {
-      return currentRow < schedule.routes.size() && currentIterator.hasNext();
+      return indexGenerator.hasNext();
     }
 
     @Override
     public Insertion next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-      if (!currentIterator.hasNext()) {
-        currentRow++;
-        createIterator();
-      }
-      return new Insertion(currentRow, currentIterator.next());
+      return new Insertion(row, indexGenerator.next());
     }
 
     @Deprecated
@@ -88,7 +105,6 @@ public final class Insertions {
     public void remove() {
       throw new UnsupportedOperationException();
     }
-
   }
 
   /**
@@ -184,8 +200,8 @@ public final class Insertions {
       originalList = l;
       startIndex = si;
       item = it;
-      indexIterator = new InsertionIndexGenerator(nrOfInsertions, l.size()
-          - startIndex);
+      indexIterator = new InsertionIndexGenerator(nrOfInsertions, l.size(),
+          startIndex);
     }
 
     @Override
@@ -202,7 +218,7 @@ public final class Insertions {
       int prev = 0;
       final ImmutableList.Builder<T> builder = ImmutableList.<T> builder();
       for (int i = 0; i < insertionIndices.size(); i++) {
-        final int cur = insertionIndices.get(i) + startIndex;
+        final int cur = insertionIndices.get(i);
         builder.addAll(originalList.subList(prev, cur));
         builder.add(item);
         prev = cur;
@@ -225,10 +241,13 @@ public final class Insertions {
     private final long length;
     private int index = 0;
 
-    InsertionIndexGenerator(int numOfInsertions, int listSize) {
+    InsertionIndexGenerator(int numOfInsertions, int listSize, int startIndex) {
       insertionPositions = new int[numOfInsertions];
+      for (int i = 0; i < insertionPositions.length; i++) {
+        insertionPositions[i] = startIndex;
+      }
       originalListSize = listSize;
-      length = multichoose(listSize + 1, numOfInsertions);
+      length = multichoose(listSize + 1 - startIndex, numOfInsertions);
     }
 
     @Override

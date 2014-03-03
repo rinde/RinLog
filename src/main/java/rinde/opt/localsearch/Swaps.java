@@ -7,7 +7,6 @@ import static com.google.common.collect.Collections2.filter;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -72,15 +71,10 @@ public class Swaps {
         for (final T t : row) {
           if (!seen.contains(t)) {
             seen.add(t);
-
-            // FIXME find way to elegantly avoid already existing insertions
-            // perhaps by providing a list of exceptions to Insertions.iterator?
-            final int occurrences = Collections.frequency(row, t);
-
             itemsB.add(t);
             rowsB.add(i);
-            builder.add(Insertions.iterator(schedule, i, occurrences,
-                startIndices));
+            builder.add(Insertions.iterator(schedule,
+                new Insertion(i, indices(row, t)), startIndices));
           }
         }
       }
@@ -284,6 +278,16 @@ public class Swaps {
         builder.add(i);
       }
       i++;
+    }
+    return builder.build();
+  }
+
+  public static <T> ImmutableList<Integer> indices(List<T> list, T item) {
+    final ImmutableList.Builder<Integer> builder = ImmutableList.builder();
+    for (int i = 0; i < list.size(); i++) {
+      if (list.get(i).equals(item)) {
+        builder.add(i);
+      }
     }
     return builder.build();
   }

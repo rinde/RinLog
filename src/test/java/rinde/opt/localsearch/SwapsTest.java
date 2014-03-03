@@ -85,7 +85,7 @@ public class SwapsTest {
    * or descending order.
    * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
    */
-  class StringListEvaluator implements Evaluator<SortDirection, String> {
+  static class StringListEvaluator implements Evaluator<SortDirection, String> {
     @Override
     public double eval(SortDirection context, int routeIndex,
         ImmutableList<String> newRoute) {
