@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import rinde.opt.localsearch.Swaps.Evaluator;
@@ -57,27 +56,36 @@ public class SwapsTest {
         new StringListEvaluator());
   }
 
-  @Ignore
   @Test
   public void generateTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.ASCENDING, list(list(A, B), list(C, D)),
+        SortDirection.DESCENDING, list(list(A, A, B, E), list(C, D)),
         new StringListEvaluator());
-    System.out.println(ImmutableList.copyOf(Swaps.generate(s,
-        ImmutableList.of(0, 0))));
+    // System.out.println(ImmutableList.copyOf(Swaps.generate(s,
+    // ImmutableList.of(0, 0))));
 
     final Iterator<Swap<String>> it = Swaps.generate(s, ImmutableList.of(0, 0));
     while (it.hasNext()) {
       final Swap<String> swapOperation = it.next();
       System.out.println(swapOperation);
       final ImmutableList<ImmutableList<String>> routes = Swaps.swap(s,
-          swapOperation.item, swapOperation.fromRow,
-          swapOperation.insertion.row,
-          swapOperation.insertion.insertionIndices, 100).get().routes;
+          swapOperation.item, swapOperation.fromRow, swapOperation.toRow,
+          swapOperation.toIndices, 100).get().routes;
 
-      System.out.println(routes);
+      // System.out.println(routes);
 
     }
+  }
+
+  // @Ignore
+  @Test
+  public void generateTest2() {
+
+    final ImmutableList<ImmutableList<String>> best = Swaps.opt2(
+        list(list(A, A, B, E), list(C, D)), list(1, 1),
+        SortDirection.DESCENDING, new StringListEvaluator());
+
+    System.out.println(best);
   }
 
   /**

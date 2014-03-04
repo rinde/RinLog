@@ -61,12 +61,25 @@ public final class Insertions {
 
   static <C, T> Iterator<Insertion> iterator(Schedule<C, T> schedule,
       Insertion insertion, ImmutableList<Integer> startIndices) {
+
+    if (insertion.insertionIndices.size() == 1) {
+      final InsertionGenerator ig = new InsertionGenerator(insertion.row,
+          startIndices.get(insertion.row), new InsertionIndexGenerator(
+              insertion.insertionIndices.size(), schedule.routes.get(
+                  insertion.row).size() - 1, startIndices.get(insertion.row)));
+      return Iterators
+          .filter(ig, Predicates.not(Predicates.equalTo(insertion)));
+    }
+
     final List<Iterator<Insertion>> iterators = newArrayList();
     for (int i = 0; i < schedule.routes.size(); i++) {
+
+      final int rSize = schedule.routes.get(i).size()
+          - (i == insertion.row ? insertion.insertionIndices.size() : 0);
+
       final InsertionGenerator ig = new InsertionGenerator(i,
           startIndices.get(i), new InsertionIndexGenerator(
-              insertion.insertionIndices.size(), schedule.routes.get(i).size(),
-              startIndices.get(i)));
+              insertion.insertionIndices.size(), rSize, startIndices.get(i)));
       if (i == insertion.row) {
         iterators.add(Iterators.filter(ig,
             Predicates.not(Predicates.equalTo(insertion))));

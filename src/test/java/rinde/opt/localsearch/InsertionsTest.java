@@ -289,11 +289,8 @@ public class InsertionsTest {
 
     final List<Insertion> insertions = ImmutableList.copyOf(iterator(s,
         new Insertion(0, list(1)), list(0, 2)));
-    assertEquals(3, insertions.size());
+    assertEquals(1, insertions.size());
     assertEquals(new Insertion(0, ImmutableList.of(0)), insertions.get(0));
-    assertEquals(new Insertion(0, ImmutableList.of(2)), insertions.get(1));
-    assertEquals(new Insertion(1, ImmutableList.of(2)), insertions.get(2));
-
   }
 
   /**

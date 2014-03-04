@@ -9,14 +9,17 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
-import rinde.opt.localsearch.Insertions.Insertion;
+import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Range;
 
 public class Swaps {
 
@@ -31,98 +34,142 @@ public class Swaps {
   static class Swap<T> {
     final T item;
     final int fromRow;
-    final Insertion insertion;
+    final int toRow;
+    final ImmutableList<Integer> toIndices;
 
-    Swap(T i, int from, Insertion ins) {
+    Swap(T i, int from, int to, ImmutableList<Integer> toInd) {
       item = i;
       fromRow = from;
-      insertion = ins;
+      toRow = to;
+      toIndices = toInd;
     }
 
     @Override
     public String toString() {
       return Objects.toStringHelper(this).add("item", item)
-          .add("fromRow", fromRow).add("insertion", insertion).toString();
+          .add("fromRow", fromRow).add("toRow", toRow)
+          .add("toIndices", toIndices).toString();
     }
   }
 
-  static class SwapIterator<T> implements Iterator<Swap<T>> {
+  static class IndexToSwapTransform<T> implements
+      Function<ImmutableList<Integer>, Swap<T>> {
 
-    final Set<T> seen = newLinkedHashSet();
-    final Iterator<Iterator<Insertion>> iterators;
-    final Iterator<Integer> rows;
-    final Iterator<T> items;
+    private final T item;
+    private final int fromRow;
+    private final int toRow;
 
-    Iterator<Insertion> current;
-
-    private int currentRow;
-    private T currentItem;
-
-    public SwapIterator(Schedule<?, T> schedule,
-        ImmutableList<Integer> startIndices) {
-      final ImmutableList.Builder<Iterator<Insertion>> builder = ImmutableList
-          .builder();
-      final ImmutableList.Builder<T> itemsB = ImmutableList.builder();
-      final ImmutableList.Builder<Integer> rowsB = ImmutableList.builder();
-
-      for (int i = 0; i < schedule.routes.size(); i++) {
-
-        final ImmutableList<T> row = schedule.routes.get(i);
-        for (final T t : row) {
-          if (!seen.contains(t)) {
-            seen.add(t);
-            itemsB.add(t);
-            rowsB.add(i);
-            builder.add(Insertions.iterator(schedule,
-                new Insertion(i, indices(row, t)), startIndices));
-          }
-        }
-      }
-      iterators = builder.build().iterator();
-      items = itemsB.build().iterator();
-      rows = rowsB.build().iterator();
-      if (iterators.hasNext()) {
-        current = iterators.next();
-        currentRow = rows.next();
-        currentItem = items.next();
-      }
-
+    IndexToSwapTransform(T it, int from, int to) {
+      item = it;
+      fromRow = from;
+      toRow = to;
     }
 
     @Override
-    public boolean hasNext() {
-      return iterators.hasNext() || current.hasNext();
-    }
-
-    @Override
-    public Swap<T> next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-
-      if (!current.hasNext()) {
-        current = iterators.next();
-        currentRow = rows.next();
-        currentItem = items.next();
-      }
-
-      final Insertion insertion = current.next();
-
-      return new Swap<T>(currentItem, currentRow, insertion);
-    }
-
-    @Deprecated
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
+    public Swap<T> apply(ImmutableList<Integer> input) {
+      return new Swap<T>(item, fromRow, toRow, input);
     }
 
   }
+
+  // static class SwapIterator<T> implements Iterator<Swap<T>> {
+  //
+  // final Set<T> seen = newLinkedHashSet();
+  // final Iterator<Iterator<Insertion>> iterators;
+  // final Iterator<Integer> rows;
+  // final Iterator<T> items;
+  //
+  // Iterator<Insertion> current;
+  //
+  // private int currentRow;
+  // private T currentItem;
+  //
+  // public SwapIterator(Schedule<?, T> schedule,
+  // ImmutableList<Integer> startIndices) {
+  // final ImmutableList.Builder<Iterator<Insertion>> builder = ImmutableList
+  // .builder();
+  // final ImmutableList.Builder<T> itemsB = ImmutableList.builder();
+  // final ImmutableList.Builder<Integer> rowsB = ImmutableList.builder();
+  //
+  // for (int i = 0; i < schedule.routes.size(); i++) {
+  //
+  // final ImmutableList<T> row = schedule.routes.get(i);
+  // for (int j = 0; j < row.size(); j++) {
+  // final T t = row.get(j);
+  // if (j < startIndices.get(i)) {
+  // seen.add(t);
+  // } else if (!seen.contains(t)) {
+  // seen.add(t);
+  // itemsB.add(t);
+  // rowsB.add(i);
+  //
+  // builder.add(Insertions.iterator(schedule,
+  // new Insertion(i, indices(row, t)), startIndices));
+  // }
+  // }
+  // }
+  // iterators = builder.build().iterator();
+  // items = itemsB.build().iterator();
+  // rows = rowsB.build().iterator();
+  // if (iterators.hasNext()) {
+  // current = iterators.next();
+  // currentRow = rows.next();
+  // currentItem = items.next();
+  // }
+  //
+  // }
+  //
+  // @Override
+  // public boolean hasNext() {
+  //
+  // while (!current.hasNext() && iterators.hasNext()) {
+  // current = iterators.next();
+  // currentRow = rows.next();
+  // currentItem = items.next();
+  // }
+  //
+  // return iterators.hasNext() || current.hasNext();
+  // }
+  //
+  // @Override
+  // public Swap<T> next() {
+  // if (!hasNext()) {
+  // throw new NoSuchElementException();
+  // }
+  //
+  // final Insertion insertion = current.next();
+  //
+  // return new Swap<T>(currentItem, currentRow, insertion);
+  // }
+  //
+  // @Deprecated
+  // @Override
+  // public void remove() {
+  // throw new UnsupportedOperationException();
+  // }
+  //
+  // }
 
   static <C, T> Iterator<Swap<T>> generate(Schedule<C, T> schedule,
       ImmutableList<Integer> startIndices) {
 
-    return new SwapIterator<T>(schedule, startIndices);
+    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder = ImmutableList
+        .builder();
+    final Set<T> seen = newLinkedHashSet();
+    for (int i = 0; i < schedule.routes.size(); i++) {
+      final ImmutableList<T> row = schedule.routes.get(i);
+      for (int j = 0; j < row.size(); j++) {
+        final T t = row.get(j);
+        if (j >= startIndices.get(i) && !seen.contains(t)) {
+          // System.out.println(i + " " + t);
+          iteratorBuilder.add(oneSwap(schedule, startIndices, t, i));
+        }
+        seen.add(t);
+      }
+    }
+    return Iterators.concat(iteratorBuilder.build().iterator());
+
+    // return new SwapIterator<T>(schedule, startIndices);
     // for each T, find # occurrences, insertion points
     // compute number of possible insertions in other places
 
@@ -130,6 +177,69 @@ public class Swaps {
 
     // Insertions.insertionsIterator(list, item, startIndex, numOfInsertions)
 
+  }
+
+  static <C, T> Iterator<Swap<T>> oneSwap(Schedule<C, T> schedule,
+      ImmutableList<Integer> startIndices, T item, int fromRow) {
+    final ImmutableList<Integer> indices = indices(
+        schedule.routes.get(fromRow), item);
+    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder = ImmutableList
+        .builder();
+
+    Range<Integer> range;
+    if (indices.size() == 1) {
+      range = Range.closedOpen(fromRow, fromRow + 1);
+    } else {
+      range = Range.closedOpen(0, schedule.routes.size());
+    }
+
+    for (int i = range.lowerEndpoint(); i < range.upperEndpoint(); i++) {
+      int rowSize = schedule.routes.get(i).size();
+      if (fromRow == i) {
+        rowSize -= indices.size();
+      }
+      Iterator<ImmutableList<Integer>> it = new InsertionIndexGenerator(
+          indices.size(), rowSize, startIndices.get(i));
+      // filter out swaps that have existing result
+      if (fromRow == i) {
+        it = Iterators.filter(it, Predicates.not(Predicates.equalTo(indices)));
+      }
+      iteratorBuilder.add(Iterators.transform(it, new IndexToSwapTransform<T>(
+          item, fromRow, i)));
+    }
+    return Iterators.concat(iteratorBuilder.build().iterator());
+  }
+
+  public static <C, T> ImmutableList<ImmutableList<T>> opt2(
+      ImmutableList<ImmutableList<T>> routes,
+      ImmutableList<Integer> startIndices, C context, Evaluator<C, T> evaluator) {
+
+    checkArgument(routes.size() == startIndices.size());
+
+    final Schedule<C, T> baseSchedule = Schedule.create(context, routes,
+        evaluator);
+    Schedule<C, T> bestSchedule = baseSchedule;
+    boolean isImproving = true;
+    while (isImproving) {
+      isImproving = false;
+
+      final Schedule<C, T> curBest = bestSchedule;
+      final Iterator<Swap<T>> it = generate(curBest, startIndices);
+      while (it.hasNext()) {
+        final Swap<T> swapOperation = it.next();
+        // TODO create cache for Swap+baseSchedule combination, maybe in Table?
+        final Optional<Schedule<C, T>> newSchedule = Swaps.swap(curBest,
+            swapOperation.item, swapOperation.fromRow, swapOperation.toRow,
+            swapOperation.toIndices, bestSchedule.objectiveValue
+                - curBest.objectiveValue);
+
+        if (newSchedule.isPresent()) {
+          isImproving = true;
+          bestSchedule = newSchedule.get();
+        }
+      }
+    }
+    return bestSchedule.routes;
   }
 
   /**
