@@ -7,14 +7,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
-import rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotiatorsHeuristic;
-import rinde.logistics.pdptw.mas.comm.SolverBidder;
-import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import rinde.logistics.pdptw.solver.Opt2;
 import rinde.sim.pdptw.central.Central;
+import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.experiment.Experiment;
@@ -28,7 +25,6 @@ import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
@@ -41,7 +37,7 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 16;
+  private static final int THREADS = 22;
   private static final int REPETITIONS = 10;
   private static final long SEED = 123L;
 
@@ -85,90 +81,87 @@ public final class GendreauExperiments {
         .addDirectory(SCENARIOS_PATH)
         .filter(GendreauProblemClass.SHORT_LOW_FREQ).parse();
 
-    final Experiment.Builder builder = Experiment
-        .build(objFunc)
-        .withRandomSeed(SEED)
-        .repeat(REPETITIONS)
-        .withThreads(THREADS)
-        .addScenarios(onlineScenarios)
+    final Experiment.Builder builder = Experiment.build(objFunc)
+        .withRandomSeed(SEED).repeat(REPETITIONS).withThreads(THREADS)
+        .addScenarios(onlineScenarios);
 
-        // .showGui()
+    // .showGui()
 
-        /*
-         * AUCTIONS
-         */
+    /*
+     * AUCTIONS
+     */
 
-        // .addConfiguration(
-        // new TruckConfiguration(RandomRoutePlanner.supplier(), RandomBidder
-        // .supplier(), ImmutableList.of(AuctionCommModel.supplier())))
-        //
-        // .addConfiguration(
-        // new TruckConfiguration(RandomRoutePlanner.supplier(),
-        // InsertionCostBidder.supplier(objFunc), ImmutableList
-        // .of(AuctionCommModel.supplier())))
+    // .addConfiguration(
+    // new TruckConfiguration(RandomRoutePlanner.supplier(), RandomBidder
+    // .supplier(), ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(RandomRoutePlanner.supplier(),
+    // InsertionCostBidder.supplier(objFunc), ImmutableList
+    // .of(AuctionCommModel.supplier())))
 
-        // .addConfiguration(
-        // new TruckConfiguration(RandomRoutePlanner.supplier(), SolverBidder
-        // .supplier(objFunc,
-        // MultiVehicleHeuristicSolver.supplier(50, 100)),
-        // ImmutableList.of(AuctionCommModel.supplier())))
+    // .addConfiguration(
+    // new TruckConfiguration(RandomRoutePlanner.supplier(), SolverBidder
+    // .supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(50, 100)),
+    // ImmutableList.of(AuctionCommModel.supplier())))
 
-        //
-        // .addConfiguration(
-        // new TruckConfiguration(SolverRoutePlanner
-        // .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
-        // SolverBidder.supplier(objFunc,
-        // MultiVehicleHeuristicSolver.supplier(50, 100)),
-        // ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(50, 100)),
+    // SolverBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(50, 100)),
+    // ImmutableList.of(AuctionCommModel.supplier())))
 
-        // .addConfiguration(
-        // new TruckConfiguration(SolverRoutePlanner
-        // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-        // NegotiatingBidder.supplier(objFunc,
-        // MultiVehicleHeuristicSolver.supplier(20, 10000),
-        // MultiVehicleHeuristicSolver.supplier(200, 50000), 3),
-        // ImmutableList.of(AuctionCommModel.supplier())))
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // NegotiatingBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 3),
+    // ImmutableList.of(AuctionCommModel.supplier())))
 
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 10000),
-                    MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
-                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
-                ImmutableList.of(AuctionCommModel.supplier())))
-
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 10000),
-                    MultiVehicleHeuristicSolver.supplier(200, 50000), 3,
-                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
-                ImmutableList.of(AuctionCommModel.supplier())))
-
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                NegotiatingBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 10000),
-                    MultiVehicleHeuristicSolver.supplier(200, 50000), 4,
-                    SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
-                ImmutableList.of(AuctionCommModel.supplier())))
-
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                SolverBidder.supplier(objFunc,
-                    MultiVehicleHeuristicSolver.supplier(20, 10000)),
-                ImmutableList.of(AuctionCommModel.supplier())))
-
-        .addConfiguration(
-            new TruckConfiguration(SolverRoutePlanner
-                .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
-                SolverBidder.supplier(objFunc,
-                    CheapestInsertionHeuristic.supplier(objFunc)),
-                ImmutableList.of(AuctionCommModel.supplier())));
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // NegotiatingBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+    // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+    // ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // NegotiatingBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 3,
+    // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+    // ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // NegotiatingBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 4,
+    // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION),
+    // ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // SolverBidder.supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000)),
+    // ImmutableList.of(AuctionCommModel.supplier())))
+    //
+    // .addConfiguration(
+    // new TruckConfiguration(SolverRoutePlanner
+    // .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000)),
+    // SolverBidder.supplier(objFunc,
+    // CheapestInsertionHeuristic.supplier(objFunc)),
+    // ImmutableList.of(AuctionCommModel.supplier())));
 
     /*
      * BLACKBOARD
@@ -187,6 +180,17 @@ public final class GendreauExperiments {
     /*
      * CENTRAL
      */
+
+    builder.addConfiguration(Central.solverConfiguration(
+        CheapestInsertionHeuristic.supplier(objFunc), "Insertion"));
+
+    builder
+        .addConfiguration(
+
+        Central.solverConfiguration(
+            SolverValidator.wrap(Opt2.supplier(
+                CheapestInsertionHeuristic.supplier(objFunc), objFunc)),
+            "Opt2Ins"));
 
     // .addConfiguration(
     // Central.solverConfiguration(

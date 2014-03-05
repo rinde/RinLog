@@ -284,7 +284,7 @@ public class InsertionsTest {
   @Test
   public void scheduleIteratorTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.ASCENDING, list(list(A, B), list(C, D)),
+        SortDirection.ASCENDING, list(list(A, B), list(C, D)), list(0, 0),
         new StringListEvaluator());
 
     final List<Insertion> insertions = ImmutableList.copyOf(iterator(s,
