@@ -1,124 +1,25 @@
 package rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.math3.util.ArithmeticUtils;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Predicates;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.primitives.Ints;
 
 /**
- * Utilities for creation insertions.
+ * Utilities for creating insertions.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public final class Insertions {
 
   private Insertions() {}
-
-  static class Insertion {
-    public final int row;
-    public final ImmutableList<Integer> insertionIndices;
-
-    Insertion(int r, ImmutableList<Integer> indices) {
-      row = r;
-      insertionIndices = indices;
-    }
-
-    @Override
-    public String toString() {
-      return Objects.toStringHelper(this).add("row", row)
-          .add("insertionIndices", insertionIndices).toString();
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(row, insertionIndices);
-    }
-
-    @Override
-    public boolean equals(@Nullable Object other) {
-      if (other == null) {
-        return false;
-      }
-      if (getClass() != other.getClass()) {
-        return false;
-      }
-      final Insertion ins = (Insertion) other;
-      return Objects.equal(row, ins.row)
-          && Objects.equal(insertionIndices, ins.insertionIndices);
-    }
-  }
-
-  static <C, T> Iterator<Insertion> iterator(Schedule<C, T> schedule,
-      Insertion insertion, ImmutableList<Integer> startIndices) {
-
-    if (insertion.insertionIndices.size() == 1) {
-      final InsertionGenerator ig = new InsertionGenerator(insertion.row,
-          startIndices.get(insertion.row), new InsertionIndexGenerator(
-              insertion.insertionIndices.size(), schedule.routes.get(
-                  insertion.row).size() - 1, startIndices.get(insertion.row)));
-      return Iterators
-          .filter(ig, Predicates.not(Predicates.equalTo(insertion)));
-    }
-
-    final List<Iterator<Insertion>> iterators = newArrayList();
-    for (int i = 0; i < schedule.routes.size(); i++) {
-
-      final int rSize = schedule.routes.get(i).size()
-          - (i == insertion.row ? insertion.insertionIndices.size() : 0);
-
-      final InsertionGenerator ig = new InsertionGenerator(i,
-          startIndices.get(i), new InsertionIndexGenerator(
-              insertion.insertionIndices.size(), rSize, startIndices.get(i)));
-      if (i == insertion.row) {
-        iterators.add(Iterators.filter(ig,
-            Predicates.not(Predicates.equalTo(insertion))));
-      } else {
-        iterators.add(ig);
-      }
-    }
-    return Iterators.concat(iterators.iterator());
-  }
-
-  // adapter for InsertionIndexGenerator
-  static class InsertionGenerator implements Iterator<Insertion> {
-
-    final int row;
-    final int startIndex;
-    final InsertionIndexGenerator indexGenerator;
-
-    InsertionGenerator(int r, int si, InsertionIndexGenerator iig) {
-      row = r;
-      startIndex = si;
-      indexGenerator = iig;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return indexGenerator.hasNext();
-    }
-
-    @Override
-    public Insertion next() {
-      return new Insertion(row, indexGenerator.next());
-    }
-
-    @Deprecated
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
-    }
-  }
 
   /**
    * Creates an {@link Iterator} for a list of lists, each list contains a
@@ -137,7 +38,8 @@ public final class Insertions {
         "startIndex must be >= 0 and <= %s (list size), it is %s.",
         list.size(), startIndex);
     checkArgument(numOfInsertions > 0, "numOfInsertions must be positive.");
-    return new InsertionsIterator<T>(list, item, startIndex, numOfInsertions);
+    return Iterators.transform(new InsertionIndexGenerator(numOfInsertions,
+        list.size(), startIndex), new IndexToInsertionTransform<T>(list, item));
   }
 
   /**
@@ -181,7 +83,6 @@ public final class Insertions {
    */
   public static <T> ImmutableList<T> insert(List<T> originalList,
       List<Integer> insertionIndices, T item) {
-    // TODO this method should be reused in the rest of the code
     checkArgument(!insertionIndices.isEmpty(),
         "At least one insertion index must be defined.");
     int prev = 0;
@@ -203,47 +104,19 @@ public final class Insertions {
     return builder.build();
   }
 
-  static class InsertionsIterator<T> implements Iterator<ImmutableList<T>> {
-    private final InsertionIndexGenerator indexIterator;
-    private final ImmutableList<T> originalList;
-    private final T item;
-    private final int startIndex;
+  static class IndexToInsertionTransform<T> implements
+      Function<ImmutableList<Integer>, ImmutableList<T>> {
+    final List<T> originalList;
+    final T item;
 
-    InsertionsIterator(ImmutableList<T> l, T it, int si, int nrOfInsertions) {
-      originalList = l;
-      startIndex = si;
-      item = it;
-      indexIterator = new InsertionIndexGenerator(nrOfInsertions, l.size(),
-          startIndex);
+    public IndexToInsertionTransform(List<T> ol, T t) {
+      originalList = ol;
+      item = t;
     }
 
     @Override
-    public boolean hasNext() {
-      return indexIterator.hasNext();
-    }
-
-    @Override
-    public ImmutableList<T> next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-      final List<Integer> insertionIndices = indexIterator.next();
-      int prev = 0;
-      final ImmutableList.Builder<T> builder = ImmutableList.<T> builder();
-      for (int i = 0; i < insertionIndices.size(); i++) {
-        final int cur = insertionIndices.get(i);
-        builder.addAll(originalList.subList(prev, cur));
-        builder.add(item);
-        prev = cur;
-      }
-      builder.addAll(originalList.subList(prev, originalList.size()));
-      return builder.build();
-    }
-
-    @Deprecated
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
+    public ImmutableList<T> apply(ImmutableList<Integer> input) {
+      return insert(originalList, input, item);
     }
   }
 
@@ -296,5 +169,4 @@ public final class Insertions {
       throw new UnsupportedOperationException();
     }
   }
-
 }

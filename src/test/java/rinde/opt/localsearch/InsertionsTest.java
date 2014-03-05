@@ -10,7 +10,6 @@ import static org.junit.Assert.assertTrue;
 import static rinde.opt.localsearch.Insertions.insert;
 import static rinde.opt.localsearch.Insertions.insertions;
 import static rinde.opt.localsearch.Insertions.insertionsIterator;
-import static rinde.opt.localsearch.Insertions.iterator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -18,10 +17,7 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import rinde.opt.localsearch.Insertions.Insertion;
 import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
-import rinde.opt.localsearch.SwapsTest.SortDirection;
-import rinde.opt.localsearch.SwapsTest.StringListEvaluator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -281,17 +277,17 @@ public class InsertionsTest {
     insert(InsertionsTest.list(A, B, C), ImmutableList.<Integer> of(), D);
   }
 
-  @Test
-  public void scheduleIteratorTest() {
-    final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.ASCENDING, list(list(A, B), list(C, D)), list(0, 0),
-        new StringListEvaluator());
-
-    final List<Insertion> insertions = ImmutableList.copyOf(iterator(s,
-        new Insertion(0, list(1)), list(0, 2)));
-    assertEquals(1, insertions.size());
-    assertEquals(new Insertion(0, ImmutableList.of(0)), insertions.get(0));
-  }
+  // @Test
+  // public void scheduleIteratorTest() {
+  // final Schedule<SortDirection, String> s = Schedule.create(
+  // SortDirection.ASCENDING, list(list(A, B), list(C, D)), list(0, 0),
+  // new StringListEvaluator());
+  //
+  // final List<Insertion> insertions = ImmutableList.copyOf(iterator(s,
+  // new Insertion(0, list(1)), list(0, 2)));
+  // assertEquals(1, insertions.size());
+  // assertEquals(new Insertion(0, ImmutableList.of(0)), insertions.get(0));
+  // }
 
   /**
    * Short hand for creating immutable lists.
