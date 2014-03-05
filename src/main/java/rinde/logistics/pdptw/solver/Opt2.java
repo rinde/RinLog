@@ -11,24 +11,31 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Implementation of 2-opt local search algorithm. It is a decorator for another
+ * {@link Solver}, it cannot be used directly since it relies on a complete
+ * schedule (i.e. all parcels must be assigned to a vehicle). For more
+ * information about the algorithm see
+ * {@link Swaps#opt2(ImmutableList, ImmutableList, Object, rinde.opt.localsearch.RouteEvaluator)}
+ * .
+ * 
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class Opt2 implements Solver {
 
   final Solver delegate;
   final ParcelRouteEvaluator evaluator;
 
+  /**
+   * Creates a new instance that decorates the specified {@link Solver} and uses
+   * the specified {@link ObjectiveFunction} to compute the cost of a swap.
+   * @param deleg The solver to decorate.
+   * @param objFunc The {@link ObjectiveFunction} to use for cost computation.
+   */
   public Opt2(Solver deleg, ObjectiveFunction objFunc) {
     delegate = deleg;
     evaluator = new ParcelRouteEvaluator(objFunc);
   }
-
-  // cheapest insertion with random restarts?
-
-  // depth first search
-  // uses the first improving of k-interchanges
-
-  // breadth first search
-  // finds best of possible k-interchanges (swaps) and uses that for next
-  // iteration
 
   @Override
   public ImmutableList<ImmutableList<ParcelDTO>> solve(GlobalStateObject state) {
@@ -38,16 +45,16 @@ public class Opt2 implements Solver {
     for (final VehicleStateObject vso : state.vehicles) {
       indexBuilder.add(vso.destination == null ? 0 : 1);
     }
-
-    final ImmutableList<ImmutableList<ParcelDTO>> routes = Swaps.opt2(schedule,
-        indexBuilder.build(), state, evaluator);
-
-    // System.out.println(routes);
-    // System.out.println(state);
-
-    return routes;
+    return Swaps.opt2(schedule, indexBuilder.build(), state, evaluator);
   }
 
+  /**
+   * Decorates the specified {@link Solver} supplier with {@link Opt2}.
+   * @param delegate The solver to decorate.
+   * @param objFunc The objective function to use.
+   * @return A supplier that creates instances of a solver decorated with
+   *         {@link Opt2}.
+   */
   public static SupplierRng<Solver> supplier(
       final SupplierRng<Solver> delegate, final ObjectiveFunction objFunc) {
     return new DefaultSupplierRng<Solver>() {

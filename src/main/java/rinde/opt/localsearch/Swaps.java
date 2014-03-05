@@ -29,7 +29,7 @@ import com.google.common.collect.Range;
  * {@link #opt2(ImmutableList, ImmutableList, Object, RouteEvaluator)}.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
-public class Swaps {
+public final class Swaps {
 
   private Swaps() {}
 
@@ -46,6 +46,9 @@ public class Swaps {
    *          compute the cost of a swap.
    * @param evaluator {@link RouteEvaluator} that can compute the cost of a
    *          single route.
+   * @param <C> The context type.
+   * @param <T> The route item type (i.e. the locations that are part of a
+   *          route).
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
    */
@@ -181,14 +184,7 @@ public class Swaps {
       final ImmutableList<T> newRoute = inListSwap(s.routes.get(swap.fromRow),
           swap.toIndices, swap.item);
 
-      double newCost;
-      if (cache.containsKey(newRoute)) {
-        newCost = cache.get(newRoute);
-      } else {
-        newCost = s.evaluator.computeCost(s.context, swap.fromRow, newRoute);
-        cache.put(newRoute, newCost);
-      }
-
+      final double newCost = computeCost(s, swap.fromRow, newRoute, cache);
       final double diff = newCost - originalCost;
 
       if (diff < threshold) {
@@ -223,13 +219,7 @@ public class Swaps {
           "The number of occurences in the fromRow (%s) should equal the number of insertion indices (%s).",
           itemCount, swap.toIndices.size());
 
-      double newCostA;
-      if (cache.containsKey(newRouteA)) {
-        newCostA = cache.get(newRouteA);
-      } else {
-        newCostA = s.evaluator.computeCost(s.context, swap.fromRow, newRouteA);
-        cache.put(newRouteA, newCostA);
-      }
+      final double newCostA = computeCost(s, swap.fromRow, newRouteA, cache);
       final double diffA = newCostA - originalCostA;
 
       // compute cost of insertion in new vehicle
@@ -237,13 +227,7 @@ public class Swaps {
       final ImmutableList<T> newRouteB = Insertions.insert(
           s.routes.get(swap.toRow), swap.toIndices, swap.item);
 
-      double newCostB;
-      if (cache.containsKey(newRouteB)) {
-        newCostB = cache.get(newRouteB);
-      } else {
-        newCostB = s.evaluator.computeCost(s.context, swap.toRow, newRouteB);
-        cache.put(newRouteB, newCostB);
-      }
+      final double newCostB = computeCost(s, swap.toRow, newRouteB, cache);
       final double diffB = newCostB - originalCostB;
 
       final double diff = diffA + diffB;
@@ -263,6 +247,16 @@ public class Swaps {
         return Optional.absent();
       }
     }
+  }
+
+  static <C, T> double computeCost(Schedule<C, T> s, int row,
+      ImmutableList<T> newRoute, Map<ImmutableList<T>, Double> cache) {
+    if (cache.containsKey(newRoute)) {
+      return cache.get(newRoute);
+    }
+    final double newCost = s.evaluator.computeCost(s.context, row, newRoute);
+    cache.put(newRoute, newCost);
+    return newCost;
   }
 
   /**

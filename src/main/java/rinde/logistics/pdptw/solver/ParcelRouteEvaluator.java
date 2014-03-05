@@ -12,7 +12,7 @@ class ParcelRouteEvaluator implements
     RouteEvaluator<GlobalStateObject, ParcelDTO> {
   private final ObjectiveFunction objectiveFunction;
 
-  public ParcelRouteEvaluator(ObjectiveFunction objFunc) {
+  ParcelRouteEvaluator(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
   }
 
