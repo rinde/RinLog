@@ -55,6 +55,9 @@ public class SwapsTest {
         new StringListEvaluator());
   }
 
+  /**
+   * Tests whether swap iterator produces correct swaps.
+   */
   @Test
   public void generateTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
@@ -66,18 +69,7 @@ public class SwapsTest {
       final Swap<String> swapOperation = it.next();
       final ImmutableList<ImmutableList<String>> routes = Swaps.swap(s,
           swapOperation, 100).get().routes;
-
     }
-  }
-
-  // @Ignore
-  @Test
-  public void generateTest2() {
-
-    final ImmutableList<ImmutableList<String>> best = Swaps.opt2(
-        list(list(A, A, B, E), list(C, D)), list(1, 1),
-        SortDirection.DESCENDING, new StringListEvaluator());
-
   }
 
   /**
