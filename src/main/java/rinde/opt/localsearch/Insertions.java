@@ -29,6 +29,7 @@ public final class Insertions {
    * @param item The item to be inserted.
    * @param startIndex Must be >= 0 && <= list size.
    * @param numOfInsertions The number of times <code>item</code> is inserted.
+   * @param <T> The list item type.
    * @return Iterator producing a list of lists of size
    *         <code>(n+1)-startIndex</code>.
    */
@@ -50,6 +51,7 @@ public final class Insertions {
    * @param item The item to be inserted.
    * @param startIndex Must be >= 0 && <= list size.
    * @param numOfInsertions The number of times <code>item</code> is inserted.
+   * @param <T> The list item type.
    * @return A list containing all insertions.
    */
   public static <T> ImmutableList<ImmutableList<T>> insertions(
@@ -78,6 +80,7 @@ public final class Insertions {
    * @param originalList The list which will be inserted by <code>item</code>.
    * @param insertionIndices List of insertion indices in ascending order.
    * @param item The item to insert.
+   * @param <T> The list item type.
    * @return A list based on the original list but inserted with item in the
    *         specified places.
    */
@@ -109,7 +112,7 @@ public final class Insertions {
     final List<T> originalList;
     final T item;
 
-    public IndexToInsertionTransform(List<T> ol, T t) {
+    IndexToInsertionTransform(List<T> ol, T t) {
       originalList = ol;
       item = t;
     }
