@@ -32,6 +32,8 @@ public abstract class AbstractBidder implements Bidder {
    */
   protected final Set<DefaultParcel> assignedParcels;
 
+  protected final Set<DefaultParcel> claimedParcels;
+
   /**
    * The event dispatcher.
    */
@@ -57,6 +59,7 @@ public abstract class AbstractBidder implements Bidder {
    */
   public AbstractBidder() {
     assignedParcels = newLinkedHashSet();
+    claimedParcels = newLinkedHashSet();
     eventDispatcher = new EventDispatcher(CommunicatorEventType.values());
     roadModel = Optional.absent();
     pdpModel = Optional.absent();
@@ -78,11 +81,25 @@ public abstract class AbstractBidder implements Bidder {
         "Can not claim parcel %s which is not in assigned parcels: %s.", p,
         assignedParcels);
     assignedParcels.remove(p);
+    claimedParcels.add(p);
+  }
+
+  @Override
+  public void unclaim(DefaultParcel p) {
+    checkArgument(!assignedParcels.contains(p));
+    checkArgument(claimedParcels.contains(p));
+    assignedParcels.add(p);
+    claimedParcels.remove(p);
   }
 
   @Override
   public final Collection<DefaultParcel> getParcels() {
     return unmodifiableSet(assignedParcels);
+  }
+
+  @Override
+  public final Collection<DefaultParcel> getClaimedParcels() {
+    return unmodifiableSet(claimedParcels);
   }
 
   @Override

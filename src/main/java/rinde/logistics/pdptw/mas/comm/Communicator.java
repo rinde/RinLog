@@ -58,11 +58,15 @@ public interface Communicator {
    */
   void claim(DefaultParcel p);
 
+  void unclaim(DefaultParcel p);
+
   /**
    * This method may only return {@link DefaultParcel}s which are not yet picked
    * up.
    * @return All parcels which this communicator may handle.
    */
   Collection<DefaultParcel> getParcels();
+
+  Collection<DefaultParcel> getClaimedParcels();
 
 }

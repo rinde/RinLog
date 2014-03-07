@@ -21,6 +21,7 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public class AuctionCommModel extends AbstractCommModel<Bidder> {
+  private static final double TOLERANCE = .0001;
   private final RandomGenerator rng;
 
   /**
@@ -49,7 +50,7 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
           bestValue = curValue;
           bestBidders.clear();
           bestBidders.add(cur);
-        } else if (Math.abs(curValue - bestValue) < 0.0001) {
+        } else if (Math.abs(curValue - bestValue) < TOLERANCE) {
           bestBidders.add(cur);
         }
       }

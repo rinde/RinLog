@@ -89,4 +89,15 @@ public class BlackboardUser implements Communicator {
       }
     };
   }
+
+  @Override
+  public void unclaim(DefaultParcel p) {
+    throw new UnsupportedOperationException(
+        "diversion is not yet supported in this class");
+  }
+
+  @Override
+  public Collection<DefaultParcel> getClaimedParcels() {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -3,7 +3,9 @@
  */
 package rinde.logistics.pdptw.mas;
 
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 import rinde.logistics.pdptw.mas.comm.Communicator;
 import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
@@ -23,6 +25,7 @@ import rinde.sim.util.fsm.StateMachine.StateMachineEvent;
 import rinde.sim.util.fsm.StateMachine.StateTransitionEvent;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A vehicle entirely controlled by a {@link RoutePlanner} and a
@@ -61,7 +64,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
 
   @Override
   protected void preTick(TimeLapse time) {
-    if (stateMachine.stateIs(waitState)) {
+    if (stateMachine.stateIs(waitState) || isDiversionAllowed()) {
       if (changed) {
         updateAssignmentAndRoutePlanner();
       }
@@ -94,6 +97,26 @@ public class Truck extends RouteFollowingVehicle implements Listener,
   }
 
   @Override
+  public void setRoute(Collection<DefaultParcel> r) {
+    final List<DefaultParcel> prevRoute = ImmutableList.copyOf(getRoute());
+    super.setRoute(r);
+
+    if (stateMachine.getCurrentState() == gotoState
+        || stateMachine.getCurrentState() == waitForServiceState) {
+      // check if first route item has changed
+      if (!prevRoute.isEmpty() && !firstEqualsFirstInRoute(prevRoute)) {
+        final DefaultParcel prevDest = prevRoute.iterator().next();
+        final ParcelState prevDestState = pdpModel.get().getParcelState(
+            prevDest);
+        if (!prevDestState.isPickedUp() && !prevDestState.isTransitionState()) {
+          communicator.unclaim(prevDest);
+        }
+        stateMachine.handle(DefaultEvent.NOGO, this);
+      }
+    }
+  }
+
+  @Override
   public void handleEvent(Event e) {
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
       changed = true;
@@ -101,13 +124,16 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       // we know this is safe since it can only be one type of event
       @SuppressWarnings("unchecked")
       final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
-      if (event.event == DefaultEvent.GOTO) {
+      if (event.event == DefaultEvent.GOTO
+          || event.event == DefaultEvent.REROUTE) {
         final DefaultParcel cur = getRoute().iterator().next();
         if (pdpModel.get().getParcelState(cur) != ParcelState.IN_CARGO) {
           communicator.claim(cur);
         }
       } else if (event.event == DefaultEvent.DONE) {
         routePlanner.next(getCurrentTime().getTime());
+      } else if (event.event == DefaultEvent.NOGO) {
+
       }
 
       if (event.newState == waitState && changed) {

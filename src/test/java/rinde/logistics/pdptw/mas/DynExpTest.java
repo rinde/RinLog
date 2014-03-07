@@ -18,6 +18,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
+import rinde.logistics.pdptw.solver.Opt2;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPScenarioEvent;
 import rinde.sim.pdptw.central.Central;
@@ -58,20 +59,16 @@ public class DynExpTest {
   }
 
   static void run() {
-
     final String dir = "files/dataset/dynexp/urgency/";
     final List<String> files = ExperimentUtil.getFilesFromDir(dir, ".scenario");
-
     final List<VanLon14Scenario> scenarios = newArrayList();
     for (final String file : files) {
-
       final StringBuilder sb = new StringBuilder();
       try {
         Files.asCharSource(new File(file), Charsets.UTF_8).copyTo(sb);
       } catch (final IOException e) {
         throw new IllegalStateException(e);
       }
-
       scenarios.add(ScenarioIO.read(sb.toString(), VanLon14Scenario.class));
     }
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
@@ -106,10 +103,15 @@ public class DynExpTest {
         // ImmutableList.of(AuctionCommModel.supplier())))
 
         // CHEAPEST INSERTION CENTRAL
+        // .addConfiguration(
+        // Central.solverConfiguration(
+        // CheapestInsertionHeuristic.supplier(objFunc),
+        // "-CheapestInsertion"))
+
         .addConfiguration(
-            Central.solverConfiguration(
-                CheapestInsertionHeuristic.supplier(objFunc),
-                "-CheapestInsertion"))
+            Central.solverConfiguration(Opt2.supplier(
+                CheapestInsertionHeuristic.supplier(objFunc), objFunc),
+                "-CheapestInsertOpt2"))
 
         // CENTRAL
         // .addConfiguration(

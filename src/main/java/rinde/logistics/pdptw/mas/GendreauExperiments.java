@@ -7,11 +7,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
+import rinde.logistics.pdptw.mas.comm.AuctionCommModel;
+import rinde.logistics.pdptw.mas.comm.Communicator;
+import rinde.logistics.pdptw.mas.comm.NegotiatingBidder;
+import rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotiatorsHeuristic;
+import rinde.logistics.pdptw.mas.route.RoutePlanner;
+import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
-import rinde.logistics.pdptw.solver.Opt2;
 import rinde.sim.pdptw.central.Central;
-import rinde.sim.pdptw.central.SolverValidator;
 import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.experiment.Experiment;
@@ -22,9 +25,11 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
+import rinde.sim.util.SupplierRng;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.io.Files;
@@ -37,8 +42,8 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 22;
-  private static final int REPETITIONS = 10;
+  private static final int THREADS = 1;
+  private static final int REPETITIONS = 1;
   private static final long SEED = 123L;
 
   private GendreauExperiments() {}
@@ -78,7 +83,7 @@ public final class GendreauExperiments {
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
 
     final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser.parser()
-        .addDirectory(SCENARIOS_PATH)
+        .allowDiversion().addDirectory(SCENARIOS_PATH)
         .filter(GendreauProblemClass.SHORT_LOW_FREQ).parse();
 
     final Experiment.Builder builder = Experiment.build(objFunc)
@@ -181,16 +186,27 @@ public final class GendreauExperiments {
      * CENTRAL
      */
 
-    builder.addConfiguration(Central.solverConfiguration(
-        CheapestInsertionHeuristic.supplier(objFunc), "Insertion"));
+    // builder.addConfiguration(Central.solverConfiguration(
+    // CheapestInsertionHeuristic.supplier(objFunc), "Insertion"));
+    //
+    // builder
+    // .addConfiguration(
+    //
+    // Central.solverConfiguration(
+    // SolverValidator.wrap(Opt2.supplier(
+    // CheapestInsertionHeuristic.supplier(objFunc), objFunc)),
+    // "Opt2Ins"));
 
-    builder
-        .addConfiguration(
+    final SupplierRng<? extends RoutePlanner> routePlannerSupplier = SolverRoutePlanner
+        .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000));
 
-        Central.solverConfiguration(
-            SolverValidator.wrap(Opt2.supplier(
-                CheapestInsertionHeuristic.supplier(objFunc), objFunc)),
-            "Opt2Ins"));
+    final SupplierRng<? extends Communicator> communicatorSupplier = NegotiatingBidder
+        .supplier(objFunc, MultiVehicleHeuristicSolver.supplier(20, 10000),
+            MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+            SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION);
+
+    builder.addConfiguration(new TruckConfiguration(routePlannerSupplier,
+        communicatorSupplier, ImmutableList.of(AuctionCommModel.supplier())));
 
     // .addConfiguration(
     // Central.solverConfiguration(
