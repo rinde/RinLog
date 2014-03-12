@@ -29,7 +29,7 @@
 		<developerConnection>scm:git:git@github.com:rinde/rinlog.git</developerConnection>
 		<url>http://github.com/rinde/RinLog</url>
 	</scm>
-	
+
 	<repositories>
 		<repository>
 			<id>sonatype-snapshots</id>
@@ -99,7 +99,13 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.13</version>
 			<scope>test</scope>
-		</dependency> 
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

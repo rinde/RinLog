@@ -132,8 +132,6 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         }
       } else if (event.event == DefaultEvent.DONE) {
         routePlanner.next(getCurrentTime().getTime());
-      } else if (event.event == DefaultEvent.NOGO) {
-
       }
 
       if (event.newState == waitState && changed) {
