@@ -26,8 +26,6 @@ import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.pdp.twpolicy.TardyAllowedPolicy;
 import rinde.sim.core.model.road.PlaneRoadModel;
-import rinde.sim.event.Event;
-import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultDepot;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
@@ -36,21 +34,34 @@ import rinde.sim.pdptw.common.RouteFollowingVehicle;
 import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.util.TimeWindow;
 import rinde.sim.util.fsm.State;
-import rinde.sim.util.fsm.StateMachine.StateMachineEvent;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Tests for {@link Truck} specifically for when diversion is allowed.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class DiversionTruckTest {
 
+  @SuppressWarnings("null")
   PDPRoadModel rm;
+  @SuppressWarnings("null")
   PDPModel pm;
+  @SuppressWarnings("null")
   DefaultParcel p1, p2, p3, p4, p5;
+  @SuppressWarnings("null")
   TestTruck truck;
+  @SuppressWarnings("null")
   Communicator communicator;
+  @SuppressWarnings("null")
   RoutePlanner routePlanner;
+  @SuppressWarnings("null")
   Simulator sim;
 
+  /**
+   * Sets up the simulator with models and initializes truck and parcels.
+   */
   @Before
   public void setUp() {
     rm = new PDPRoadModel(new PlaneRoadModel(new Point(0, 0), new Point(5, 5),
@@ -391,18 +402,6 @@ public class DiversionTruckTest {
   class TestTruck extends Truck {
     public TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
       super(pDto, rp, c);
-
-      final TestTruck tt = this;
-
-      stateMachine.getEventAPI().addListener(new Listener() {
-
-        @Override
-        public void handleEvent(Event e) {
-
-          System.out.println(tt.getCurrentTime().getTime() + " == " + e);
-        }
-
-      }, StateMachineEvent.STATE_TRANSITION);
     }
 
     public State<StateEvent, RouteFollowingVehicle> getState() {
