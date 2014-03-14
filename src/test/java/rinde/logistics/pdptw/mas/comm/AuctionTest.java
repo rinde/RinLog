@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import rinde.logistics.pdptw.mas.Truck;
@@ -37,26 +38,41 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class AuctionTest {
+  MASConfiguration configuration;
+  AddParcelEvent ape1, ape2;
+  Gendreau06Scenario scen;
 
-  @Test
-  public void test() {
-
-    final MASConfiguration configuration = new TruckConfiguration(
+  @Before
+  public void setUp() {
+    configuration = new TruckConfiguration(
         FixedRoutePlanner.supplier(), RandomBidder.supplier(),
         ImmutableList.of(AuctionCommModel.supplier(), CommTestModel.supplier()));
 
-    final AddParcelEvent ape1 = new AddParcelEvent(new ParcelDTO(
-        new Point(1, 1), new Point(1, 4), new TimeWindow(218300, 10 * 60000),
-        new TimeWindow(0, 20 * 60000), 0, -1, 5000, 5000));
+    ape1 = new AddParcelEvent(ParcelDTO
+        .builder(new Point(1, 1), new Point(1, 4))
+        .pickupTimeWindow(new TimeWindow(218300, 10 * 60000))
+        .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
+        .serviceDuration(5000)
+        .arrivalTime(-1)
+        .build());
 
-    final AddParcelEvent ape2 = new AddParcelEvent(new ParcelDTO(
-        new Point(4, 1), new Point(4, 4), new TimeWindow(0, 10 * 60000),
-        new TimeWindow(0, 20 * 60000), 0, -1, 5000, 5000));
+    ape2 = new AddParcelEvent(ParcelDTO
+        .builder(new Point(4, 1), new Point(4, 4))
+        .pickupTimeWindow(new TimeWindow(0, 10 * 60000))
+        .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
+        .serviceDuration(5000)
+        .arrivalTime(-1)
+        .build());
 
-    final Gendreau06Scenario scen = Gendreau06Parser.parser().allowDiversion()
+    scen = Gendreau06Parser.parser()
+        .allowDiversion()
         .setNumVehicles(1)
-        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24").parse()
-        .get(0);
+        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
+        .parse().get(0);
+  }
+
+  @Test
+  public void test() {
 
     final DynamicPDPTWProblem problem = ExperimentTest.init(scen,
         configuration, 123, false);
@@ -96,9 +112,7 @@ public class AuctionTest {
 
     // set initial destination
     routePlanner.current = Optional.fromNullable(dp1);
-    System.out.println("before");
     sim.tick();
-    System.out.println("#1");
 
     assertThat(truck.getRoute().iterator().next(), is(dp1));
     assertThat(rm.getDestination(truck), is(dp1.dto.pickupLocation));
@@ -113,7 +127,6 @@ public class AuctionTest {
     // change destination
     routePlanner.current = Optional.fromNullable(dp2);
     sim.tick();
-    System.out.println("#2");
 
     assertThat(truck.getRoute().iterator().next(), is(dp2));
     assertThat(rm.getDestination(truck), is(dp2.dto.pickupLocation));
@@ -127,7 +140,6 @@ public class AuctionTest {
     // change destination again, now back to first
     routePlanner.current = Optional.fromNullable(dp1);
     sim.tick();
-    System.out.println("#3");
 
     assertThat(truck.getRoute().iterator().next(), is(dp1));
     assertThat(rm.getDestination(truck), is(dp1.dto.pickupLocation));
@@ -140,8 +152,33 @@ public class AuctionTest {
     while (rm.containsObject(dp2) && !rm.equalPosition(truck, dp2)) {
       sim.tick();
     }
+  }
 
-    System.out.println(sim.getCurrentTime());
+  @Test(expected = IllegalArgumentException.class)
+  public void claimFail1() {
+    new RandomBidder(123).claim(new DefaultParcel(ape1.parcelDTO));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void claimFail2() {
+    final RandomBidder rb = new RandomBidder(123);
+    final DefaultParcel dp = new DefaultParcel(ape1.parcelDTO);
+    rb.receiveParcel(dp);
+    rb.claim(dp);
+    rb.claim(dp);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void unclaimFail1() {
+    new RandomBidder(123).unclaim(new DefaultParcel(ape1.parcelDTO));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void unclaimFail2() {
+    final RandomBidder rb = new RandomBidder(123);
+    final DefaultParcel dp = new DefaultParcel(ape1.parcelDTO);
+    rb.receiveParcel(dp);
+    rb.unclaim(dp);
   }
 
   static class FixedRoutePlanner extends AbstractRoutePlanner {

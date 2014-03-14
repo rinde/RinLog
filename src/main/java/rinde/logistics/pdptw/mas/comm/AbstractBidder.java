@@ -32,6 +32,9 @@ public abstract class AbstractBidder implements Bidder {
    */
   protected final Set<DefaultParcel> assignedParcels;
 
+  /**
+   * The set of parcels that are claimed by this bidder.
+   */
   protected final Set<DefaultParcel> claimedParcels;
 
   /**
@@ -77,6 +80,8 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void claim(DefaultParcel p) {
+    checkArgument(!claimedParcels.contains(p),
+        "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
         "Can not claim parcel %s which is not in assigned parcels: %s.", p,
         assignedParcels);
@@ -86,8 +91,10 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void unclaim(DefaultParcel p) {
-    checkArgument(!assignedParcels.contains(p));
-    checkArgument(claimedParcels.contains(p));
+    checkArgument(!assignedParcels.contains(p),
+        "Can not unclaim %s because it is assigned and not yet claimed.", p);
+    checkArgument(claimedParcels.contains(p),
+        "Can not unclaim %s because it is not claimed.", p);
     assignedParcels.add(p);
     claimedParcels.remove(p);
   }
