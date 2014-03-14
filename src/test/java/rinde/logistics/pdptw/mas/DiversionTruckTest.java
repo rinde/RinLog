@@ -206,6 +206,18 @@ public class DiversionTruckTest {
     verify(communicator, times(2)).unclaim(p1);
     verify(communicator, times(2)).claim(p2);
     verify(communicator, times(1)).unclaim(p2);
+
+    // now divert back to p1. p1 should be claimed but p2 should not be
+    // unclaimed since it is already in cargo.
+    routePlannerGoto(p1);
+    sim.tick();
+    assertEquals(truck.gotoState(), truck.getState());
+    assertEquals(p1, truck.getRoute().iterator().next());
+    inOrder.verify(communicator).claim(p1);
+    verify(communicator, times(3)).claim(p1);
+    verify(communicator, times(2)).unclaim(p1);
+    verify(communicator, times(2)).claim(p2);
+    verify(communicator, times(1)).unclaim(p2);
   }
 
   /**
@@ -220,6 +232,7 @@ public class DiversionTruckTest {
     // divert to nowhere
     routePlannerGotoNowhere();
     sim.tick();
+    assertEquals(truck.waitState(), truck.getState());
     inOrder.verify(communicator).unclaim(p3);
 
     verify(communicator, times(1)).claim(p3);
