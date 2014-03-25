@@ -10,8 +10,8 @@
 	
 	<!-- suppress RinSim logs -->
 	<logger name="rinde.sim" level="WARN" />
-  	<logger name="rinde.logistics" level="TRACE" />
-  	<logger name="rinde.sim.pdptw.common" level="TRACE" />
+  	<logger name="rinde.logistics" level="WARN" />
+  	<logger name="rinde.sim.pdptw.common" level="WARN" />
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
