@@ -3,6 +3,7 @@
  */
 package rinde.logistics.pdptw.mas.route;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
@@ -18,7 +19,7 @@ import rinde.sim.util.SupplierRng;
 import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.HashMultiset;
+import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
 /**
@@ -36,7 +37,8 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
    * @param seed The random seed.
    */
   public RandomRoutePlanner(long seed) {
-    assignedParcels = HashMultiset.create();
+    LOGGER.info("constructor {}", seed);
+    assignedParcels = LinkedHashMultiset.create();
     current = Optional.absent();
     rng = new RandomAdaptor(new MersenneTwister(seed));
   }
@@ -67,8 +69,9 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   public final void nextImpl(long time) {
+    LOGGER.trace("current {}", current);
     if (current.isPresent()) {
-      assignedParcels.remove(current.get());
+      checkArgument(assignedParcels.remove(current.get()));
     }
     updateCurrent();
   }

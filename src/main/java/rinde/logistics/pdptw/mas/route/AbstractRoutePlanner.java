@@ -10,6 +10,9 @@ import static java.util.Collections.unmodifiableList;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.DefaultParcel;
@@ -25,6 +28,9 @@ import com.google.common.collect.ImmutableList;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
+  protected static final Logger LOGGER = LoggerFactory
+      .getLogger(AbstractRoutePlanner.class);
+
   /**
    * Reference to the {@link RoadModel}.
    */
@@ -62,6 +68,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
 
   @Override
   public final void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
+    LOGGER.info("init {}", dv);
     checkState(!isInitialized(), "init shoud be called only once");
     initialized = true;
     roadModel = Optional.of(rm);
@@ -73,19 +80,23 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   @Override
   public final void update(Collection<DefaultParcel> onMap, long time) {
     checkIsInitialized();
+    LOGGER.info("update {} {} {}", vehicle.get(), time, onMap);
     updated = true;
     doUpdate(onMap, time);
+    LOGGER.info("currentRoute {}", currentRoute());
   }
 
   @Override
   public final Optional<DefaultParcel> next(long time) {
     checkIsInitialized();
+    LOGGER.info("next {} {}", vehicle.get(), time);
     checkState(updated,
         "RoutePlanner should be udpated before it can be used, see update()");
     if (current().isPresent()) {
       history.add(current().get());
     }
     nextImpl(time);
+    LOGGER.info("next after {}", currentRoute());
     return current();
   }
 

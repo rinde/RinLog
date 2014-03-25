@@ -1,6 +1,7 @@
 package rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
@@ -53,6 +54,10 @@ public class NegotiatingBidder extends SolverBidder {
     final List<TruckDist> pos = newArrayList(Collections2.transform(roadModel
         .get().getObjectsOfType(Truck.class), new ToTruckDistFunc(reference)));
 
+    checkState(
+        pos.size() >= negotiators,
+        "There are not enough vehicles in the system to hold a %s-party negotiation, there are only %s vehicle(s).",
+        negotiators, pos.size());
     Collections.sort(pos);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,
         new ToTruckFunc()).subList(0, negotiators));

@@ -69,4 +69,6 @@ public interface Communicator {
 
   Collection<DefaultParcel> getClaimedParcels();
 
+  void done();
+
 }

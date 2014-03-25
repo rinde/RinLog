@@ -10,7 +10,11 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Collection;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rinde.sim.core.model.pdp.PDPModel;
+import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.event.Event;
 import rinde.sim.event.EventDispatcher;
@@ -26,6 +30,9 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public abstract class AbstractBidder implements Bidder {
+
+  protected static final Logger LOGGER = LoggerFactory
+      .getLogger(AbstractBidder.class);
 
   /**
    * The set of parcels that are assigned to this bidder.
@@ -80,23 +87,43 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void claim(DefaultParcel p) {
+    LOGGER.info("claim {}", p);
     checkArgument(!claimedParcels.contains(p),
         "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
         "Can not claim parcel %s which is not in assigned parcels: %s.", p,
         assignedParcels);
-    assignedParcels.remove(p);
+    checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
+        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+    // assignedParcels.remove(p);
+    checkArgument(claimedParcels.isEmpty(),
+        "claimed parcels must be empty, is %s.", claimedParcels);
     claimedParcels.add(p);
+    LOGGER.info(" > assigned parcels {}", assignedParcels);
+    LOGGER.info(" > claimed parcels {}", claimedParcels);
   }
 
   @Override
   public void unclaim(DefaultParcel p) {
-    checkArgument(!assignedParcels.contains(p),
-        "Can not unclaim %s because it is assigned and not yet claimed.", p);
+    LOGGER.info("unclaim {}", p);
+    // checkArgument(!assignedParcels.contains(p),
+    // "Can not unclaim %s because it is assigned and not yet claimed.", p);
     checkArgument(claimedParcels.contains(p),
         "Can not unclaim %s because it is not claimed.", p);
-    assignedParcels.add(p);
+
+    checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
+        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+    // assignedParcels.add(p);
     claimedParcels.remove(p);
+    // eventDispatcher
+    // .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+  }
+
+  @Override
+  public void done() {
+    LOGGER.info("done {}", claimedParcels);
+    assignedParcels.removeAll(claimedParcels);
+    claimedParcels.clear();
   }
 
   @Override
@@ -111,6 +138,7 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void receiveParcel(DefaultParcel p) {
+    LOGGER.info("receiveParcel {}", p);
     assignedParcels.add(p);
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));

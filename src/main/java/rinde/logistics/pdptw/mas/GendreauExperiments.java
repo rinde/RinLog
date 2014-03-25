@@ -42,8 +42,8 @@ public final class GendreauExperiments {
 
   private static final String SCENARIOS_PATH = "files/scenarios/gendreau06/";
 
-  private static final int THREADS = 1;
-  private static final int REPETITIONS = 1;
+  private static final int THREADS = 5;
+  private static final int REPETITIONS = 5;
   private static final long SEED = 123L;
 
   private GendreauExperiments() {}
@@ -58,8 +58,10 @@ public final class GendreauExperiments {
     System.out.println("offline");
 
     final List<Gendreau06Scenario> offlineScenarios = Gendreau06Parser.parser()
-        .addDirectory(SCENARIOS_PATH).offline()
-        .filter(GendreauProblemClass.values()).parse();
+        .addDirectory(SCENARIOS_PATH)
+        .offline()
+        .filter(GendreauProblemClass.values())
+        .parse();
 
     final ExperimentResults offlineResults = Experiment
         .build(new Gendreau06ObjectiveFunction())
@@ -83,14 +85,17 @@ public final class GendreauExperiments {
     final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
 
     final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser.parser()
-        .allowDiversion().addDirectory(SCENARIOS_PATH)
-        .filter(GendreauProblemClass.SHORT_LOW_FREQ).parse();
+        .allowDiversion()
+        .addDirectory(SCENARIOS_PATH)
+        // .setNumVehicles(1)
+        .filter(GendreauProblemClass.SHORT_LOW_FREQ)
+        .parse();
 
     final Experiment.Builder builder = Experiment.build(objFunc)
-        .withRandomSeed(SEED).repeat(REPETITIONS).withThreads(THREADS)
+        .withRandomSeed(SEED)
+        .repeat(REPETITIONS)
+        .withThreads(THREADS)
         .addScenarios(onlineScenarios);
-
-    // .showGui()
 
     /*
      * AUCTIONS
@@ -197,6 +202,21 @@ public final class GendreauExperiments {
     // CheapestInsertionHeuristic.supplier(objFunc), objFunc)),
     // "Opt2Ins"));
 
+    // final SupplierRng<? extends RoutePlanner> routePlannerSupplier =
+    // RandomRoutePlanner
+    // .supplier();
+    // SolverRoutePlanner .supplier(RandomSolver.supplier());
+
+    // final SupplierRng<? extends Communicator> communicatorSupplier =
+    // NegotiatingBidder
+    // .supplier(objFunc, MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+    // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION);
+
+    // final SupplierRng<? extends Communicator> communicatorSupplier =
+    // SolverBidder
+    // .supplier(objFunc, RandomSolver.supplier());
+
     final SupplierRng<? extends RoutePlanner> routePlannerSupplier = SolverRoutePlanner
         .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000));
 
@@ -204,6 +224,15 @@ public final class GendreauExperiments {
         .supplier(objFunc, MultiVehicleHeuristicSolver.supplier(20, 10000),
             MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
             SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION);
+
+    // SolverBidder
+    // .supplier(objFunc, RandomSolver.supplier());
+
+    // NegotiatingBidder
+    // .supplier(objFunc,
+    // MultiVehicleHeuristicSolver.supplier(20, 10000),
+    // MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
+    // SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION);
 
     builder.addConfiguration(new TruckConfiguration(routePlannerSupplier,
         communicatorSupplier, ImmutableList.of(AuctionCommModel.supplier())));
@@ -252,22 +281,22 @@ public final class GendreauExperiments {
       final GendreauProblemClass gpc = (GendreauProblemClass) pc;
       /* seed */
       sb.append(r.seed).append(",")
-      /* instance */
-      .append(r.scenario.getProblemInstanceId()).append(",")
-      /* duration */
-      .append(gpc.duration).append(",")
-      /* frequency */
-      .append(gpc.frequency).append(",")
-      /* cost */
-      .append(obj.computeCost(r.stats)).append(',')
-      /* tardiness */
-      .append(obj.tardiness(r.stats)).append(',')
-      /* travelTime */
-      .append(obj.travelTime(r.stats)).append(',')
-      /* overTime */
-      .append(obj.overTime(r.stats)).append(',')
-      /* computation time */
-      .append(r.stats.computationTime).append("\n");
+          /* instance */
+          .append(r.scenario.getProblemInstanceId()).append(",")
+          /* duration */
+          .append(gpc.duration).append(",")
+          /* frequency */
+          .append(gpc.frequency).append(",")
+          /* cost */
+          .append(obj.computeCost(r.stats)).append(',')
+          /* tardiness */
+          .append(obj.tardiness(r.stats)).append(',')
+          /* travelTime */
+          .append(obj.travelTime(r.stats)).append(',')
+          /* overTime */
+          .append(obj.overTime(r.stats)).append(',')
+          /* computation time */
+          .append(r.stats.computationTime).append("\n");
     }
 
     final Set<Cell<MASConfiguration, ProblemClass, StringBuilder>> set = table

@@ -22,7 +22,8 @@ import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.sim.core.TickListener;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.model.AbstractModel;
-import rinde.sim.core.model.pdp.Parcel;
+import rinde.sim.core.model.pdp.PDPModel;
+import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
 import rinde.sim.pdptw.experiment.ExperimentTest;
@@ -75,6 +76,8 @@ public class CommTest implements TickListener {
 
     final Optional<RoadModel> roadModel = Optional.fromNullable(problem
         .getSimulator().getModelProvider().getModel(RoadModel.class));
+    final Optional<PDPModel> pdpModel = Optional.fromNullable(problem
+        .getSimulator().getModelProvider().getModel(PDPModel.class));
 
     final Optional<CommTestModel> commTestModel = Optional.fromNullable(problem
         .getSimulator().getModelProvider().getModel(CommTestModel.class));
@@ -82,7 +85,10 @@ public class CommTest implements TickListener {
     for (final Communicator c : commTestModel.get().communicators) {
       assertTrue(
           "The communicator may only return parcels which are not yet picked up",
-          roadModel.get().getObjectsOfType(Parcel.class)
+          pdpModel
+              .get()
+              .getParcels(ParcelState.ANNOUNCED, ParcelState.AVAILABLE,
+                  ParcelState.PICKING_UP)
               .containsAll(c.getParcels()));
     }
   }

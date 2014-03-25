@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 
 import rinde.logistics.pdptw.mas.comm.Communicator;
+import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.graph.Point;
@@ -26,6 +27,7 @@ import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.pdp.twpolicy.TardyAllowedPolicy;
 import rinde.sim.core.model.road.PlaneRoadModel;
+import rinde.sim.event.Event;
 import rinde.sim.pdptw.common.DefaultDepot;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
@@ -95,14 +97,13 @@ public class DiversionTruckTest {
     sim.register(p5);
 
     routePlanner = mock(RoutePlanner.class);
-    routePlannerGotoNowhere();
-
     communicator = mock(Communicator.class);
     final VehicleDTO dto = new VehicleDTO(new Point(0, 0), 30d, 100,
         TimeWindow.ALWAYS);
 
     truck = new TestTruck(dto, routePlanner, communicator);
     sim.register(truck);
+    routePlannerGotoNowhere();
     assertEquals(truck.waitState(), truck.getState());
 
     assertEquals(ParcelState.AVAILABLE, pm.getParcelState(p1));
@@ -350,10 +351,11 @@ public class DiversionTruckTest {
 
     // service p5
     gotoServiceStateP5();
+    assertEquals(ParcelState.PICKING_UP, pm.getParcelState(p5));
     inOrder.verify(communicator).claim(p5);
 
-    // now divert to p4 while servicing p5. p5 will still be picked up, p4 will
-    // be next destination.
+    // now divert to p4 while servicing p5. p5 will continue to be picked up, p4
+    // will be next destination.
     routePlannerGoto(p4);
     sim.tick();
     assertEquals(ParcelState.IN_CARGO, pm.getParcelState(p5));
@@ -369,12 +371,14 @@ public class DiversionTruckTest {
     when(routePlanner.current()).thenReturn(Optional.<DefaultParcel> absent());
     when(routePlanner.currentRoute()).thenReturn(
         Optional.of(ImmutableList.<DefaultParcel> of()));
+    truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   private void routePlannerGoto(DefaultParcel dp) {
     when(routePlanner.current()).thenReturn(Optional.of(dp));
     when(routePlanner.currentRoute()).thenReturn(
         Optional.of(ImmutableList.of(dp)));
+    truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   private void gotoWaitAtServiceStateP3() {

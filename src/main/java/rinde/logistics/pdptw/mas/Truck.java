@@ -60,10 +60,16 @@ public class Truck extends RouteFollowingVehicle implements Listener,
 
   @Override
   protected void preTick(TimeLapse time) {
-    if (stateMachine.stateIs(waitState) || isDiversionAllowed()) {
+    if (stateMachine.stateIs(waitState)) {
       if (changed) {
         updateAssignmentAndRoutePlanner();
+        updateRoute();
+      } else if (getRoute().isEmpty() && routePlanner.current().isPresent()) {
+        updateRoute();
       }
+    } else if (changed && isDiversionAllowed()
+        && !stateMachine.stateIs(serviceState)) {
+      updateAssignmentAndRoutePlanner();
       updateRoute();
     }
   }
@@ -74,6 +80,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
    */
   protected void updateAssignmentAndRoutePlanner() {
     changed = false;
+
     routePlanner.update(communicator.getParcels(), getCurrentTime().getTime());
     final Optional<DefaultParcel> cur = routePlanner.current();
     if (cur.isPresent()) {
@@ -85,6 +92,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
    * Updates the route based on the {@link RoutePlanner}.
    */
   protected void updateRoute() {
+    LOGGER.info("**UPDATE_ROUTE**");
     if (routePlanner.current().isPresent()) {
       setRoute(routePlanner.currentRoute().get());
     } else {
@@ -116,11 +124,12 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         if (!pdpModel.get().getParcelState(cur).isPickedUp()) {
           communicator.claim(cur);
         }
-      } else if (event.event == DefaultEvent.DONE) {
+      } else if (event.event == DefaultEvent.DONE) { // READY_TO_SERVICE) {
+        communicator.done();
         routePlanner.next(getCurrentTime().getTime());
       }
 
-      if (event.newState == waitState && changed) {
+      if (((event.newState == waitState || (isDiversionAllowed() && event.newState != serviceState)) && changed)) {
         updateAssignmentAndRoutePlanner();
         updateRoute();
       }

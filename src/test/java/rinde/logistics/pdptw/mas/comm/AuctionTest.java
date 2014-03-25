@@ -3,9 +3,10 @@ package rinde.logistics.pdptw.mas.comm;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -17,14 +18,19 @@ import org.junit.Test;
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.logistics.pdptw.mas.TruckConfiguration;
 import rinde.logistics.pdptw.mas.comm.CommTest.CommTestModel;
+import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPModel;
+import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.road.RoadModel;
+import rinde.sim.event.Event;
 import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
+import rinde.sim.pdptw.common.DefaultVehicle;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
+import rinde.sim.pdptw.common.PDPRoadModel;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
@@ -112,33 +118,36 @@ public class AuctionTest {
 
     // set initial destination
     routePlanner.current = Optional.fromNullable(dp1);
+    truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
     assertThat(truck.getRoute().iterator().next(), is(dp1));
     assertThat(rm.getDestination(truck), is(dp1.dto.pickupLocation));
     assertThat(rm.getPosition(truck), is(not(truck.getDTO().startPosition)));
 
-    assertEquals(1, bidder.getParcels().size());
-    assertFalse(bidder.getParcels().contains(dp1));
+    assertEquals(2, bidder.getParcels().size());
+    assertTrue(bidder.getParcels().contains(dp1));
     assertTrue(bidder.getParcels().contains(dp2));
     assertEquals(1, bidder.getClaimedParcels().size());
     assertTrue(bidder.getClaimedParcels().contains(dp1));
 
     // change destination
     routePlanner.current = Optional.fromNullable(dp2);
+    truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
     assertThat(truck.getRoute().iterator().next(), is(dp2));
     assertThat(rm.getDestination(truck), is(dp2.dto.pickupLocation));
     assertThat(rm.getPosition(truck), is(not(truck.getDTO().startPosition)));
-    assertEquals(1, bidder.getParcels().size());
+    assertEquals(2, bidder.getParcels().size());
     assertTrue(bidder.getParcels().contains(dp1));
-    assertFalse(bidder.getParcels().contains(dp2));
+    assertTrue(bidder.getParcels().contains(dp2));
     assertEquals(1, bidder.getClaimedParcels().size());
     assertTrue(bidder.getClaimedParcels().contains(dp2));
 
     // change destination again, now back to first
     routePlanner.current = Optional.fromNullable(dp1);
+    truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
     assertThat(truck.getRoute().iterator().next(), is(dp1));
@@ -159,13 +168,25 @@ public class AuctionTest {
     new RandomBidder(123).claim(new DefaultParcel(ape1.parcelDTO));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  /**
+   * Tests whether two consecutive calls to claim() throws an exception.
+   */
+  @Test
   public void claimFail2() {
     final RandomBidder rb = new RandomBidder(123);
     final DefaultParcel dp = new DefaultParcel(ape1.parcelDTO);
+    final PDPModel pm = mock(PDPModel.class);
+    rb.init(mock(PDPRoadModel.class), pm, mock(DefaultVehicle.class));
+    when(pm.getParcelState(dp)).thenReturn(ParcelState.AVAILABLE);
     rb.receiveParcel(dp);
     rb.claim(dp);
-    rb.claim(dp);
+    boolean fail = false;
+    try {
+      rb.claim(dp);
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    assertTrue(fail);
   }
 
   @Test(expected = IllegalArgumentException.class)

@@ -10,6 +10,7 @@ import java.util.Queue;
 
 import rinde.sim.core.SimulatorAPI;
 import rinde.sim.core.SimulatorUser;
+import rinde.sim.core.model.pdp.PDPModel.VehicleState;
 import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.SolverValidator;
@@ -69,12 +70,28 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
+
+      LOGGER.info("vehicle {}", pdpModel.get().getVehicleState(vehicle.get()));
+      if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
+        LOGGER.info("parcel {} {}",
+            pdpModel.get().getVehicleActionInfo(vehicle.get())
+                .getParcel(),
+
+            pdpModel.get().getParcelState(
+                pdpModel.get().getVehicleActionInfo(vehicle.get())
+                    .getParcel()));
+      }
+
       final SolveArgs args = SolveArgs.create().useParcels(onMap);
 
       if (reuseCurRoutes) {
         args.useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
         try {
           final GlobalStateObject gso = solverHandle.get().convert(args).state;
+
+          LOGGER.info("destination {} available: {}",
+              gso.vehicles.get(0).destination, gso.availableParcels);
+
           SolverValidator.checkRoute(gso.vehicles.get(0), 0);
         } catch (final IllegalArgumentException e) {
           args.noCurrentRoutes();
@@ -82,6 +99,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
       }
       route = solverHandle.get().solve(args).get(0);
     }
+    LOGGER.info("{}", pdpModel.get().getVehicleState(vehicle.get()));
   }
 
   @Override

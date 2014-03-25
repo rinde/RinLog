@@ -100,4 +100,7 @@ public class BlackboardUser implements Communicator {
   public Collection<DefaultParcel> getClaimedParcels() {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public void done() {}
 }
