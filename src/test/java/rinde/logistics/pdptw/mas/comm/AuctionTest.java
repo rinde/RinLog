@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.logistics.pdptw.mas.TruckConfiguration;
-import rinde.logistics.pdptw.mas.comm.CommTest.CommTestModel;
+import rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.CommTestModel;
 import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
 import rinde.sim.core.Simulator;
@@ -43,11 +43,21 @@ import rinde.sim.util.TimeWindow;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Tests for the auction mechanism.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class AuctionTest {
+  @SuppressWarnings("null")
   MASConfiguration configuration;
+  @SuppressWarnings("null")
   AddParcelEvent ape1, ape2;
+  @SuppressWarnings("null")
   Gendreau06Scenario scen;
 
+  /**
+   * 
+   */
   @Before
   public void setUp() {
     configuration = new TruckConfiguration(
@@ -77,6 +87,9 @@ public class AuctionTest {
         .parse().get(0);
   }
 
+  /**
+   * Tests an auction scenario.
+   */
   @Test
   public void test() {
 
@@ -163,6 +176,9 @@ public class AuctionTest {
     }
   }
 
+  /**
+   * Illegal claim.
+   */
   @Test(expected = IllegalArgumentException.class)
   public void claimFail1() {
     new RandomBidder(123).claim(new DefaultParcel(ape1.parcelDTO));
@@ -189,11 +205,17 @@ public class AuctionTest {
     assertTrue(fail);
   }
 
+  /**
+   * Illegal unclaim.
+   */
   @Test(expected = IllegalArgumentException.class)
   public void unclaimFail1() {
     new RandomBidder(123).unclaim(new DefaultParcel(ape1.parcelDTO));
   }
 
+  /**
+   * Illegal unclaim.
+   */
   @Test(expected = IllegalArgumentException.class)
   public void unclaimFail2() {
     final RandomBidder rb = new RandomBidder(123);

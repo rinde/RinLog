@@ -6,8 +6,9 @@ package rinde.logistics.pdptw.mas.comm;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
-import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType.CHANGE;
 
 import java.util.HashSet;
@@ -21,7 +22,6 @@ import rinde.sim.core.model.pdp.Parcel;
 import rinde.sim.event.ListenerEventHistory;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.util.TimeWindow;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
@@ -29,10 +29,16 @@ import rinde.sim.util.TimeWindow;
  */
 public class BlackboardTest {
 
+  @SuppressWarnings("null")
   BlackboardCommModel model;
+  @SuppressWarnings("null")
   List<BlackboardUser> users;
+  @SuppressWarnings("null")
   List<ListenerEventHistory> listeners;
 
+  /**
+   * Sets up several blackboard users.
+   */
   @Before
   public void setUp() {
     model = new BlackboardCommModel();
@@ -51,16 +57,19 @@ public class BlackboardTest {
     assertEquals(users, model.communicators);
   }
 
+  /**
+   * Test claiming of parcels.
+   */
   @Test
-  public void test1() {
-    final DefaultParcel p = create();
+  public void testClaim() {
+    final DefaultParcel p = parcel();
     assertEquals(new HashSet<Parcel>(), model.getUnclaimedParcels());
     model.receiveParcel(p, 0);
     assertEquals(newHashSet(p), model.getUnclaimedParcels());
 
     users.get(0).claim(p);
-    assertEquals(new HashSet<Parcel>(), model.getUnclaimedParcels());
-    assertEquals(users.get(0).getParcels(), model.getUnclaimedParcels());
+    assertTrue(model.getUnclaimedParcels().isEmpty());
+    assertEquals(newHashSet(p), users.get(0).getParcels());
 
     // the user doing the claim should have dispatched only 1 update event
     // (based on the new parcel).
@@ -73,13 +82,87 @@ public class BlackboardTest {
   }
 
   /**
+   * Tests a scenario where a parcel is claimed, unclaimed, claimed again and
+   * then done.
+   */
+  @Test
+  public void claimUnclaimScenario() {
+    final DefaultParcel p = parcel();
+    model.receiveParcel(p, 0L);
+    for (int i = 0; i < users.size(); i++) {
+      final BlackboardUser bu = users.get(i);
+      final ListenerEventHistory li = listeners.get(i);
+      assertEquals(1, bu.getParcels().size());
+      assertTrue(bu.getClaimedParcels().isEmpty());
+      assertEquals(1, li.getHistory().size());
+    }
+
+    users.get(0).claim(p);
+    for (int i = 0; i < users.size(); i++) {
+      final BlackboardUser bu = users.get(i);
+      final ListenerEventHistory li = listeners.get(i);
+      if (i == 0) {
+        assertEquals(1, bu.getClaimedParcels().size());
+        assertEquals(1, bu.getParcels().size());
+        assertEquals(1, li.getHistory().size());
+      } else {
+        assertTrue(bu.getClaimedParcels().isEmpty());
+        assertTrue(bu.getParcels().isEmpty());
+        assertEquals(2, li.getHistory().size());
+      }
+    }
+
+    users.get(0).unclaim(p);
+    for (int i = 0; i < users.size(); i++) {
+      final BlackboardUser bu = users.get(i);
+      final ListenerEventHistory li = listeners.get(i);
+      assertEquals(1, bu.getParcels().size());
+      assertTrue(bu.getClaimedParcels().isEmpty());
+      if (i == 0) {
+        assertEquals(1, li.getHistory().size());
+      } else {
+        assertEquals(3, li.getHistory().size());
+      }
+    }
+
+    users.get(0).claim(p);
+    for (int i = 0; i < users.size(); i++) {
+      final BlackboardUser bu = users.get(i);
+      final ListenerEventHistory li = listeners.get(i);
+      if (i == 0) {
+        assertEquals(1, bu.getClaimedParcels().size());
+        assertEquals(1, bu.getParcels().size());
+        assertEquals(1, li.getHistory().size());
+      } else {
+        assertTrue(bu.getClaimedParcels().isEmpty());
+        assertTrue(bu.getParcels().isEmpty());
+        assertEquals(4, li.getHistory().size());
+      }
+    }
+
+    users.get(0).done();
+    for (int i = 0; i < users.size(); i++) {
+      final BlackboardUser bu = users.get(i);
+      final ListenerEventHistory li = listeners.get(i);
+      assertTrue(bu.getClaimedParcels().isEmpty());
+      assertTrue(bu.getParcels().isEmpty());
+      if (i == 0) {
+        assertEquals(1, li.getHistory().size());
+      } else {
+        assertEquals(4, li.getHistory().size());
+      }
+    }
+  }
+
+  /**
    * Test the check for double claims.
    */
   @Test
   public void claimFail() {
-    final DefaultParcel p = create();
+    final DefaultParcel p = parcel();
     model.receiveParcel(p, 0);
     users.get(0).claim(p);
+    // try claim via user
     boolean fail = false;
     try {
       users.get(0).claim(p);
@@ -87,11 +170,50 @@ public class BlackboardTest {
       fail = true;
     }
     assertTrue(fail);
+    // try claim directly on model
+    fail = false;
+    try {
+      model.claim(users.get(0), p);
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    assertTrue(fail);
   }
 
-  DefaultParcel create() {
-    return new DefaultParcel(new ParcelDTO(new Point(0, 0), new Point(1, 1),
-        TimeWindow.ALWAYS, TimeWindow.ALWAYS, 0, 0, 0, 0));
+  /**
+   * Tests defensive checks of unclaim.
+   */
+  @Test
+  public void unclaimFail() {
+    boolean fail = false;
+    try {
+      users.get(0).unclaim(parcel());
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    assertTrue(fail);
+    fail = false;
+    final DefaultParcel p = parcel();
+    model.receiveParcel(p, 0L);
+    try {
+      model.unclaim(users.get(0), p);
+    } catch (final IllegalArgumentException e) {
+      fail = true;
+    }
+    assertTrue(fail);
   }
 
+  /**
+   * Test the suppliers.
+   */
+  @Test
+  public void supplierTest() {
+    assertNotNull(BlackboardCommModel.supplier().get(0));
+    assertNotNull(BlackboardUser.supplier().get(0));
+  }
+
+  static DefaultParcel parcel() {
+    return new DefaultParcel(ParcelDTO
+        .builder(new Point(0, 0), new Point(1, 1)).build());
+  }
 }

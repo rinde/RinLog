@@ -96,7 +96,6 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   class ClosestDistanceComparator implements Comparator<DefaultParcel> {
-    @SuppressWarnings("null")
     @Override
     public int compare(DefaultParcel arg0, DefaultParcel arg1) {
       final Point cur = roadModel.get().getPosition(vehicle.get());

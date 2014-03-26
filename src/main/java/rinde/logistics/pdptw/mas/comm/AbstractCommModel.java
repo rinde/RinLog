@@ -8,6 +8,9 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rinde.sim.core.model.AbstractModel;
 import rinde.sim.core.model.ModelProvider;
 import rinde.sim.core.model.ModelReceiver;
@@ -30,6 +33,11 @@ import com.google.common.base.Optional;
  */
 public abstract class AbstractCommModel<T extends Communicator> extends
     AbstractModel<T> implements ModelReceiver {
+  /**
+   * The logger.
+   */
+  protected static final Logger LOGGER = LoggerFactory
+      .getLogger(AbstractCommModel.class);
   /**
    * The list of registered communicators.
    */
@@ -67,6 +75,7 @@ public abstract class AbstractCommModel<T extends Communicator> extends
 
   @Override
   public boolean register(final T communicator) {
+    LOGGER.trace("register {}", communicator);
     communicators.add(communicator);
     return true;
   }

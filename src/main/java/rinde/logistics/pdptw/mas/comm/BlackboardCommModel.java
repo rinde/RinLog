@@ -22,7 +22,6 @@ import rinde.sim.util.SupplierRng.DefaultSupplierRng;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
-
   private final Set<DefaultParcel> unclaimedParcels;
 
   /**
@@ -39,11 +38,30 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
    * @param p The parcel that is claimed.
    */
   public void claim(BlackboardUser claimer, DefaultParcel p) {
+    LOGGER.trace("claim {} by {}", p, claimer);
     checkArgument(unclaimedParcels.contains(p), "Parcel %s must be unclaimed.",
         p);
     unclaimedParcels.remove(p);
     for (final BlackboardUser bu : communicators) {
       if (bu != claimer) {
+        bu.update();
+      }
+    }
+  }
+
+  /**
+   * Releases a claim on the specified {@link DefaultParcel}. This means that
+   * this parcel become available again for other {@link BlackboardUser}s.
+   * @param unclaimer The user that releases the claim.
+   * @param p The parcel to release the claim for.
+   */
+  public void unclaim(BlackboardUser unclaimer, DefaultParcel p) {
+    LOGGER.trace("unclaim {} by {}", p, unclaimer);
+    checkArgument(!unclaimedParcels.contains(p), "Parcel %s must be claimed.",
+        p);
+    unclaimedParcels.add(p);
+    for (final BlackboardUser bu : communicators) {
+      if (bu != unclaimer) {
         bu.update();
       }
     }

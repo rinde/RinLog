@@ -8,6 +8,16 @@
 		</encoder>
 	</appender>
 	
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>rinlog.log</file>
+    <append>false</append>
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+    </encoder>
+  </appender>
+	
 	<!-- suppress RinSim logs -->
 	<logger name="rinde.sim" level="WARN" />
   	<logger name="rinde.logistics" level="TRACE" />
@@ -15,5 +25,6 @@
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
 	</root>
 </configuration>

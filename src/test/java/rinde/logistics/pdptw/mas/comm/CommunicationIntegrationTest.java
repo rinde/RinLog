@@ -7,8 +7,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,16 +16,19 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import rinde.logistics.pdptw.mas.TruckConfiguration;
+import rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.sim.core.TickListener;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.model.AbstractModel;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
-import rinde.sim.core.model.road.RoadModel;
+import rinde.sim.pdptw.central.RandomSolver;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
+import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
+import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.util.SupplierRng;
 
@@ -39,18 +40,28 @@ import com.google.common.collect.ImmutableList;
  * 
  */
 @RunWith(Parameterized.class)
-public class CommTest implements TickListener {
-  protected final MASConfiguration configuration;
-  protected DynamicPDPTWProblem problem;
+public class CommunicationIntegrationTest implements TickListener {
+  final MASConfiguration configuration;
+  DynamicPDPTWProblem problem;
 
-  public CommTest(MASConfiguration c) {
+  /**
+   * @param c The configuration under test.
+   */
+  @SuppressWarnings("null")
+  public CommunicationIntegrationTest(MASConfiguration c) {
     configuration = c;
   }
 
+  /**
+   * Conducts the actual integration test.
+   */
   @Test
-  public void test() throws IOException {
-    problem = ExperimentTest.init(Gendreau06Parser.parse(new File(
-        "files/scenarios/gendreau06/req_rapide_1_240_24")), configuration, 123,
+  public void test() {
+    problem = ExperimentTest.init(
+        Gendreau06Parser.parser()
+            .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
+            .parse().get(0)
+        , configuration, 123,
         false);
 
     problem.getSimulator().tick();
@@ -58,13 +69,21 @@ public class CommTest implements TickListener {
     problem.simulate();
   }
 
+  /**
+   * @return The configurations to test.
+   */
   @Parameters
   public static Collection<Object[]> configs() {
-    return asList(new Object[][] { /* */
+    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    return asList(new Object[][] {
         { new TruckConfiguration(RandomRoutePlanner.supplier(),
             RandomBidder.supplier(), ImmutableList.of(
                 AuctionCommModel.supplier(), CommTestModel.supplier())) },
         { new TruckConfiguration(RandomRoutePlanner.supplier(),
+            SolverBidder.supplier(objFunc, RandomSolver.supplier()),
+            ImmutableList.of(
+                AuctionCommModel.supplier(), CommTestModel.supplier())) },
+        { new TruckConfiguration(GotoClosestRoutePlanner.supplier(),
             BlackboardUser.supplier(), ImmutableList.of(
                 BlackboardCommModel.supplier(), CommTestModel.supplier())) },
 
@@ -73,9 +92,6 @@ public class CommTest implements TickListener {
 
   @Override
   public void tick(TimeLapse timeLapse) {
-
-    final Optional<RoadModel> roadModel = Optional.fromNullable(problem
-        .getSimulator().getModelProvider().getModel(RoadModel.class));
     final Optional<PDPModel> pdpModel = Optional.fromNullable(problem
         .getSimulator().getModelProvider().getModel(PDPModel.class));
 
@@ -96,7 +112,7 @@ public class CommTest implements TickListener {
   @Override
   public void afterTick(TimeLapse timeLapse) {}
 
-  protected static class CommTestModel extends AbstractModel<Communicator> {
+  static class CommTestModel extends AbstractModel<Communicator> {
     final List<Communicator> communicators;
 
     CommTestModel() {

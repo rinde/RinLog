@@ -3,6 +3,7 @@
  */
 package rinde.logistics.pdptw.mas.route;
 
+import static com.google.common.base.Objects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.unmodifiableList;
@@ -28,6 +29,9 @@ import com.google.common.collect.ImmutableList;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
+  /**
+   * Logger.
+   */
   protected static final Logger LOGGER = LoggerFactory
       .getLogger(AbstractRoutePlanner.class);
 
@@ -80,7 +84,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   @Override
   public final void update(Collection<DefaultParcel> onMap, long time) {
     checkIsInitialized();
-    LOGGER.info("update {} {} {}", vehicle.get(), time, onMap);
+    LOGGER.info("update {} {} size {}", vehicle.get(), time, onMap.size());
     updated = true;
     doUpdate(onMap, time);
     LOGGER.info("currentRoute {}", currentRoute());
@@ -168,5 +172,11 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected final boolean isUpdated() {
     return updated;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
+        .toString();
   }
 }

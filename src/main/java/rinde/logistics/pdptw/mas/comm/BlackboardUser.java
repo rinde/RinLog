@@ -3,7 +3,13 @@
  */
 package rinde.logistics.pdptw.mas.comm;
 
+import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.Sets.newLinkedHashSet;
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.Collection;
+import java.util.Set;
 
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.road.RoadModel;
@@ -16,6 +22,7 @@ import rinde.sim.util.SupplierRng;
 import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 /**
  * This {@link Communicator} implementation allows communication via a
@@ -26,6 +33,7 @@ public class BlackboardUser implements Communicator {
 
   private Optional<BlackboardCommModel> bcModel;
   private final EventDispatcher eventDispatcher;
+  private final Set<DefaultParcel> claimedParcels;
 
   /**
    * Constructor.
@@ -33,6 +41,7 @@ public class BlackboardUser implements Communicator {
   public BlackboardUser() {
     eventDispatcher = new EventDispatcher(CommunicatorEventType.values());
     bcModel = Optional.absent();
+    claimedParcels = newLinkedHashSet();
   }
 
   /**
@@ -51,8 +60,23 @@ public class BlackboardUser implements Communicator {
    */
   @Override
   public void claim(DefaultParcel p) {
+    checkArgument(!claimedParcels.contains(p), "Parcel %s is already claimed.",
+        p);
     // forward call to model
     bcModel.get().claim(this, p);
+    claimedParcels.add(p);
+  }
+
+  @Override
+  public void unclaim(DefaultParcel p) {
+    checkArgument(claimedParcels.contains(p), "Parcel %s is not claimed.", p);
+    bcModel.get().unclaim(this, p);
+    claimedParcels.remove(p);
+  }
+
+  @Override
+  public void done() {
+    claimedParcels.clear();
   }
 
   /**
@@ -70,7 +94,18 @@ public class BlackboardUser implements Communicator {
 
   @Override
   public Collection<DefaultParcel> getParcels() {
-    return bcModel.get().getUnclaimedParcels();
+    return Sets.union(bcModel.get().getUnclaimedParcels(), claimedParcels);
+  }
+
+  @Override
+  public Collection<DefaultParcel> getClaimedParcels() {
+    return unmodifiableSet(claimedParcels);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
+        .toString();
   }
 
   // not needed
@@ -90,17 +125,4 @@ public class BlackboardUser implements Communicator {
     };
   }
 
-  @Override
-  public void unclaim(DefaultParcel p) {
-    throw new UnsupportedOperationException(
-        "diversion is not yet supported in this class");
-  }
-
-  @Override
-  public Collection<DefaultParcel> getClaimedParcels() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void done() {}
 }

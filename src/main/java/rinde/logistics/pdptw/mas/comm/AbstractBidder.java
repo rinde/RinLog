@@ -31,6 +31,9 @@ import com.google.common.base.Optional;
  */
 public abstract class AbstractBidder implements Bidder {
 
+  /**
+   * The logger.
+   */
   protected static final Logger LOGGER = LoggerFactory
       .getLogger(AbstractBidder.class);
 
@@ -95,7 +98,6 @@ public abstract class AbstractBidder implements Bidder {
         assignedParcels);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
         || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
-    // assignedParcels.remove(p);
     checkArgument(claimedParcels.isEmpty(),
         "claimed parcels must be empty, is %s.", claimedParcels);
     claimedParcels.add(p);
@@ -106,17 +108,11 @@ public abstract class AbstractBidder implements Bidder {
   @Override
   public void unclaim(DefaultParcel p) {
     LOGGER.info("unclaim {}", p);
-    // checkArgument(!assignedParcels.contains(p),
-    // "Can not unclaim %s because it is assigned and not yet claimed.", p);
     checkArgument(claimedParcels.contains(p),
         "Can not unclaim %s because it is not claimed.", p);
-
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
         || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
-    // assignedParcels.add(p);
     claimedParcels.remove(p);
-    // eventDispatcher
-    // .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override

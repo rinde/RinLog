@@ -53,22 +53,36 @@ public interface Communicator {
   void waitFor(DefaultParcel p);
 
   /**
-   * Indicates that the truck is going to this parcel (this is final!).
-   * @param p The parcel.
+   * This communicator lays a claim on the specified {@link DefaultParcel}, this
+   * means that this communicator is from now on exclusively responsible for the
+   * servicing of this parcel.
+   * @param p The parcel to claim.
    */
   void claim(DefaultParcel p);
 
+  /**
+   * Releases the claim made by {@link #claim(DefaultParcel)}.
+   * @param p The parcel to release the claim for.
+   */
   void unclaim(DefaultParcel p);
 
   /**
+   * Indicates that the previously claimed parcels are done and are therefore
+   * removed from the {@link #getParcels()} and {@link #getClaimedParcels()}.
+   */
+  void done();
+
+  /**
    * This method may only return {@link DefaultParcel}s which are not yet picked
-   * up.
+   * up. All returned parcels are assigned to this communicator, however, this
+   * assignment is not guaranteed to be exclusive.
    * @return All parcels which this communicator may handle.
    */
   Collection<DefaultParcel> getParcels();
 
+  /**
+   * @return Parcels which are claimed by this communicator and are not yet
+   *         'done', see {@link #done()}.
+   */
   Collection<DefaultParcel> getClaimedParcels();
-
-  void done();
-
 }

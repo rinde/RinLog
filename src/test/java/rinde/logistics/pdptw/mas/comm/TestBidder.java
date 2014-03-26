@@ -4,12 +4,22 @@ import rinde.sim.event.Event;
 import rinde.sim.util.SupplierRng;
 import rinde.sim.util.SupplierRng.DefaultSupplierRng;
 
+/**
+ * {@link Bidder} implementation that adds some methods for easier testing.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class TestBidder extends RandomBidder {
 
+  /**
+   * @param seed Seed for random bidder.
+   */
   public TestBidder(long seed) {
     super(seed);
   }
 
+  /**
+   * Clears assignedParcels.
+   */
   public void removeAll() {
     assignedParcels.clear();
     eventDispatcher
@@ -27,5 +37,4 @@ public class TestBidder extends RandomBidder {
       }
     };
   }
-
 }

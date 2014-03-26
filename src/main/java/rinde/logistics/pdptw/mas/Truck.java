@@ -3,6 +3,8 @@
  */
 package rinde.logistics.pdptw.mas;
 
+import static com.google.common.base.Objects.toStringHelper;
+
 import java.util.LinkedList;
 
 import rinde.logistics.pdptw.mas.comm.Communicator;
@@ -92,7 +94,6 @@ public class Truck extends RouteFollowingVehicle implements Listener,
    * Updates the route based on the {@link RoutePlanner}.
    */
   protected void updateRoute() {
-    LOGGER.info("**UPDATE_ROUTE**");
     if (routePlanner.current().isPresent()) {
       setRoute(routePlanner.currentRoute().get());
     } else {
@@ -154,5 +155,14 @@ public class Truck extends RouteFollowingVehicle implements Listener,
   public void setSimulator(SimulatorAPI api) {
     api.register(communicator);
     api.register(routePlanner);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .addValue(Integer.toHexString(hashCode()))
+        .add("rp", routePlanner)
+        .add("c", communicator)
+        .toString();
   }
 }
