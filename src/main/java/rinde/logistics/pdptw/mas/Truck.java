@@ -111,12 +111,10 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
 
       // when diverting -> unclaim previous
-      if (event.event == DefaultEvent.REROUTE
-          || event.event == DefaultEvent.NOGO) {
-        if (!pdpModel.get().getParcelState(gotoState.getPreviousDestination())
-            .isPickedUp()) {
-          communicator.unclaim(gotoState.getPreviousDestination());
-        }
+      if ((event.event == DefaultEvent.REROUTE || event.event == DefaultEvent.NOGO)
+          && !pdpModel.get().getParcelState(gotoState.getPreviousDestination())
+              .isPickedUp()) {
+        communicator.unclaim(gotoState.getPreviousDestination());
       }
 
       if (event.event == DefaultEvent.GOTO
@@ -125,12 +123,13 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         if (!pdpModel.get().getParcelState(cur).isPickedUp()) {
           communicator.claim(cur);
         }
-      } else if (event.event == DefaultEvent.DONE) { // READY_TO_SERVICE) {
+      } else if (event.event == DefaultEvent.DONE) {
         communicator.done();
         routePlanner.next(getCurrentTime().getTime());
       }
 
-      if (((event.newState == waitState || (isDiversionAllowed() && event.newState != serviceState)) && changed)) {
+      if ((event.newState == waitState || (isDiversionAllowed() && event.newState != serviceState))
+          && changed) {
         updateAssignmentAndRoutePlanner();
         updateRoute();
       }
