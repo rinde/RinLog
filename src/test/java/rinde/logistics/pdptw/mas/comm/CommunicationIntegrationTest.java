@@ -112,7 +112,7 @@ public class CommunicationIntegrationTest implements TickListener {
   @Override
   public void afterTick(TimeLapse timeLapse) {}
 
-  static class CommTestModel extends AbstractModel<Communicator> {
+  public static class CommTestModel extends AbstractModel<Communicator> {
     final List<Communicator> communicators;
 
     CommTestModel() {
