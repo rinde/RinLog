@@ -7,6 +7,7 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -35,6 +36,9 @@ import com.google.common.collect.Lists;
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public class NegotiatingBidder extends SolverBidder {
+
+  private static final Comparator<TruckDist> TRUCK_DIST_COMPARATOR = new TruckDistComparator();
+  private static final Function<TruckDist, Truck> TRUCK_DIST_TO_TRUCK = new ToTruckFunc();
 
   /**
    * This heuristic determines the property on which the selection of
@@ -85,9 +89,9 @@ public class NegotiatingBidder extends SolverBidder {
         pos.size() >= negotiators,
         "There are not enough vehicles in the system to hold a %s-party negotiation, there are only %s vehicle(s).",
         negotiators, pos.size());
-    Collections.sort(pos);
+    Collections.sort(pos, TRUCK_DIST_COMPARATOR);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,
-        new ToTruckFunc()).subList(0, negotiators));
+        TRUCK_DIST_TO_TRUCK).subList(0, negotiators));
 
     if (!trucks.contains(vehicle.get())) {
       // remove the last one in the list
@@ -210,7 +214,9 @@ public class NegotiatingBidder extends SolverBidder {
     @Override
     @Nullable
     public Truck apply(@Nullable TruckDist input) {
-      checkArgument(input != null);
+      if (input == null) {
+        throw new IllegalArgumentException("Null input is not allowed.");
+      }
       return input.truck;
     }
   }
@@ -232,18 +238,22 @@ public class NegotiatingBidder extends SolverBidder {
     }
   }
 
-  private static class TruckDist implements Comparable<TruckDist> {
+  private static class TruckDistComparator implements Comparator<TruckDist> {
+    TruckDistComparator() {}
+
+    @Override
+    public int compare(TruckDist o1, TruckDist o2) {
+      return Double.compare(o1.distance, o2.distance);
+    }
+  }
+
+  private static class TruckDist {
     final Truck truck;
     final double distance;
 
     TruckDist(Truck t, double d) {
       truck = t;
       distance = d;
-    }
-
-    @Override
-    public int compareTo(TruckDist o) {
-      return Double.compare(distance, o.distance);
     }
   }
 }

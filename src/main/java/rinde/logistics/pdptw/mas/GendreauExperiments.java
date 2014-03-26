@@ -48,7 +48,11 @@ public final class GendreauExperiments {
 
   private GendreauExperiments() {}
 
-  public static void main(String[] args) throws IOException {
+  /**
+   * Executes the experiment.
+   * @param args The args (ignored).
+   */
+  public static void main(String[] args) {
     onlineExperiment();
   }
 
