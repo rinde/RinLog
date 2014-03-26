@@ -56,7 +56,7 @@ public class NegotiatingBidder extends SolverBidder {
 
   private final Solver negotiationSolver;
   private final int negotiators;
-  final SelectNegotiatorsHeuristic heuristic;
+  private final SelectNegotiatorsHeuristic heuristic;
 
   /**
    * Create a new instance.
@@ -98,32 +98,6 @@ public class NegotiatingBidder extends SolverBidder {
     return trucks;
   }
 
-  static class ToTruckFunc implements Function<TruckDist, Truck> {
-    @Override
-    @Nullable
-    public Truck apply(@Nullable TruckDist input) {
-      checkArgument(input != null);
-      return input.truck;
-    }
-  }
-
-  class ToTruckDistFunc implements Function<Truck, TruckDist> {
-    private final Point reference;
-
-    ToTruckDistFunc(Point ref) {
-      reference = ref;
-    }
-
-    @Override
-    @Nullable
-    public TruckDist apply(@Nullable Truck t) {
-      if (t == null) {
-        throw new IllegalArgumentException("Null is not allowed.");
-      }
-      return new TruckDist(t, Point.distance(convertToPos(t), reference));
-    }
-  }
-
   Point convertToPos(Truck t) {
     Point p;
     if (t.getRoute().isEmpty()
@@ -138,21 +112,6 @@ public class NegotiatingBidder extends SolverBidder {
       }
     }
     return p;
-  }
-
-  private static class TruckDist implements Comparable<TruckDist> {
-    final Truck truck;
-    final double distance;
-
-    TruckDist(Truck t, double d) {
-      truck = t;
-      distance = d;
-    }
-
-    @Override
-    public int compareTo(TruckDist o) {
-      return Double.compare(distance, o.distance);
-    }
   }
 
   @Override
@@ -245,5 +204,46 @@ public class NegotiatingBidder extends SolverBidder {
                 numOfNegotiators, heuristic.toString().replaceAll("_", "-")));
       }
     };
+  }
+
+  static class ToTruckFunc implements Function<TruckDist, Truck> {
+    @Override
+    @Nullable
+    public Truck apply(@Nullable TruckDist input) {
+      checkArgument(input != null);
+      return input.truck;
+    }
+  }
+
+  class ToTruckDistFunc implements Function<Truck, TruckDist> {
+    private final Point reference;
+
+    ToTruckDistFunc(Point ref) {
+      reference = ref;
+    }
+
+    @Override
+    @Nullable
+    public TruckDist apply(@Nullable Truck t) {
+      if (t == null) {
+        throw new IllegalArgumentException("Null is not allowed.");
+      }
+      return new TruckDist(t, Point.distance(convertToPos(t), reference));
+    }
+  }
+
+  private static class TruckDist implements Comparable<TruckDist> {
+    final Truck truck;
+    final double distance;
+
+    TruckDist(Truck t, double d) {
+      truck = t;
+      distance = d;
+    }
+
+    @Override
+    public int compareTo(TruckDist o) {
+      return Double.compare(distance, o.distance);
+    }
   }
 }
