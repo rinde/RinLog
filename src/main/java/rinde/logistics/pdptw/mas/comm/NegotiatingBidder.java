@@ -30,17 +30,44 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+/**
+ * {@link SolverBidder} that uses a negotiation phase for exchanging parcels.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class NegotiatingBidder extends SolverBidder {
 
+  /**
+   * This heuristic determines the property on which the selection of
+   * negotiators is done.
+   * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+   */
   public enum SelectNegotiatorsHeuristic {
-    VEHICLE_POSITION, FIRST_DESTINATION_POSITION;
+    /**
+     * Select negotiators based on <code>n</code> closed vehicles.
+     */
+    VEHICLE_POSITION,
+
+    /**
+     * Select negotiators based on <code>n</code> vehicles which closest first
+     * destinations.
+     */
+    FIRST_DESTINATION_POSITION;
   }
 
   private final Solver negotiationSolver;
   private final int negotiators;
   final SelectNegotiatorsHeuristic heuristic;
 
-  public NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
+  /**
+   * Create a new instance.
+   * @param objFunc The objective function to use for optimization.
+   * @param s1 The solver used for computing bids.
+   * @param s2 The solver used for the negotiation process.
+   * @param numOfNegotiators The number of parties to include in the negotiation
+   *          process (including itself), must be <code>>=2</code>.
+   * @param h The heuristic to use for selecting negotiators.
+   */
+  protected NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
       int numOfNegotiators, SelectNegotiatorsHeuristic h) {
     super(objFunc, s1);
     negotiationSolver = s2;
@@ -187,11 +214,22 @@ public class NegotiatingBidder extends SolverBidder {
     checkArgument(newLinkedHashSet(list).equals(ps));
   }
 
+  /**
+   * Create a supplier that creates new instances.
+   * @param objFunc The objective function to use for optimization.
+   * @param bidderSolverSupplier The solver used for computing bids.
+   * @param negoSolverSupplier The solver used for the negotiation process.
+   * @param numOfNegotiators The number of parties to include in the negotiation
+   *          process (including itself), must be <code>>=2</code>.
+   * @param heuristic The heuristic to use for selecting negotiators.
+   * @return The new supplier.
+   */
   public static SupplierRng<NegotiatingBidder> supplier(
       final ObjectiveFunction objFunc,
       final SupplierRng<? extends Solver> bidderSolverSupplier,
       final SupplierRng<? extends Solver> negoSolverSupplier,
-      final int numOfNegotiators, final SelectNegotiatorsHeuristic heuristic) {
+      final int numOfNegotiators,
+      final SelectNegotiatorsHeuristic heuristic) {
     return new DefaultSupplierRng<NegotiatingBidder>() {
       @Override
       public NegotiatingBidder get(long seed) {
