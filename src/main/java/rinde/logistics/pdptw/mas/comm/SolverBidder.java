@@ -55,10 +55,12 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
   @Override
   public double getBidFor(DefaultParcel p, long time) {
+    LOGGER.info("{} getBidFor {}", this, p);
     final Set<DefaultParcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
     final ImmutableList<DefaultParcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
+    LOGGER.trace(" > currentRoute {}", currentRoute);
     final ImmutableList<ParcelDTO> dtoRoute = Solvers.toDtoList(currentRoute);
     final StateContext context = solverHandle.get().convert(
         SolveArgs.create().noCurrentRoutes().useParcels(parcels));
@@ -105,8 +107,11 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
     if (simulator.isPresent() && roadModel.isPresent()
         && !solverHandle.isPresent()) {
       solverHandle = Optional.of(Solvers.solverBuilder(solver)
-          .with(roadModel.get()).with(pdpModel.get()).with(simulator.get())
-          .with(vehicle.get()).buildSingle());
+          .with(roadModel.get())
+          .with(pdpModel.get())
+          .with(simulator.get())
+          .with(vehicle.get())
+          .buildSingle());
 
     }
   }

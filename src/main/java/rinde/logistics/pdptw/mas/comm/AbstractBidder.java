@@ -3,6 +3,7 @@
  */
 package rinde.logistics.pdptw.mas.comm;
 
+import static com.google.common.base.Objects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
@@ -134,8 +135,17 @@ public abstract class AbstractBidder implements Bidder {
 
   @Override
   public void receiveParcel(DefaultParcel p) {
-    LOGGER.info("receiveParcel {}", p);
+    LOGGER.info("{} receiveParcel {}", this, p);
     assignedParcels.add(p);
+    eventDispatcher
+        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+  }
+
+  @Override
+  public void releaseParcel(DefaultParcel p) {
+    LOGGER.info("{} releaseParcel {}", this, p);
+    checkArgument(assignedParcels.contains(p));
+    assignedParcels.remove(p);
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
@@ -153,4 +163,10 @@ public abstract class AbstractBidder implements Bidder {
    * after {@link #init(RoadModel, PDPModel, DefaultVehicle)} is called.
    */
   protected void afterInit() {}
+
+  @Override
+  public String toString() {
+    return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
+        .toString();
+  }
 }

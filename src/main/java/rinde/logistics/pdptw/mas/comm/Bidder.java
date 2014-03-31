@@ -29,4 +29,6 @@ public interface Bidder extends Communicator {
    */
   void receiveParcel(DefaultParcel p);
 
+  void releaseParcel(DefaultParcel p);
+
 }

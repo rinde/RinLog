@@ -1,8 +1,10 @@
 package rinde.logistics.pdptw.mas.comm;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -10,30 +12,38 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import rinde.logistics.pdptw.mas.Truck;
 import rinde.logistics.pdptw.mas.TruckConfiguration;
 import rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.CommTestModel;
 import rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
+import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.road.RoadModel;
 import rinde.sim.event.Event;
+import rinde.sim.pdptw.central.RandomSolver;
 import rinde.sim.pdptw.common.AddParcelEvent;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem;
+import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.PDPRoadModel;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
+import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.util.SupplierRng;
@@ -47,23 +57,34 @@ import com.google.common.collect.ImmutableList;
  * Tests for the auction mechanism.
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
+@RunWith(Parameterized.class)
 public class AuctionTest {
-  @SuppressWarnings("null")
-  MASConfiguration configuration;
-  @SuppressWarnings("null")
   AddParcelEvent ape1, ape2;
+
+  final SupplierRng<Bidder> bidderSupplier;
+
+  /**
+   * @param b The {@link Bidder} under test.
+   */
   @SuppressWarnings("null")
-  Gendreau06Scenario scen;
+  public AuctionTest(SupplierRng<Bidder> b) {
+    bidderSupplier = b;
+  }
+
+  @Parameters
+  public static Collection<Object[]> configs() {
+    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    return ImmutableList.of(
+        // new Object[] { RandomBidder.supplier() },
+        new Object[] { SolverBidder.supplier(objFunc,
+            RandomSolver.supplier()) });
+  }
 
   /**
    * 
    */
   @Before
   public void setUp() {
-    configuration = new TruckConfiguration(
-        FixedRoutePlanner.supplier(), RandomBidder.supplier(),
-        ImmutableList.of(AuctionCommModel.supplier(), CommTestModel.supplier()));
-
     ape1 = new AddParcelEvent(ParcelDTO
         .builder(new Point(1, 1), new Point(1, 4))
         .pickupTimeWindow(new TimeWindow(218300, 10 * 60000))
@@ -79,12 +100,6 @@ public class AuctionTest {
         .serviceDuration(5000)
         .arrivalTime(-1)
         .build());
-
-    scen = Gendreau06Parser.parser()
-        .allowDiversion()
-        .setNumVehicles(1)
-        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
-        .parse().get(0);
   }
 
   /**
@@ -92,6 +107,14 @@ public class AuctionTest {
    */
   @Test
   public void test() {
+    final MASConfiguration configuration = new TruckConfiguration(
+        FixedRoutePlanner.supplier(), bidderSupplier,
+        ImmutableList.of(AuctionCommModel.supplier(), CommTestModel.supplier()));
+    final Gendreau06Scenario scen = Gendreau06Parser.parser()
+        .allowDiversion()
+        .setNumVehicles(1)
+        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
+        .parse().get(0);
 
     final DynamicPDPTWProblem problem = ExperimentTest.init(scen,
         configuration, 123, false);
@@ -122,7 +145,7 @@ public class AuctionTest {
     final FixedRoutePlanner routePlanner = (FixedRoutePlanner) truck
         .getRoutePlanner();
 
-    final AbstractBidder bidder = (AbstractBidder) truck.getCommunicator();
+    final Bidder bidder = (Bidder) truck.getCommunicator();
 
     assertEquals(2, bidder.getParcels().size());
     assertTrue(bidder.getParcels().contains(dp1));
@@ -176,6 +199,73 @@ public class AuctionTest {
     }
   }
 
+  @Test
+  public void swapParcelTest() {
+    final MASConfiguration configuration = new TruckConfiguration(
+        RandomRoutePlanner.supplier(), bidderSupplier,
+        ImmutableList.of(AuctionCommModel.supplier(), CommTestModel.supplier()));
+    final Gendreau06Scenario scen = Gendreau06Parser.parser()
+        .allowDiversion()
+        .setNumVehicles(2)
+        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
+        .parse().get(0);
+
+    final DynamicPDPTWProblem problem = ExperimentTest.init(scen,
+        configuration, 123, false);
+    final Simulator sim = problem.getSimulator();
+    sim.tick();
+
+    final RoadModel rm = Optional.fromNullable(
+        problem.getSimulator().getModelProvider().getModel(RoadModel.class))
+        .get();
+
+    final PDPModel pm = Optional.fromNullable(
+        problem.getSimulator().getModelProvider().getModel(PDPModel.class))
+        .get();
+
+    final AuctionCommModel cm = Optional.fromNullable(
+        problem.getSimulator().getModelProvider()
+            .getModel(AuctionCommModel.class))
+        .get();
+
+    final List<Truck> trucks = newArrayList(rm.getObjectsOfType(Truck.class));
+    final Truck truck1 = trucks.get(0);
+    final Truck truck2 = trucks.get(1);
+    assertNotEquals(truck1, truck2);
+    assertEquals(2, trucks.size());
+
+    final Bidder bidder1 = (Bidder) truck1.getCommunicator();
+    final Bidder bidder2 = (Bidder) truck2.getCommunicator();
+    sim.tick();
+
+    final DefaultParcel newParcel = new DefaultParcel(ParcelDTO.builder(
+        new Point(0, 0), new Point(3, 4)).build());
+
+    // SWAP a parcel to another truck
+    final DefaultParcel parcelToSwap = truck1.getCommunicator().getParcels()
+        .iterator().next();
+    bidder1.releaseParcel(parcelToSwap);
+    bidder2.receiveParcel(parcelToSwap);
+    System.out.println(truck1.getRoute());
+    System.out.println(truck2.getRoute());
+
+    sim.tick();
+    System.out.println("swapped parcel: " + parcelToSwap);
+    System.out.println(truck1.getRoute());
+    System.out.println(truck2.getRoute());
+
+    System.out.println("GOGOGOGO");
+    while (!pm.getParcelState(parcelToSwap).isPickedUp()) {
+      sim.tick();
+    }
+    assertEquals(ParcelState.IN_CARGO, pm.getParcelState(parcelToSwap));
+    assertTrue(pm.getContents(truck2).contains(parcelToSwap));
+
+    sim.register(newParcel);
+    // cm.receiveParcel(newParcel, sim.getCurrentTime());
+    sim.tick();
+  }
+
   /**
    * Illegal claim.
    */
@@ -225,7 +315,6 @@ public class AuctionTest {
   }
 
   static class FixedRoutePlanner extends AbstractRoutePlanner {
-
     Optional<DefaultParcel> current;
 
     FixedRoutePlanner() {
@@ -258,7 +347,5 @@ public class AuctionTest {
         }
       };
     }
-
   }
-
 }
