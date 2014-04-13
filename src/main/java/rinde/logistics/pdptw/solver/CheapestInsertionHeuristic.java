@@ -14,7 +14,8 @@ import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -141,7 +142,7 @@ public class CheapestInsertionHeuristic implements Solver {
    *         {@link CheapestInsertionHeuristic} instances.
    */
   public static SupplierRng<Solver> supplier(final ObjectiveFunction objFunc) {
-    return new DefaultSupplierRng<Solver>() {
+    return new SupplierRngs.AbstractSupplierRng<Solver>() {
       @Override
       public Solver get(long seed) {
         return new CheapestInsertionHeuristic(objFunc);

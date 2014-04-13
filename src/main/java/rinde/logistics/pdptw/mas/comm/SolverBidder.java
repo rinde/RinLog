@@ -19,7 +19,8 @@ import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -125,7 +126,7 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
   public static SupplierRng<SolverBidder> supplier(
       final ObjectiveFunction objFunc,
       final SupplierRng<? extends Solver> solverSupplier) {
-    return new DefaultSupplierRng<SolverBidder>() {
+    return new SupplierRngs.AbstractSupplierRng<SolverBidder>() {
       @Override
       public SolverBidder get(long seed) {
         return new SolverBidder(objFunc, solverSupplier.get(seed));

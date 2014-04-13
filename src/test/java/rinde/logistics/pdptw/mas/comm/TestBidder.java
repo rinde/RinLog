@@ -2,7 +2,8 @@ package rinde.logistics.pdptw.mas.comm;
 
 import rinde.sim.event.Event;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 /**
  * {@link Bidder} implementation that adds some methods for easier testing.
@@ -30,7 +31,7 @@ public class TestBidder extends RandomBidder {
    * @return A {@link SupplierRng} that supplies {@link RandomBidder} instances.
    */
   public static SupplierRng<RandomBidder> supplier() {
-    return new DefaultSupplierRng<RandomBidder>() {
+    return new SupplierRngs.AbstractSupplierRng<RandomBidder>() {
       @Override
       public TestBidder get(long seed) {
         return new TestBidder(seed);

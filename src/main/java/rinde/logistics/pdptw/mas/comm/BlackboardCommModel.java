@@ -11,7 +11,8 @@ import java.util.Set;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 /**
  * This is an implementation of a blackboard communication model. It allows
@@ -95,7 +96,7 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
    *         instances.
    */
   public static SupplierRng<BlackboardCommModel> supplier() {
-    return new DefaultSupplierRng<BlackboardCommModel>() {
+    return new SupplierRngs.AbstractSupplierRng<BlackboardCommModel>() {
       @Override
       public BlackboardCommModel get(long seed) {
         return new BlackboardCommModel();

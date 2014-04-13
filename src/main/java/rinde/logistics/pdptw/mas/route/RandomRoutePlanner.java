@@ -16,7 +16,8 @@ import org.apache.commons.math3.random.RandomAdaptor;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.LinkedHashMultiset;
@@ -91,7 +92,7 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
    *         instances.
    */
   public static SupplierRng<RandomRoutePlanner> supplier() {
-    return new DefaultSupplierRng<RandomRoutePlanner>() {
+    return new SupplierRngs.AbstractSupplierRng<RandomRoutePlanner>() {
       @Override
       public RandomRoutePlanner get(long seed) {
         return new RandomRoutePlanner(seed);

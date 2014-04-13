@@ -14,7 +14,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 /**
  * A communication model that supports auctions.
@@ -68,7 +69,7 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
    *         instances.
    */
   public static SupplierRng<AuctionCommModel> supplier() {
-    return new DefaultSupplierRng<AuctionCommModel>() {
+    return new SupplierRngs.AbstractSupplierRng<AuctionCommModel>() {
       @Override
       public AuctionCommModel get(long seed) {
         return new AuctionCommModel(seed);

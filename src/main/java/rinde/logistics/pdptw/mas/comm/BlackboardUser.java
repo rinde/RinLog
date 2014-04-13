@@ -19,7 +19,8 @@ import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.DefaultVehicle;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -117,7 +118,7 @@ public class BlackboardUser implements Communicator {
    *         instances.
    */
   public static SupplierRng<BlackboardUser> supplier() {
-    return new DefaultSupplierRng<BlackboardUser>() {
+    return new SupplierRngs.AbstractSupplierRng<BlackboardUser>() {
       @Override
       public BlackboardUser get(long seed) {
         return new BlackboardUser();

@@ -11,7 +11,8 @@ import java.util.Queue;
 
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 
@@ -55,7 +56,7 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
   }
 
   public static SupplierRng<TestRoutePlanner> supplier() {
-    return new DefaultSupplierRng<TestRoutePlanner>() {
+    return new SupplierRngs.AbstractSupplierRng<TestRoutePlanner>() {
       @Override
       public TestRoutePlanner get(long seed) {
         return new TestRoutePlanner();

@@ -11,7 +11,8 @@ import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 
@@ -80,7 +81,7 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
    *         instances.
    */
   public static SupplierRng<GotoClosestRoutePlanner> supplier() {
-    return new DefaultSupplierRng<GotoClosestRoutePlanner>() {
+    return new SupplierRngs.AbstractSupplierRng<GotoClosestRoutePlanner>() {
       @Override
       public GotoClosestRoutePlanner get(long seed) {
         return new GotoClosestRoutePlanner();

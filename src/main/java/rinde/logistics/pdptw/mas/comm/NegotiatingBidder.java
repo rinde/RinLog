@@ -23,7 +23,8 @@ import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -193,7 +194,7 @@ public class NegotiatingBidder extends SolverBidder {
       final SupplierRng<? extends Solver> negoSolverSupplier,
       final int numOfNegotiators,
       final SelectNegotiatorsHeuristic heuristic) {
-    return new DefaultSupplierRng<NegotiatingBidder>() {
+    return new SupplierRngs.AbstractSupplierRng<NegotiatingBidder>() {
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),

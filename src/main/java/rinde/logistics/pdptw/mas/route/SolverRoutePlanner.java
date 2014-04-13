@@ -20,7 +20,8 @@ import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -171,7 +172,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   }
 
   private static class SRPSupplier extends
-      DefaultSupplierRng<SolverRoutePlanner> {
+      SupplierRngs.AbstractSupplierRng<SolverRoutePlanner> {
     final SupplierRng<? extends Solver> solverSupplier;
     final boolean reuseCurrentRoutes;
 

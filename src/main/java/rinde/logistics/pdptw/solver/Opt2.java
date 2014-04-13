@@ -7,7 +7,8 @@ import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 
 import com.google.common.collect.ImmutableList;
 
@@ -57,7 +58,7 @@ public class Opt2 implements Solver {
    */
   public static SupplierRng<Solver> supplier(
       final SupplierRng<Solver> delegate, final ObjectiveFunction objFunc) {
-    return new DefaultSupplierRng<Solver>() {
+    return new SupplierRngs.AbstractSupplierRng<Solver>() {
       @Override
       public Solver get(long seed) {
         return new Opt2(delegate.get(seed), objFunc);

@@ -47,7 +47,8 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.base.Optional;
@@ -340,7 +341,7 @@ public class AuctionTest {
     }
 
     static SupplierRng<FixedRoutePlanner> supplier() {
-      return new DefaultSupplierRng<FixedRoutePlanner>() {
+      return new SupplierRngs.AbstractSupplierRng<FixedRoutePlanner>() {
         @Override
         public FixedRoutePlanner get(long seed) {
           return new FixedRoutePlanner();

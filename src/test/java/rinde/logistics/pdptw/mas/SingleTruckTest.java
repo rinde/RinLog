@@ -51,7 +51,8 @@ import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
 import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRng.DefaultSupplierRng;
+import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 import rinde.sim.util.TimeWindow;
 import rinde.sim.util.fsm.AbstractState;
 import rinde.sim.util.fsm.State;
@@ -407,7 +408,7 @@ public class SingleTruckTest {
 
     public static SupplierRng<RoutePlanner> supplier(
         final SupplierRng<? extends RoutePlanner> rp) {
-      return new DefaultSupplierRng<RoutePlanner>() {
+      return new SupplierRngs.AbstractSupplierRng<RoutePlanner>() {
         @Override
         public RoutePlanner get(long seed) {
           return new DebugRoutePlanner(rp.get(seed));
