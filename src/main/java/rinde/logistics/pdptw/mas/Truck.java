@@ -111,19 +111,19 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
 
       // when diverting -> unclaim previous
-      if ((event.event == DefaultEvent.REROUTE || event.event == DefaultEvent.NOGO)
+      if ((event.trigger == DefaultEvent.REROUTE || event.trigger == DefaultEvent.NOGO)
           && !pdpModel.get().getParcelState(gotoState.getPreviousDestination())
               .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
       }
 
-      if (event.event == DefaultEvent.GOTO
-          || event.event == DefaultEvent.REROUTE) {
+      if (event.trigger == DefaultEvent.GOTO
+          || event.trigger == DefaultEvent.REROUTE) {
         final DefaultParcel cur = getRoute().iterator().next();
         if (!pdpModel.get().getParcelState(cur).isPickedUp()) {
           communicator.claim(cur);
         }
-      } else if (event.event == DefaultEvent.DONE) {
+      } else if (event.trigger == DefaultEvent.DONE) {
         communicator.done();
         routePlanner.next(getCurrentTime().getTime());
       }
