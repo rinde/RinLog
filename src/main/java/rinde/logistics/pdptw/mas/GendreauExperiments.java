@@ -15,7 +15,6 @@ import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import rinde.sim.pdptw.central.Central;
-import rinde.sim.pdptw.common.DynamicPDPTWScenario.ProblemClass;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.experiment.Experiment;
 import rinde.sim.pdptw.experiment.Experiment.ExperimentResults;
@@ -25,6 +24,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
+import rinde.sim.pdptw.scenario.PDPScenario.ProblemClass;
 import rinde.sim.util.SupplierRng;
 
 import com.google.common.base.Charsets;
