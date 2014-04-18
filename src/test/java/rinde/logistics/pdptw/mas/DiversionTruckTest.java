@@ -25,7 +25,7 @@ import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.DefaultPDPModel;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
-import rinde.sim.core.model.pdp.twpolicy.TardyAllowedPolicy;
+import rinde.sim.core.model.pdp.TimeWindowPolicy.TimeWindowPolicies;
 import rinde.sim.core.model.road.PlaneRoadModel;
 import rinde.sim.event.Event;
 import rinde.sim.pdptw.common.DefaultDepot;
@@ -68,7 +68,7 @@ public class DiversionTruckTest {
   public void setUp() {
     rm = new PDPRoadModel(new PlaneRoadModel(new Point(0, 0), new Point(5, 5),
         50d), true);
-    pm = new DefaultPDPModel(new TardyAllowedPolicy());
+    pm = new DefaultPDPModel(TimeWindowPolicies.TARDY_ALLOWED);
 
     sim = new Simulator(new MersenneTwister(123), Measure.valueOf(1000L,
         SI.MILLI(SI.SECOND)));
