@@ -111,7 +111,7 @@ public class NegotiatingBidder extends SolverBidder {
     } else {
       final DefaultParcel firstDestination = t.getRoute().iterator().next();
       if (pdpModel.get().getParcelState(firstDestination).isPickedUp()) {
-        p = firstDestination.dto.destinationLocation;
+        p = firstDestination.dto.deliveryLocation;
       } else {
         p = firstDestination.dto.pickupLocation;
       }

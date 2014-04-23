@@ -91,7 +91,7 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 
   static Point getPos(DefaultParcel parcel, PDPModel model) {
     if (model.getParcelState(parcel).isPickedUp()) {
-      return parcel.dto.destinationLocation;
+      return parcel.dto.deliveryLocation;
     }
     return parcel.dto.pickupLocation;
   }

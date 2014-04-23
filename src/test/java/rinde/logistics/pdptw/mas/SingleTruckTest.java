@@ -175,12 +175,12 @@ public class SingleTruckTest {
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.getServiceState());
-    assertEquals(parcel1dto.destinationLocation, roadModel.getPosition(truck));
+    assertEquals(parcel1dto.deliveryLocation, roadModel.getPosition(truck));
     assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
 
     // deliver
     while (truck.getState() == truck.getServiceState()) {
-      assertEquals(parcel1dto.destinationLocation, roadModel.getPosition(truck));
+      assertEquals(parcel1dto.deliveryLocation, roadModel.getPosition(truck));
       assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
