@@ -91,7 +91,7 @@ public class AuctionTest {
         .pickupTimeWindow(new TimeWindow(218300, 10 * 60000))
         .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
         .serviceDuration(5000)
-        .arrivalTime(-1)
+        .orderAnnounceTime(-1)
         .build());
 
     ape2 = new AddParcelEvent(ParcelDTO
@@ -99,7 +99,7 @@ public class AuctionTest {
         .pickupTimeWindow(new TimeWindow(0, 10 * 60000))
         .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
         .serviceDuration(5000)
-        .arrivalTime(-1)
+        .orderAnnounceTime(-1)
         .build());
   }
 
