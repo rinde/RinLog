@@ -34,7 +34,8 @@ import com.google.common.collect.ImmutableList;
 @RunWith(Parameterized.class)
 public class DiversionTruckIntegrationTest {
 
-  static final ObjectiveFunction GENDREAU_OBJ_FUNC = new Gendreau06ObjectiveFunction();
+  static final ObjectiveFunction GENDREAU_OBJ_FUNC = Gendreau06ObjectiveFunction
+      .instance();
 
   final TruckConfiguration truckConfig;
   final ObjectiveFunction objectiveFunction;

@@ -93,10 +93,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        new Gendreau06ObjectiveFunction(), false);
+        Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue("invalid result", objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 
@@ -133,10 +133,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        new Gendreau06ObjectiveFunction(), false);
+        Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
     final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
@@ -180,10 +180,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        new Gendreau06ObjectiveFunction(), false);
+        Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 

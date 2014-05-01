@@ -66,7 +66,7 @@ public final class GendreauExperiments {
         .parse();
 
     final ExperimentResults offlineResults = Experiment
-        .build(new Gendreau06ObjectiveFunction())
+        .build(Gendreau06ObjectiveFunction.instance())
         .addScenarios(offlineScenarios)
         .withRandomSeed(321)
         .repeat(REPETITIONS)
@@ -84,7 +84,7 @@ public final class GendreauExperiments {
 
   static void onlineExperiment() {
     System.out.println("online");
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
 
     final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser.parser()
         .allowDiversion()

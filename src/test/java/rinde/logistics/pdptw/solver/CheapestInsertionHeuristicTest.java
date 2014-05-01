@@ -28,7 +28,7 @@ public class CheapestInsertionHeuristicTest {
    */
   @Test
   public void consistency() {
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     // try test in RinLog?
     final ExperimentResults er = Experiment
         .build(objFunc)

@@ -74,7 +74,7 @@ public class CommunicationIntegrationTest implements TickListener {
    */
   @Parameters
   public static Collection<Object[]> configs() {
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     return asList(new Object[][] {
         { new TruckConfiguration(RandomRoutePlanner.supplier(),
             RandomBidder.supplier(), ImmutableList.of(

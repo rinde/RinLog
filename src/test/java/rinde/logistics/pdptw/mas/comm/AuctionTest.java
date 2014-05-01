@@ -48,7 +48,6 @@ import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.util.SupplierRng;
 import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.base.Optional;
@@ -74,7 +73,7 @@ public class AuctionTest {
 
   @Parameters
   public static Collection<Object[]> configs() {
-    final ObjectiveFunction objFunc = new Gendreau06ObjectiveFunction();
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     return ImmutableList.of(
         // new Object[] { RandomBidder.supplier() },
         new Object[] { SolverBidder.supplier(objFunc,
