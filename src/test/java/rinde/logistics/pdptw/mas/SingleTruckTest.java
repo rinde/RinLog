@@ -50,9 +50,9 @@ import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import rinde.sim.util.TimeWindow;
 import rinde.sim.util.fsm.AbstractState;
 import rinde.sim.util.fsm.State;
@@ -76,7 +76,7 @@ public class SingleTruckTest {
 
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
-      @Nullable SupplierRng<? extends RoutePlanner> rp) {
+      @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
     final Collection<TimedEvent> events = newArrayList();
     for (final ParcelDTO p : parcels) {
       events.add(new AddParcelEvent(p));
@@ -308,9 +308,9 @@ public class SingleTruckTest {
 
   static class TestTruckConfiguration extends TruckConfiguration {
     TestTruckConfiguration(
-        SupplierRng<? extends RoutePlanner> routePlannerSupplier,
-        SupplierRng<? extends Communicator> communicatorSupplier,
-        ImmutableList<? extends SupplierRng<? extends Model<?>>> modelSuppliers) {
+        StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
+        StochasticSupplier<? extends Communicator> communicatorSupplier,
+        ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
       super(routePlannerSupplier, communicatorSupplier, modelSuppliers);
     }
 
@@ -406,9 +406,9 @@ public class SingleTruckTest {
       return delegate.hasNext();
     }
 
-    public static SupplierRng<RoutePlanner> supplier(
-        final SupplierRng<? extends RoutePlanner> rp) {
-      return new SupplierRngs.AbstractSupplierRng<RoutePlanner>() {
+    public static StochasticSupplier<RoutePlanner> supplier(
+        final StochasticSupplier<? extends RoutePlanner> rp) {
+      return new StochasticSuppliers.AbstractStochasticSupplier<RoutePlanner>() {
         @Override
         public RoutePlanner get(long seed) {
           return new DebugRoutePlanner(rp.get(seed));

@@ -30,7 +30,7 @@ import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -130,8 +130,8 @@ public class CommunicationIntegrationTest implements TickListener {
       throw new UnsupportedOperationException();
     }
 
-    public static SupplierRng<CommTestModel> supplier() {
-      return new SupplierRng<CommTestModel>() {
+    public static StochasticSupplier<CommTestModel> supplier() {
+      return new StochasticSupplier<CommTestModel>() {
         @Override
         public CommTestModel get(long seed) {
           return new CommTestModel();

@@ -7,9 +7,9 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * A {@link Bidder} implementation that creates random bids.
@@ -33,10 +33,10 @@ public class RandomBidder extends AbstractBidder {
   }
 
   /**
-   * @return A {@link SupplierRng} that supplies {@link RandomBidder} instances.
+   * @return A {@link StochasticSupplier} that supplies {@link RandomBidder} instances.
    */
-  public static SupplierRng<RandomBidder> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<RandomBidder>() {
+  public static StochasticSupplier<RandomBidder> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<RandomBidder>() {
       @Override
       public RandomBidder get(long seed) {
         return new RandomBidder(seed);

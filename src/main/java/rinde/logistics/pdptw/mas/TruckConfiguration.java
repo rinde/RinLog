@@ -8,7 +8,7 @@ import rinde.sim.pdptw.common.AddVehicleEvent;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -23,19 +23,19 @@ public class TruckConfiguration extends DefaultMASConfiguration {
    * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
    * <i>every</i> {@link Truck}.
    */
-  protected final SupplierRng<? extends RoutePlanner> rpSupplier;
+  protected final StochasticSupplier<? extends RoutePlanner> rpSupplier;
 
   /**
    * Supplier for {@link Communicator} instances, it supplies a new instance for
    * <i>every</i> {@link Truck}.
    */
-  protected final SupplierRng<? extends Communicator> cSupplier;
+  protected final StochasticSupplier<? extends Communicator> cSupplier;
 
   /**
    * Suppliers for {@link Model}s, for each model a new instance is created for
    * each simulation.
    */
-  protected final ImmutableList<? extends SupplierRng<? extends Model<?>>> mSuppliers;
+  protected final ImmutableList<? extends StochasticSupplier<? extends Model<?>>> mSuppliers;
 
   /**
    * Instantiate a new configuration.
@@ -44,9 +44,9 @@ public class TruckConfiguration extends DefaultMASConfiguration {
    * @param modelSuppliers {@link #mSuppliers}.
    */
   public TruckConfiguration(
-      SupplierRng<? extends RoutePlanner> routePlannerSupplier,
-      SupplierRng<? extends Communicator> communicatorSupplier,
-      ImmutableList<? extends SupplierRng<? extends Model<?>>> modelSuppliers) {
+      StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
+      StochasticSupplier<? extends Communicator> communicatorSupplier,
+      ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
     rpSupplier = routePlannerSupplier;
     cSupplier = communicatorSupplier;
     mSuppliers = modelSuppliers;
@@ -79,7 +79,7 @@ public class TruckConfiguration extends DefaultMASConfiguration {
   }
 
   @Override
-  public ImmutableList<? extends SupplierRng<? extends Model<?>>> getModels() {
+  public ImmutableList<? extends StochasticSupplier<? extends Model<?>>> getModels() {
     return mSuppliers;
   }
 

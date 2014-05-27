@@ -25,7 +25,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
 import rinde.sim.pdptw.scenario.PDPScenario.ProblemClass;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
@@ -99,10 +99,10 @@ public final class GendreauExperiments {
         .withThreads(THREADS)
         .addScenarios(onlineScenarios);
 
-    final SupplierRng<? extends RoutePlanner> routePlannerSupplier = SolverRoutePlanner
+    final StochasticSupplier<? extends RoutePlanner> routePlannerSupplier = SolverRoutePlanner
         .supplier(MultiVehicleHeuristicSolver.supplier(200, 50000));
 
-    final SupplierRng<? extends Communicator> communicatorSupplier = NegotiatingBidder
+    final StochasticSupplier<? extends Communicator> communicatorSupplier = NegotiatingBidder
         .supplier(objFunc, MultiVehicleHeuristicSolver.supplier(20, 10000),
             MultiVehicleHeuristicSolver.supplier(200, 50000), 2,
             SelectNegotiatorsHeuristic.FIRST_DESTINATION_POSITION);

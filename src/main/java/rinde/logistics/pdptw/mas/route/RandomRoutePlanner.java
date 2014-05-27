@@ -15,9 +15,9 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
 
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.LinkedHashMultiset;
@@ -88,11 +88,11 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
   }
 
   /**
-   * @return A {@link SupplierRng} that supplies {@link RandomRoutePlanner}
+   * @return A {@link StochasticSupplier} that supplies {@link RandomRoutePlanner}
    *         instances.
    */
-  public static SupplierRng<RandomRoutePlanner> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<RandomRoutePlanner>() {
+  public static StochasticSupplier<RandomRoutePlanner> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<RandomRoutePlanner>() {
       @Override
       public RandomRoutePlanner get(long seed) {
         return new RandomRoutePlanner(seed);

@@ -10,9 +10,9 @@ import java.util.Collections;
 import java.util.Queue;
 
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Optional;
 
@@ -55,8 +55,8 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
     route.poll();
   }
 
-  public static SupplierRng<TestRoutePlanner> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<TestRoutePlanner>() {
+  public static StochasticSupplier<TestRoutePlanner> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<TestRoutePlanner>() {
       @Override
       public TestRoutePlanner get(long seed) {
         return new TestRoutePlanner();

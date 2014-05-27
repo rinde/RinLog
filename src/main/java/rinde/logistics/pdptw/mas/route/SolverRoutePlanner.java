@@ -19,9 +19,9 @@ import rinde.sim.pdptw.central.Solvers.SimulationSolver;
 import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -148,35 +148,35 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   /**
    * Supplier for {@link SolverRoutePlanner} that does not reuse the current
    * routes.
-   * @param solverSupplier A {@link SupplierRng} that supplies the
+   * @param solverSupplier A {@link StochasticSupplier} that supplies the
    *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
    *          .
-   * @return A {@link SupplierRng} that supplies {@link SolverRoutePlanner}
+   * @return A {@link StochasticSupplier} that supplies {@link SolverRoutePlanner}
    *         instances.
    */
-  public static SupplierRng<SolverRoutePlanner> supplierWithoutCurrentRoutes(
-      final SupplierRng<? extends Solver> solverSupplier) {
+  public static StochasticSupplier<SolverRoutePlanner> supplierWithoutCurrentRoutes(
+      final StochasticSupplier<? extends Solver> solverSupplier) {
     return new SRPSupplier(solverSupplier, false);
   }
 
   /**
-   * @param solverSupplier A {@link SupplierRng} that supplies the
+   * @param solverSupplier A {@link StochasticSupplier} that supplies the
    *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
    *          .
-   * @return A {@link SupplierRng} that supplies {@link SolverRoutePlanner}
+   * @return A {@link StochasticSupplier} that supplies {@link SolverRoutePlanner}
    *         instances.
    */
-  public static SupplierRng<SolverRoutePlanner> supplier(
-      final SupplierRng<? extends Solver> solverSupplier) {
+  public static StochasticSupplier<SolverRoutePlanner> supplier(
+      final StochasticSupplier<? extends Solver> solverSupplier) {
     return new SRPSupplier(solverSupplier, true);
   }
 
   private static class SRPSupplier extends
-      SupplierRngs.AbstractSupplierRng<SolverRoutePlanner> {
-    final SupplierRng<? extends Solver> solverSupplier;
+      StochasticSuppliers.AbstractStochasticSupplier<SolverRoutePlanner> {
+    final StochasticSupplier<? extends Solver> solverSupplier;
     final boolean reuseCurrentRoutes;
 
-    SRPSupplier(final SupplierRng<? extends Solver> ss, final boolean rr) {
+    SRPSupplier(final StochasticSupplier<? extends Solver> ss, final boolean rr) {
       solverSupplier = ss;
       reuseCurrentRoutes = rr;
     }

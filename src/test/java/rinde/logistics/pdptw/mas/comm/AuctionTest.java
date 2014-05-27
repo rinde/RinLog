@@ -46,8 +46,8 @@ import rinde.sim.pdptw.experiment.MASConfiguration;
 import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.base.Optional;
@@ -61,13 +61,13 @@ import com.google.common.collect.ImmutableList;
 public class AuctionTest {
   AddParcelEvent ape1, ape2;
 
-  final SupplierRng<Bidder> bidderSupplier;
+  final StochasticSupplier<Bidder> bidderSupplier;
 
   /**
    * @param b The {@link Bidder} under test.
    */
   @SuppressWarnings("null")
-  public AuctionTest(SupplierRng<Bidder> b) {
+  public AuctionTest(StochasticSupplier<Bidder> b) {
     bidderSupplier = b;
   }
 
@@ -339,8 +339,8 @@ public class AuctionTest {
       current = Optional.absent();
     }
 
-    static SupplierRng<FixedRoutePlanner> supplier() {
-      return new SupplierRngs.AbstractSupplierRng<FixedRoutePlanner>() {
+    static StochasticSupplier<FixedRoutePlanner> supplier() {
+      return new StochasticSuppliers.AbstractStochasticSupplier<FixedRoutePlanner>() {
         @Override
         public FixedRoutePlanner get(long seed) {
           return new FixedRoutePlanner();

@@ -10,9 +10,9 @@ import java.util.List;
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Optional;
 
@@ -77,11 +77,11 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   /**
-   * @return A {@link SupplierRng} that supplies {@link GotoClosestRoutePlanner}
+   * @return A {@link StochasticSupplier} that supplies {@link GotoClosestRoutePlanner}
    *         instances.
    */
-  public static SupplierRng<GotoClosestRoutePlanner> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<GotoClosestRoutePlanner>() {
+  public static StochasticSupplier<GotoClosestRoutePlanner> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<GotoClosestRoutePlanner>() {
       @Override
       public GotoClosestRoutePlanner get(long seed) {
         return new GotoClosestRoutePlanner();

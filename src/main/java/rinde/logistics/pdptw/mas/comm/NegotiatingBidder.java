@@ -22,9 +22,9 @@ import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.central.Solvers.SolveArgs;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -188,13 +188,13 @@ public class NegotiatingBidder extends SolverBidder {
    * @param heuristic The heuristic to use for selecting negotiators.
    * @return The new supplier.
    */
-  public static SupplierRng<NegotiatingBidder> supplier(
+  public static StochasticSupplier<NegotiatingBidder> supplier(
       final ObjectiveFunction objFunc,
-      final SupplierRng<? extends Solver> bidderSolverSupplier,
-      final SupplierRng<? extends Solver> negoSolverSupplier,
+      final StochasticSupplier<? extends Solver> bidderSolverSupplier,
+      final StochasticSupplier<? extends Solver> negoSolverSupplier,
       final int numOfNegotiators,
       final SelectNegotiatorsHeuristic heuristic) {
-    return new SupplierRngs.AbstractSupplierRng<NegotiatingBidder>() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<NegotiatingBidder>() {
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),

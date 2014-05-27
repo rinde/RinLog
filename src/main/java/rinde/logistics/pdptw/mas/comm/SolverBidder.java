@@ -18,9 +18,9 @@ import rinde.sim.pdptw.central.Solvers.StateContext;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -123,10 +123,10 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
    * @param solverSupplier The solver to use.
    * @return A supplier of {@link SolverBidder} instances.
    */
-  public static SupplierRng<SolverBidder> supplier(
+  public static StochasticSupplier<SolverBidder> supplier(
       final ObjectiveFunction objFunc,
-      final SupplierRng<? extends Solver> solverSupplier) {
-    return new SupplierRngs.AbstractSupplierRng<SolverBidder>() {
+      final StochasticSupplier<? extends Solver> solverSupplier) {
+    return new StochasticSuppliers.AbstractStochasticSupplier<SolverBidder>() {
       @Override
       public SolverBidder get(long seed) {
         return new SolverBidder(objFunc, solverSupplier.get(seed));

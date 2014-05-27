@@ -47,7 +47,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.collect.ImmutableList;
@@ -240,7 +240,7 @@ public class SingleVehicleSolverTest {
     }
 
     @Override
-    public ImmutableList<? extends SupplierRng<? extends Model<?>>> getModels() {
+    public ImmutableList<? extends StochasticSupplier<? extends Model<?>>> getModels() {
       return ImmutableList.of(AuctionCommModel.supplier());
     }
   }

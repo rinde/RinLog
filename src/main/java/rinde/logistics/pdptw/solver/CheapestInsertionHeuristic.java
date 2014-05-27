@@ -13,9 +13,9 @@ import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -138,11 +138,11 @@ public class CheapestInsertionHeuristic implements Solver {
   /**
    * @param objFunc The objective function used to calculate the cost of a
    *          schedule.
-   * @return A {@link SupplierRng} that supplies
+   * @return A {@link StochasticSupplier} that supplies
    *         {@link CheapestInsertionHeuristic} instances.
    */
-  public static SupplierRng<Solver> supplier(final ObjectiveFunction objFunc) {
-    return new SupplierRngs.AbstractSupplierRng<Solver>() {
+  public static StochasticSupplier<Solver> supplier(final ObjectiveFunction objFunc) {
+    return new StochasticSuppliers.AbstractStochasticSupplier<Solver>() {
       @Override
       public Solver get(long seed) {
         return new CheapestInsertionHeuristic(objFunc);

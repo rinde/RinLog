@@ -46,7 +46,7 @@ import rinde.sim.pdptw.experiment.ExperimentTest;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
 import rinde.sim.scenario.TimedEvent;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.TimeWindow;
 
 import com.google.common.collect.ImmutableSet;
@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableSet;
  */
 @RunWith(Parameterized.class)
 public class RoutePlannerTest {
-  protected final SupplierRng<RoutePlanner> supplier;
+  protected final StochasticSupplier<RoutePlanner> supplier;
   protected RoutePlanner routePlanner;
   protected DynamicPDPTWProblem problem;
   protected RoadModel roadModel;
@@ -65,7 +65,7 @@ public class RoutePlannerTest {
   protected Simulator simulator;
   protected DefaultVehicle truck;
 
-  public RoutePlannerTest(SupplierRng<RoutePlanner> rp) {
+  public RoutePlannerTest(StochasticSupplier<RoutePlanner> rp) {
     supplier = rp;
   }
 

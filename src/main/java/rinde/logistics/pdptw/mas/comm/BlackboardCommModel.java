@@ -10,9 +10,9 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Set;
 
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * This is an implementation of a blackboard communication model. It allows
@@ -92,11 +92,11 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   }
 
   /**
-   * @return A {@link SupplierRng} that supplies {@link BlackboardCommModel}
+   * @return A {@link StochasticSupplier} that supplies {@link BlackboardCommModel}
    *         instances.
    */
-  public static SupplierRng<BlackboardCommModel> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<BlackboardCommModel>() {
+  public static StochasticSupplier<BlackboardCommModel> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<BlackboardCommModel>() {
       @Override
       public BlackboardCommModel get(long seed) {
         return new BlackboardCommModel();

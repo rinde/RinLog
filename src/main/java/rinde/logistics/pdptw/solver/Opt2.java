@@ -6,9 +6,9 @@ import rinde.sim.pdptw.central.GlobalStateObject.VehicleStateObject;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.collect.ImmutableList;
 
@@ -56,9 +56,9 @@ public class Opt2 implements Solver {
    * @return A supplier that creates instances of a solver decorated with
    *         {@link Opt2}.
    */
-  public static SupplierRng<Solver> supplier(
-      final SupplierRng<Solver> delegate, final ObjectiveFunction objFunc) {
-    return new SupplierRngs.AbstractSupplierRng<Solver>() {
+  public static StochasticSupplier<Solver> supplier(
+      final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
+    return new StochasticSuppliers.AbstractStochasticSupplier<Solver>() {
       @Override
       public Solver get(long seed) {
         return new Opt2(delegate.get(seed), objFunc);

@@ -26,7 +26,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -51,23 +51,23 @@ public class DiversionTruckIntegrationTest {
   @Parameters
   public static Collection<Object[]> configs() {
 
-    final ImmutableList<SupplierRng<? extends RoutePlanner>> routePlanners = ImmutableList
-        .<SupplierRng<? extends RoutePlanner>> of(
+    final ImmutableList<StochasticSupplier<? extends RoutePlanner>> routePlanners = ImmutableList
+        .<StochasticSupplier<? extends RoutePlanner>> of(
             GotoClosestRoutePlanner.supplier(),
             RandomRoutePlanner.supplier(),
             SolverRoutePlanner.supplier(RandomSolver.supplier())
         );
 
-    final ImmutableList<SupplierRng<? extends Communicator>> communicators = ImmutableList
-        .<SupplierRng<? extends Communicator>> of(SolverBidder
+    final ImmutableList<StochasticSupplier<? extends Communicator>> communicators = ImmutableList
+        .<StochasticSupplier<? extends Communicator>> of(SolverBidder
             .supplier(GENDREAU_OBJ_FUNC, RandomSolver.supplier()));
 
     final ImmutableList<Integer> numTrucks = ImmutableList
         .of(1, 2, 3, 4, 5, 10, 15);
 
     final List<Object[]> configs = newArrayList();
-    for (final SupplierRng<? extends RoutePlanner> rp : routePlanners) {
-      for (final SupplierRng<? extends Communicator> cm : communicators) {
+    for (final StochasticSupplier<? extends RoutePlanner> rp : routePlanners) {
+      for (final StochasticSupplier<? extends Communicator> cm : communicators) {
         for (final int i : numTrucks) {
           configs.add(new Object[] {
               new TruckConfiguration(rp, cm, ImmutableList.of(AuctionCommModel

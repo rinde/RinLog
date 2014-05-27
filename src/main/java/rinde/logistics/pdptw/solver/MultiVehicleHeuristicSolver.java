@@ -21,7 +21,7 @@ import rinde.sim.pdptw.central.arrays.ArraysSolvers;
 import rinde.sim.pdptw.central.arrays.MultiVehicleArraysSolver;
 import rinde.sim.pdptw.central.arrays.MultiVehicleSolverAdapter;
 import rinde.sim.pdptw.central.arrays.SolutionObject;
-import rinde.sim.util.SupplierRng;
+import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.primitives.Ints;
 
@@ -651,18 +651,18 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     return assignment;
   }
 
-  public static SupplierRng<Solver> supplier(int pListLength,
+  public static StochasticSupplier<Solver> supplier(int pListLength,
       int pMaxNrOfNonImprovements) {
     return new Supplier(pListLength, pMaxNrOfNonImprovements);
   }
 
-  public static SupplierRng<Solver> supplier(int pListLength,
+  public static StochasticSupplier<Solver> supplier(int pListLength,
       int pMaxNrOfNonImprovements, boolean pDebug, boolean pStrictMode) {
     return new Supplier(pListLength, pMaxNrOfNonImprovements, pDebug,
         pStrictMode);
   }
 
-  private static class Supplier implements SupplierRng<Solver> {
+  private static class Supplier implements StochasticSupplier<Solver> {
 
     private final int listLength;
     private final int maxNrOfNonImprovements;

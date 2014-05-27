@@ -13,9 +13,9 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.util.SupplierRng;
-import rinde.sim.util.SupplierRngs;
-import rinde.sim.util.SupplierRngs.AbstractSupplierRng;
+import rinde.sim.util.StochasticSupplier;
+import rinde.sim.util.StochasticSuppliers;
+import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * A communication model that supports auctions.
@@ -65,11 +65,11 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
   }
 
   /**
-   * @return A {@link SupplierRng} that supplies {@link AuctionCommModel}
+   * @return A {@link StochasticSupplier} that supplies {@link AuctionCommModel}
    *         instances.
    */
-  public static SupplierRng<AuctionCommModel> supplier() {
-    return new SupplierRngs.AbstractSupplierRng<AuctionCommModel>() {
+  public static StochasticSupplier<AuctionCommModel> supplier() {
+    return new StochasticSuppliers.AbstractStochasticSupplier<AuctionCommModel>() {
       @Override
       public AuctionCommModel get(long seed) {
         return new AuctionCommModel(seed);
