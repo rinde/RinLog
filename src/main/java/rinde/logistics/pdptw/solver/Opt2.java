@@ -8,7 +8,6 @@ import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.StochasticSuppliers;
-import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.collect.ImmutableList;
 
