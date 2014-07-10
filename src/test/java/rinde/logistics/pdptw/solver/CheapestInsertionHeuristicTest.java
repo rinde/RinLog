@@ -39,9 +39,12 @@ public class CheapestInsertionHeuristicTest {
             Central.solverConfiguration(SolverValidator
                 .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
 
-        .repeat(3).withThreads(3).perform();
+        .repeat(3)
+        .withThreads(3)
+        .perform();
     for (int i = 0; i < er.results.size(); i++) {
-      assertEquals(979.898336, objFunc.computeCost(er.results.get(i).stats),
+      assertEquals(979.898336,
+          objFunc.computeCost(er.results.asList().get(i).stats),
           0.0001);
     }
   }

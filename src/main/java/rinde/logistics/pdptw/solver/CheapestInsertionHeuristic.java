@@ -15,7 +15,6 @@ import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.StochasticSuppliers;
-import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -141,8 +140,11 @@ public class CheapestInsertionHeuristic implements Solver {
    * @return A {@link StochasticSupplier} that supplies
    *         {@link CheapestInsertionHeuristic} instances.
    */
-  public static StochasticSupplier<Solver> supplier(final ObjectiveFunction objFunc) {
+  public static StochasticSupplier<Solver> supplier(
+      final ObjectiveFunction objFunc) {
     return new StochasticSuppliers.AbstractStochasticSupplier<Solver>() {
+      private static final long serialVersionUID = 992219257352250656L;
+
       @Override
       public Solver get(long seed) {
         return new CheapestInsertionHeuristic(objFunc);
