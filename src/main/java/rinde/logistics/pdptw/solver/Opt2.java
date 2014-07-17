@@ -58,6 +58,8 @@ public class Opt2 implements Solver {
   public static StochasticSupplier<Solver> supplier(
       final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
     return new StochasticSuppliers.AbstractStochasticSupplier<Solver>() {
+      private static final long serialVersionUID = 992219257352250656L;
+
       @Override
       public Solver get(long seed) {
         return new Opt2(delegate.get(seed), objFunc);
