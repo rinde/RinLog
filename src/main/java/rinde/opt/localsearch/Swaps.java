@@ -8,11 +8,15 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.math3.random.RandomAdaptor;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 
@@ -25,8 +29,14 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 
 /**
- * Class for swap algorithms. Currently supporta 2-opt:
- * {@link #opt2(ImmutableList, ImmutableList, Object, RouteEvaluator)}.
+ * Class for swap algorithms. Currently supports two variants of 2-opt:
+ * <ul>
+ * <li>Breadth-first 2-opt search:
+ * {@link #bfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator)}.</li>
+ * <li>Depth-first 2-opt search:
+ * {@link #dfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator, RandomGenerator)}
+ * .</li>
+ * </ul>
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
  */
 public final class Swaps {
@@ -35,8 +45,8 @@ public final class Swaps {
 
   /**
    * 2-opt local search procedure for schedules. Performs breadth-first search
-   * in 2-swap space, picks best swap and uses that as starting point for next
-   * iteration. Stops as soon as there is no improving swap anymore.
+   * in 2-swap space, picks <i>best swap</i> and uses that as starting point for
+   * next iteration. Stops as soon as there is no improving swap anymore.
    * @param schedule The schedule to improve.
    * @param startIndices Indices indicating which part of the schedule can be
    *          modified. <code>startIndices[j] = n</code> indicates that
@@ -52,10 +62,49 @@ public final class Swaps {
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
    */
-  public static <C, T> ImmutableList<ImmutableList<T>> opt2(
+  public static <C, T> ImmutableList<ImmutableList<T>> bfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
       ImmutableList<Integer> startIndices, C context,
       RouteEvaluator<C, T> evaluator) {
+    return opt2(schedule, startIndices, context, evaluator, false,
+        Optional.<RandomGenerator> absent());
+  }
+
+  /**
+   * 2-opt local search procedure for schedules. Performs depth-first search in
+   * 2-swap space, picks <i>first improving</i> (from random ordering of swaps)
+   * swap and uses that as starting point for next iteration. Stops as soon as
+   * there is no improving swap anymore.
+   * @param schedule The schedule to improve.
+   * @param startIndices Indices indicating which part of the schedule can be
+   *          modified. <code>startIndices[j] = n</code> indicates that
+   *          <code>schedule[j][n]</code> can be modified but
+   *          <code>schedule[j][n-1]</code> not.
+   * @param context The context to the schedule, used by the evaluator to
+   *          compute the cost of a swap.
+   * @param evaluator {@link RouteEvaluator} that can compute the cost of a
+   *          single route.
+   * @param rng The random number generator that is used to randomize the
+   *          ordering of the swaps.
+   * @param <C> The context type.
+   * @param <T> The route item type (i.e. the locations that are part of a
+   *          route).
+   * @return An improved schedule (or the input schedule if no improvement could
+   *         be made).
+   */
+  public static <C, T> ImmutableList<ImmutableList<T>> dfsOpt2(
+      ImmutableList<ImmutableList<T>> schedule,
+      ImmutableList<Integer> startIndices, C context,
+      RouteEvaluator<C, T> evaluator, RandomGenerator rng) {
+    return opt2(schedule, startIndices, context, evaluator, true,
+        Optional.of(rng));
+  }
+
+  static <C, T> ImmutableList<ImmutableList<T>> opt2(
+      ImmutableList<ImmutableList<T>> schedule,
+      ImmutableList<Integer> startIndices, C context,
+      RouteEvaluator<C, T> evaluator, boolean depthFirst,
+      Optional<RandomGenerator> rng) {
 
     checkArgument(schedule.size() == startIndices.size());
 
@@ -74,7 +123,14 @@ public final class Swaps {
       isImproving = false;
 
       final Schedule<C, T> curBest = bestSchedule;
-      final Iterator<Swap<T>> it = swapIterator(curBest);
+      Iterator<Swap<T>> it = swapIterator(curBest);
+      if (depthFirst) {
+        // randomize ordering of swaps
+        final List<Swap<T>> swaps = newArrayList(it);
+        Collections.shuffle(swaps, new RandomAdaptor(rng.get()));
+        it = swaps.iterator();
+      }
+
       while (it.hasNext()) {
         final Swap<T> swapOperation = it.next();
         final Optional<Schedule<C, T>> newSchedule = Swaps.swap(curBest,
@@ -85,6 +141,11 @@ public final class Swaps {
         if (newSchedule.isPresent()) {
           isImproving = true;
           bestSchedule = newSchedule.get();
+          if (depthFirst) {
+            // first improving swap is chosen as new starting point (depth
+            // first).
+            break;
+          }
         }
       }
     }
