@@ -68,7 +68,8 @@ public class Opt2 implements Solver {
 
   /**
    * Decorates the specified {@link Solver} supplier with <i>breadth-first</i>
-   * {@link Opt2}.
+   * {@link Opt2}. This algorithm is deterministic, repeated invocations (even
+   * with different random seeds) on the same data will yield the same result.
    * @param delegate The solver to decorate.
    * @param objFunc The objective function to use.
    * @return A supplier that creates instances of a solver decorated with
@@ -81,7 +82,9 @@ public class Opt2 implements Solver {
 
   /**
    * Decorates the specified {@link Solver} supplier with <i>depth-first</i>
-   * {@link Opt2}.
+   * {@link Opt2}. This algorithm is non-deterministic, repeated invocations on
+   * the same data may yield different results if different random seeds are
+   * used.
    * @param delegate The solver to decorate.
    * @param objFunc The objective function to use.
    * @return A supplier that creates instances of a solver decorated with
