@@ -3,4 +3,5 @@
 org.sonar.ide.eclipse.core.prefs
 *.log
 files/scenarios/gendreau06/req_rapide_*
+.DS_Store
 
