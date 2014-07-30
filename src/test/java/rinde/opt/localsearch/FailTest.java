@@ -3,7 +3,7 @@ package rinde.opt.localsearch;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Fail {
+public class FailTest {
 
   @Test
   public void test() {
