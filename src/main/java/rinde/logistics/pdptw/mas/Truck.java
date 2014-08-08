@@ -15,11 +15,11 @@ import rinde.sim.core.SimulatorUser;
 import rinde.sim.core.TimeLapse;
 import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.road.RoadModel;
+import rinde.sim.core.pdptw.VehicleDTO;
 import rinde.sim.event.Event;
 import rinde.sim.event.Listener;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.RouteFollowingVehicle;
-import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.util.fsm.StateMachine.StateMachineEvent;
 import rinde.sim.util.fsm.StateMachine.StateTransitionEvent;
 

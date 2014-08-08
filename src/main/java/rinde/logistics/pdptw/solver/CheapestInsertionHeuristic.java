@@ -7,12 +7,12 @@ import java.util.Iterator;
 import java.util.Set;
 
 import rinde.opt.localsearch.Insertions;
+import rinde.sim.core.pdptw.ParcelDTO;
 import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.GlobalStateObject.VehicleStateObject;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.central.Solvers;
 import rinde.sim.pdptw.common.ObjectiveFunction;
-import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.StochasticSuppliers;
 

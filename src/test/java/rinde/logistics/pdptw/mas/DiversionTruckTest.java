@@ -27,13 +27,13 @@ import rinde.sim.core.model.pdp.PDPModel;
 import rinde.sim.core.model.pdp.PDPModel.ParcelState;
 import rinde.sim.core.model.pdp.TimeWindowPolicy.TimeWindowPolicies;
 import rinde.sim.core.model.road.PlaneRoadModel;
+import rinde.sim.core.pdptw.ParcelDTO;
+import rinde.sim.core.pdptw.VehicleDTO;
 import rinde.sim.event.Event;
 import rinde.sim.pdptw.common.DefaultDepot;
 import rinde.sim.pdptw.common.DefaultParcel;
 import rinde.sim.pdptw.common.PDPRoadModel;
-import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.pdptw.common.RouteFollowingVehicle;
-import rinde.sim.pdptw.common.VehicleDTO;
 import rinde.sim.util.TimeWindow;
 import rinde.sim.util.fsm.State;
 

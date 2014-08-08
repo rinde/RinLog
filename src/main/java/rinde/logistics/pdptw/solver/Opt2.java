@@ -4,11 +4,11 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import rinde.opt.localsearch.Swaps;
+import rinde.sim.core.pdptw.ParcelDTO;
 import rinde.sim.pdptw.central.GlobalStateObject;
 import rinde.sim.pdptw.central.GlobalStateObject.VehicleStateObject;
 import rinde.sim.pdptw.central.Solver;
 import rinde.sim.pdptw.common.ObjectiveFunction;
-import rinde.sim.pdptw.common.ParcelDTO;
 import rinde.sim.util.StochasticSupplier;
 import rinde.sim.util.StochasticSuppliers.AbstractStochasticSupplier;
 

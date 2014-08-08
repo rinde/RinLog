@@ -24,7 +24,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
-import rinde.sim.pdptw.scenario.PDPScenario.ProblemClass;
+import rinde.sim.scenario.Scenario.ProblemClass;
 import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.base.Charsets;

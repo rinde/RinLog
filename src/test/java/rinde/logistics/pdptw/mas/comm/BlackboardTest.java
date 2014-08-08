@@ -19,9 +19,9 @@ import org.junit.Test;
 
 import rinde.sim.core.graph.Point;
 import rinde.sim.core.model.pdp.Parcel;
+import rinde.sim.core.pdptw.ParcelDTO;
 import rinde.sim.event.ListenerEventHistory;
 import rinde.sim.pdptw.common.DefaultParcel;
-import rinde.sim.pdptw.common.ParcelDTO;
 
 /**
  * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
