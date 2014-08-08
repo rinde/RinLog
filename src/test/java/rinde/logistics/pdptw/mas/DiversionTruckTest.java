@@ -98,8 +98,12 @@ public class DiversionTruckTest {
 
     routePlanner = mock(RoutePlanner.class);
     communicator = mock(Communicator.class);
-    final VehicleDTO dto = new VehicleDTO(new Point(0, 0), 30d, 100,
-        TimeWindow.ALWAYS);
+    final VehicleDTO dto = VehicleDTO.builder()
+        .startPosition(new Point(0, 0))
+        .speed(30d)
+        .capacity(100)
+        .availabilityTimeWindow(TimeWindow.ALWAYS)
+        .build();
 
     truck = new TestTruck(dto, routePlanner, communicator);
     sim.register(truck);

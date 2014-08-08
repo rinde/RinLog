@@ -243,8 +243,12 @@ public class RoutePlannerTest {
    */
   @Test
   public void testEmpty() {
-    final TestTruck emptyTruck = new TestTruck(new VehicleDTO(new Point(0, 0),
-        10, 10, new TimeWindow(0, 1)));
+    final TestTruck emptyTruck = new TestTruck(VehicleDTO.builder()
+        .startPosition(new Point(0, 0))
+        .speed(10d)
+        .capacity(10)
+        .availabilityTimeWindow(new TimeWindow(0, 1))
+        .build());
     simulator.register(emptyTruck);
 
     routePlanner.init(roadModel, pdpModel, emptyTruck);
@@ -276,14 +280,14 @@ public class RoutePlannerTest {
 
   static Parcel createParcel(RandomGenerator rng) {
     final ParcelDTO dto = new ParcelDTO(/* */
-    new Point(rng.nextDouble(), rng.nextDouble()),/* start pos */
-    new Point(rng.nextDouble(), rng.nextDouble()),/* dest pos */
-    new TimeWindow(0, 100000),/* pickup tw */
-    new TimeWindow(0, 100000),/* deliver tw */
-    0,/* needed capacity */
-    -1,/* order arrival time */
-    3000,/* pickup duration */
-    3000 /* delivery duration */);
+        new Point(rng.nextDouble(), rng.nextDouble()),/* start pos */
+        new Point(rng.nextDouble(), rng.nextDouble()),/* dest pos */
+        new TimeWindow(0, 100000),/* pickup tw */
+        new TimeWindow(0, 100000),/* deliver tw */
+        0,/* needed capacity */
+        -1,/* order arrival time */
+        3000,/* pickup duration */
+        3000 /* delivery duration */);
 
     return new DefaultParcel(dto);
   }
