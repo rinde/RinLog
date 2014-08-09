@@ -16,7 +16,6 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.junit.Test;
 
 import rinde.sim.core.graph.Point;
-import rinde.sim.core.pdptw.AddParcelEvent;
 import rinde.sim.core.pdptw.ParcelDTO;
 import rinde.sim.pdptw.central.Central;
 import rinde.sim.pdptw.central.DebugSolverCreator;
@@ -28,6 +27,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauTestUtil;
+import rinde.sim.scenario.AddParcelEvent;
 import rinde.sim.scenario.TimedEvent;
 import rinde.sim.util.TimeWindow;
 

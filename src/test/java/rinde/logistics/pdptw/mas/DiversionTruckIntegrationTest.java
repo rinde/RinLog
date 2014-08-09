@@ -18,7 +18,6 @@ import rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import rinde.sim.core.pdptw.AddParcelEvent;
 import rinde.sim.pdptw.central.RandomSolver;
 import rinde.sim.pdptw.common.ObjectiveFunction;
 import rinde.sim.pdptw.experiment.Experiment;
@@ -26,6 +25,7 @@ import rinde.sim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
 import rinde.sim.pdptw.gendreau06.Gendreau06Parser;
 import rinde.sim.pdptw.gendreau06.Gendreau06Scenario;
 import rinde.sim.pdptw.gendreau06.GendreauProblemClass;
+import rinde.sim.scenario.AddParcelEvent;
 import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.collect.FluentIterable;

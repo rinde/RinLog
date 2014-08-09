@@ -4,10 +4,10 @@ import rinde.logistics.pdptw.mas.comm.Communicator;
 import rinde.logistics.pdptw.mas.route.RoutePlanner;
 import rinde.sim.core.Simulator;
 import rinde.sim.core.model.Model;
-import rinde.sim.core.pdptw.AddVehicleEvent;
 import rinde.sim.core.pdptw.VehicleDTO;
 import rinde.sim.pdptw.common.DynamicPDPTWProblem.Creator;
 import rinde.sim.pdptw.experiment.DefaultMASConfiguration;
+import rinde.sim.scenario.AddVehicleEvent;
 import rinde.sim.util.StochasticSupplier;
 
 import com.google.common.base.Joiner;
