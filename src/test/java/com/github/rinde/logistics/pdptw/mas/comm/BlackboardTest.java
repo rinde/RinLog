@@ -19,10 +19,10 @@ import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.mas.comm.BlackboardCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.BlackboardUser;
-import com.github.rinde.rinsim.core.graph.Point;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.event.ListenerEventHistory;
+import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.DefaultParcel;
 
 /**

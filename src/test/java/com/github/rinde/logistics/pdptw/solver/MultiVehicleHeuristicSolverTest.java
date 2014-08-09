@@ -16,8 +16,8 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
-import com.github.rinde.rinsim.core.graph.Point;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
+import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.central.Central;
 import com.github.rinde.rinsim.pdptw.central.DebugSolverCreator;
 import com.github.rinde.rinsim.pdptw.central.Solvers;

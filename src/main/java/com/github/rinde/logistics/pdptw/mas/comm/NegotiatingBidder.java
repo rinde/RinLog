@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import com.github.rinde.rinsim.core.graph.Point;
+import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.central.Solver;
 import com.github.rinde.rinsim.pdptw.central.Solvers;
 import com.github.rinde.rinsim.pdptw.central.Solvers.SolveArgs;
