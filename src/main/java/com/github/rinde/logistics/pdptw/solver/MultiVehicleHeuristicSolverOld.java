@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.apache.commons.math3.random.RandomGenerator;
 
-import com.github.rinde.rinsim.pdptw.central.arrays.ArraysSolvers;
-import com.github.rinde.rinsim.pdptw.central.arrays.MultiVehicleArraysSolver;
-import com.github.rinde.rinsim.pdptw.central.arrays.SolutionObject;
+import com.github.rinde.rinsim.central.arrays.ArraysSolvers;
+import com.github.rinde.rinsim.central.arrays.MultiVehicleArraysSolver;
+import com.github.rinde.rinsim.central.arrays.SolutionObject;
 
 /**
  * A heuristic implementation of the {@link MultiVehicleArraysSolver} interface.

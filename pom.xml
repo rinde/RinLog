@@ -64,6 +64,11 @@
 			<version>${rinsim.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.rinde</groupId>
+			<artifactId>rinsim-central</artifactId>
+			<version>${rinsim.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.13</version>

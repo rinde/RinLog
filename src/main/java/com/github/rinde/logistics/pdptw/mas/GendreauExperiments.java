@@ -14,7 +14,7 @@ import com.github.rinde.logistics.pdptw.mas.comm.NegotiatingBidder.SelectNegotia
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
-import com.github.rinde.rinsim.pdptw.central.Central;
+import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.experiment.Experiment;
 import com.github.rinde.rinsim.pdptw.experiment.ExperimentResults;

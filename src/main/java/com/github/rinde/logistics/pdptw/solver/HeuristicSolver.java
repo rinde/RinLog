@@ -9,8 +9,8 @@ import javax.annotation.Nullable;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 
-import com.github.rinde.rinsim.pdptw.central.arrays.SingleVehicleArraysSolver;
-import com.github.rinde.rinsim.pdptw.central.arrays.SolutionObject;
+import com.github.rinde.rinsim.central.arrays.SingleVehicleArraysSolver;
+import com.github.rinde.rinsim.central.arrays.SolutionObject;
 
 /**
  * This class contains a heuristic implementation of the solver interface.

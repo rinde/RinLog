@@ -9,8 +9,8 @@ import java.io.File;
 import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
-import com.github.rinde.rinsim.pdptw.central.Central;
-import com.github.rinde.rinsim.pdptw.central.SolverValidator;
+import com.github.rinde.rinsim.central.Central;
+import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.experiment.Experiment;
 import com.github.rinde.rinsim.pdptw.experiment.ExperimentResults;

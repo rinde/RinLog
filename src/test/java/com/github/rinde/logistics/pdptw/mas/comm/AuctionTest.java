@@ -31,6 +31,7 @@ import com.github.rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.Co
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
+import com.github.rinde.rinsim.central.RandomSolver;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
@@ -40,7 +41,6 @@ import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.central.RandomSolver;
 import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;

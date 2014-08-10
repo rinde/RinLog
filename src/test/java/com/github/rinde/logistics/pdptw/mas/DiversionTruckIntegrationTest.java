@@ -19,7 +19,7 @@ import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import com.github.rinde.rinsim.pdptw.central.RandomSolver;
+import com.github.rinde.rinsim.central.RandomSolver;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.experiment.Experiment;
 import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;

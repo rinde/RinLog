@@ -1,9 +1,9 @@
 package com.github.rinde.logistics.pdptw.solver;
 
 import com.github.rinde.opt.localsearch.RouteEvaluator;
+import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
-import com.github.rinde.rinsim.pdptw.central.GlobalStateObject;
-import com.github.rinde.rinsim.pdptw.central.Solvers;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.google.common.collect.ImmutableList;
 

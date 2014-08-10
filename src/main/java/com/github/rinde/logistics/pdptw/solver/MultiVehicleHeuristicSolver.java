@@ -14,13 +14,13 @@ import javax.measure.unit.SI;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
-import com.github.rinde.rinsim.pdptw.central.Solver;
-import com.github.rinde.rinsim.pdptw.central.SolverValidator;
-import com.github.rinde.rinsim.pdptw.central.arrays.ArraysSolverValidator;
-import com.github.rinde.rinsim.pdptw.central.arrays.ArraysSolvers;
-import com.github.rinde.rinsim.pdptw.central.arrays.MultiVehicleArraysSolver;
-import com.github.rinde.rinsim.pdptw.central.arrays.MultiVehicleSolverAdapter;
-import com.github.rinde.rinsim.pdptw.central.arrays.SolutionObject;
+import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverValidator;
+import com.github.rinde.rinsim.central.arrays.ArraysSolverValidator;
+import com.github.rinde.rinsim.central.arrays.ArraysSolvers;
+import com.github.rinde.rinsim.central.arrays.MultiVehicleArraysSolver;
+import com.github.rinde.rinsim.central.arrays.MultiVehicleSolverAdapter;
+import com.github.rinde.rinsim.central.arrays.SolutionObject;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.primitives.Ints;
 
