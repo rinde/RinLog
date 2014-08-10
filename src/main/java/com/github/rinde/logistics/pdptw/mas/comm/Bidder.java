@@ -3,7 +3,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import com.github.rinde.rinsim.pdptw.common.DefaultParcel;
+import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 
 /**
  * Implementations of this interface can participate in auctions.

@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.pdptw.common.DefaultParcel;
-import com.github.rinde.rinsim.pdptw.common.DefaultVehicle;
+import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 

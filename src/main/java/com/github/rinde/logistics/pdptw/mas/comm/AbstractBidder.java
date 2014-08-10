@@ -17,11 +17,11 @@ import org.slf4j.LoggerFactory;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
-import com.github.rinde.rinsim.pdptw.common.DefaultParcel;
-import com.github.rinde.rinsim.pdptw.common.DefaultVehicle;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.google.common.base.Optional;
 

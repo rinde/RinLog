@@ -4,9 +4,9 @@ import java.util.Collection;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.event.Listener;
-import com.github.rinde.rinsim.pdptw.common.DefaultParcel;
-import com.github.rinde.rinsim.pdptw.common.DefaultVehicle;
 
 /**
  * Interface of communications. Facade for communication system. acts on behalve
