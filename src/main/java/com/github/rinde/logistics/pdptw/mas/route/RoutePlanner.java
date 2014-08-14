@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
  * its history (accessible via {@link #getHistory()}) and accessible via
  * {@link #prev()}.
  * 
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public interface RoutePlanner {
 

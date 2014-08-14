@@ -7,7 +7,7 @@ import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 
 /**
  * Implementations of this interface can participate in auctions.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public interface Bidder extends Communicator {
 

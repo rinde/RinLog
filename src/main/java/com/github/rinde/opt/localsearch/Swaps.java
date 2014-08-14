@@ -36,7 +36,7 @@ import com.google.common.collect.Range;
  * {@link #dfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator, RandomGenerator)}
  * .</li>
  * </ul>
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public final class Swaps {
 

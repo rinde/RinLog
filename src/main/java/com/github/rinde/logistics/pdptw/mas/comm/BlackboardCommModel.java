@@ -20,7 +20,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
  * all other {@link BlackboardUser}s are notified of claims. With this
  * communication strategy race conditions between {@link BlackboardUser}s can be
  * prevented.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   private final Set<DefaultParcel> unclaimedParcels;

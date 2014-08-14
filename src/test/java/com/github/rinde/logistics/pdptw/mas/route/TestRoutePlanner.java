@@ -17,7 +17,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
 import com.google.common.base.Optional;
 
 /**
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  * 
  */
 public class TestRoutePlanner extends AbstractRoutePlanner {

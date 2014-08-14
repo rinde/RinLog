@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Tests all known implementations of the {@link RoutePlanner} interface.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 @RunWith(Parameterized.class)
 public class RoutePlannerTest {

@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Test of {@link Swaps}.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class SwapsTest {
 
@@ -77,7 +77,7 @@ public class SwapsTest {
   /**
    * Evaluator providing an objective function for sorting strings in ascending
    * or descending order.
-   * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+   * @author Rinde van Lon 
    */
   static class StringListEvaluator implements
       RouteEvaluator<SortDirection, String> {

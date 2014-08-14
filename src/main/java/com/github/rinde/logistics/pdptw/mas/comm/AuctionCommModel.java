@@ -19,7 +19,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
 
 /**
  * A communication model that supports auctions.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class AuctionCommModel extends AbstractCommModel<Bidder> {
   private static final double TOLERANCE = .0001;

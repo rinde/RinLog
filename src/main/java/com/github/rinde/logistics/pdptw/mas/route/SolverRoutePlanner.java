@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
  * A {@link RoutePlanner} implementation that uses a {@link Solver} that
  * computes a complete route each time {@link #update(Collection, long)} is
  * called.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class SolverRoutePlanner extends AbstractRoutePlanner implements
     SimulatorUser {

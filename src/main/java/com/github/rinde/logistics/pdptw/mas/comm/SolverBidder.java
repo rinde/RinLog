@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * A {@link Bidder} that uses a {@link Solver} for computing the bid value.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class SolverBidder extends AbstractBidder implements SimulatorUser {
 

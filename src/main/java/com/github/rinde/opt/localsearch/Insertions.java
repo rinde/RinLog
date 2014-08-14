@@ -15,7 +15,7 @@ import com.google.common.primitives.Ints;
 
 /**
  * Utilities for creating insertions.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public final class Insertions {
 

@@ -27,7 +27,7 @@ import com.google.common.base.Optional;
 
 /**
  * Basic implementation for {@link Bidder}.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public abstract class AbstractBidder implements Bidder {
 

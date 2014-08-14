@@ -61,7 +61,7 @@ import com.google.common.collect.ImmutableList;
  * calculated by the {@link SingleVehicleArraysSolver} is always worse compared
  * to the objective calculated by the {@link Gendreau06ObjectiveFunction}.
  * 
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 @RunWith(Parameterized.class)
 public class SingleVehicleSolverTest {

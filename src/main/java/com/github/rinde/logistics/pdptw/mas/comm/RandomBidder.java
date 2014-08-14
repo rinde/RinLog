@@ -13,7 +13,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
 
 /**
  * A {@link Bidder} implementation that creates random bids.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class RandomBidder extends AbstractBidder {
 
