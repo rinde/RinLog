@@ -58,7 +58,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Tests for the auction mechanism.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 @RunWith(Parameterized.class)
 public class AuctionTest {

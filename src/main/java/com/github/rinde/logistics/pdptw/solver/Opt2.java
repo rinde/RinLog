@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
  * and
  * {@link Swaps#dfsOpt2(ImmutableList, ImmutableList, Object, com.github.rinde.opt.localsearch.RouteEvaluator, org.apache.commons.math3.random.RandomGenerator)}
  * .
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class Opt2 implements Solver {
 

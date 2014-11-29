@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableList;
  * 
  * @param <C> The context type.
  * @param <T> The generic type of a route.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public interface RouteEvaluator<C, T> {
 

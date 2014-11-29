@@ -27,7 +27,7 @@ import com.google.common.base.Optional;
 /**
  * A vehicle entirely controlled by a {@link RoutePlanner} and a
  * {@link Communicator}.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class Truck extends RouteFollowingVehicle implements Listener,
     SimulatorUser {

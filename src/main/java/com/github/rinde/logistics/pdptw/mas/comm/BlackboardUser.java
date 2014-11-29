@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
 /**
  * This {@link Communicator} implementation allows communication via a
  * blackboard system. It requires the {@link BlackboardCommModel}.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class BlackboardUser implements Communicator {
 

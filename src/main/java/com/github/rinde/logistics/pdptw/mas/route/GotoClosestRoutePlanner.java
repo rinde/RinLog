@@ -18,7 +18,7 @@ import com.google.common.base.Optional;
 /**
  * A {@link RoutePlanner} implementation that lets a vehicle go to its closest
  * destination.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 

@@ -24,7 +24,7 @@ import com.google.common.collect.Multiset;
 
 /**
  * A {@link RoutePlanner} implementation that creates random routes.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class RandomRoutePlanner extends AbstractRoutePlanner {
 

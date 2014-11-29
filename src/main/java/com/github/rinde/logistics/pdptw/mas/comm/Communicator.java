@@ -14,7 +14,7 @@ import com.github.rinde.rinsim.event.Listener;
  * Via the communicator a truck receives updates about the environment with
  * regard to {@link DefaultParcel}s.
  * 
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public interface Communicator {
 

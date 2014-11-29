@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
 
 /**
  * {@link SolverBidder} that uses a negotiation phase for exchanging parcels.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class NegotiatingBidder extends SolverBidder {
 
@@ -43,7 +43,7 @@ public class NegotiatingBidder extends SolverBidder {
   /**
    * This heuristic determines the property on which the selection of
    * negotiators is done.
-   * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+   * @author Rinde van Lon 
    */
   public enum SelectNegotiatorsHeuristic {
     /**

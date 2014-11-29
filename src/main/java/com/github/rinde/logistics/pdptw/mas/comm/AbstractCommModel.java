@@ -27,7 +27,7 @@ import com.google.common.base.Optional;
  * strategy between a set of {@link Communicator}s. There are currently two
  * implementations, blackboard communication ({@link BlackboardCommModel}) and
  * auctioning ({@link AuctionCommModel}).
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  * @param <T> The type of {@link Communicator} this model expects.
  */
 public abstract class AbstractCommModel<T extends Communicator> extends

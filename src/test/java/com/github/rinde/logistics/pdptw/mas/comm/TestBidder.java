@@ -9,7 +9,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
 
 /**
  * {@link Bidder} implementation that adds some methods for easier testing.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public class TestBidder extends RandomBidder {
 

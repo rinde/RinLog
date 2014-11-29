@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
  * A partial {@link RoutePlanner} implementation, it already implements much of
  * the common required behaviors. Subclasses only need to concentrate on the
  * route planning itself.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon 
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
   /**
