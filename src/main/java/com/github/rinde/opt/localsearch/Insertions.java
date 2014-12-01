@@ -30,7 +30,7 @@ import com.google.common.primitives.Ints;
 
 /**
  * Utilities for creating insertions.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public final class Insertions {
 
@@ -42,7 +42,7 @@ public final class Insertions {
    * in the list. Only creates insertions starting at <code>startIndex</code>.
    * @param list The original list.
    * @param item The item to be inserted.
-   * @param startIndex Must be >= 0 && <= list size.
+   * @param startIndex Must be &ge; 0 &amp;&amp; &le; list size.
    * @param numOfInsertions The number of times <code>item</code> is inserted.
    * @param <T> The list item type.
    * @return Iterator producing a list of lists of size
@@ -64,7 +64,7 @@ public final class Insertions {
    * creates insertions starting at <code>startIndex</code>.
    * @param list The original list.
    * @param item The item to be inserted.
-   * @param startIndex Must be >= 0 && <= list size.
+   * @param startIndex Must be &ge; 0 &amp;&amp; &le; list size.
    * @param numOfInsertions The number of times <code>item</code> is inserted.
    * @param <T> The list item type.
    * @return A list containing all insertions.

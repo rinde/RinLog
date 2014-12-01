@@ -39,7 +39,6 @@ import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -48,7 +47,7 @@ import com.google.common.collect.Lists;
 
 /**
  * {@link SolverBidder} that uses a negotiation phase for exchanging parcels.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class NegotiatingBidder extends SolverBidder {
 
@@ -58,7 +57,7 @@ public class NegotiatingBidder extends SolverBidder {
   /**
    * This heuristic determines the property on which the selection of
    * negotiators is done.
-   * @author Rinde van Lon 
+   * @author Rinde van Lon
    */
   public enum SelectNegotiatorsHeuristic {
     /**
@@ -83,7 +82,7 @@ public class NegotiatingBidder extends SolverBidder {
    * @param s1 The solver used for computing bids.
    * @param s2 The solver used for the negotiation process.
    * @param numOfNegotiators The number of parties to include in the negotiation
-   *          process (including itself), must be <code>>=2</code>.
+   *          process (including itself), must be <code>&ge; 2</code>.
    * @param h The heuristic to use for selecting negotiators.
    */
   protected NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
@@ -198,7 +197,7 @@ public class NegotiatingBidder extends SolverBidder {
    * @param bidderSolverSupplier The solver used for computing bids.
    * @param negoSolverSupplier The solver used for the negotiation process.
    * @param numOfNegotiators The number of parties to include in the negotiation
-   *          process (including itself), must be <code>>=2</code>.
+   *          process (including itself), must be <code>&ge; 2</code>.
    * @param heuristic The heuristic to use for selecting negotiators.
    * @return The new supplier.
    */
