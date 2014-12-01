@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType.CHANGE;

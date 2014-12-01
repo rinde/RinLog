@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.solver;
 
 import static com.google.common.collect.Lists.newArrayList;

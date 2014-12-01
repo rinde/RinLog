@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;

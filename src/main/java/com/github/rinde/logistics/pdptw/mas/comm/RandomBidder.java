@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import org.apache.commons.math3.random.MersenneTwister;

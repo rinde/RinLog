@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.mas;
 
 import static com.google.common.collect.Lists.newArrayList;

@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.opt.localsearch;
 
 import static com.github.rinde.opt.localsearch.Insertions.insert;

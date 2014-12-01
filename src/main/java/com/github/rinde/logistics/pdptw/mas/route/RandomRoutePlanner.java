@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.base.Preconditions.checkArgument;
