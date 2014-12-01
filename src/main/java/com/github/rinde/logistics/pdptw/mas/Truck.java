@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.LinkedList;
 
@@ -39,7 +39,7 @@ import com.google.common.base.Optional;
 /**
  * A vehicle entirely controlled by a {@link RoutePlanner} and a
  * {@link Communicator}.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class Truck extends RouteFollowingVehicle implements Listener,
     SimulatorUser {

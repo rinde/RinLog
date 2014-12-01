@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
@@ -32,14 +32,13 @@ import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 /**
  * This {@link Communicator} implementation allows communication via a
  * blackboard system. It requires the {@link BlackboardCommModel}.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class BlackboardUser implements Communicator {
 
@@ -130,6 +129,8 @@ public class BlackboardUser implements Communicator {
    */
   public static StochasticSupplier<BlackboardUser> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<BlackboardUser>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public BlackboardUser get(long seed) {
         return new BlackboardUser();

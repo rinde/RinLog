@@ -17,7 +17,7 @@ package com.github.rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 final class Schedule<C, T> {
@@ -72,7 +72,7 @@ final class Schedule<C, T> {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("context", context)
+    return MoreObjects.toStringHelper(this).add("context", context)
         .add("routes", routes).add("startIndices", startIndices)
         .add("objectiveValues", objectiveValues)
         .add("objectiveValue", objectiveValue).add("evaluator", evaluator)

@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.route;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.unmodifiableList;
@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableList;
  * A partial {@link RoutePlanner} implementation, it already implements much of
  * the common required behaviors. Subclasses only need to concentrate on the
  * route planning itself.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public abstract class AbstractRoutePlanner implements RoutePlanner {
   /**

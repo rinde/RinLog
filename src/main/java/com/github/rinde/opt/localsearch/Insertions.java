@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.math3.util.ArithmeticUtils;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -86,7 +86,7 @@ public final class Insertions {
    * @return The number of multisubsets.
    */
   static long multichoose(int n, int k) {
-    return ArithmeticUtils.binomialCoefficient(n + k - 1, k);
+    return CombinatoricsUtils.binomialCoefficient(n + k - 1, k);
   }
 
   /**

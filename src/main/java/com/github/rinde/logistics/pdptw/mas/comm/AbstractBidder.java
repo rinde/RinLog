@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
@@ -39,7 +39,7 @@ import com.google.common.base.Optional;
 
 /**
  * Basic implementation for {@link Bidder}.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public abstract class AbstractBidder implements Bidder {
 

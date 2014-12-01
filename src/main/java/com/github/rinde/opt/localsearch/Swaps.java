@@ -35,7 +35,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +51,7 @@ import com.google.common.collect.Range;
  * {@link #dfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator, RandomGenerator)}
  * .</li>
  * </ul>
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public final class Swaps {
 
@@ -423,7 +423,7 @@ public final class Swaps {
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(this).add("item", item)
+      return MoreObjects.toStringHelper(this).add("item", item)
           .add("fromRow", fromRow).add("toRow", toRow)
           .add("toIndices", toIndices).toString();
     }
