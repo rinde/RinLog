@@ -27,7 +27,6 @@ import javax.measure.unit.SI;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.central.DebugSolverCreator;
 import com.github.rinde.rinsim.central.Solvers;
@@ -45,7 +44,7 @@ import com.github.rinde.rinsim.scenario.TimedEvent;
 import com.github.rinde.rinsim.util.TimeWindow;
 
 /**
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  * 
  */
 public class MultiVehicleHeuristicSolverTest {
@@ -74,18 +73,42 @@ public class MultiVehicleHeuristicSolverTest {
   @Test
   public void testObjectiveValue() {
     final List<TimedEvent> parcels = newArrayList();
-    parcels.add(new AddParcelEvent(new ParcelDTO(new Point(1, 1), new Point(2,
-        2), new TimeWindow(10, 100000), new TimeWindow(0, 1000000), 0, 10,
-        300000, 300000)));
-    parcels.add(new AddParcelEvent(new ParcelDTO(new Point(3, 1), new Point(
-        0.1, 3), new TimeWindow(10, 100), new TimeWindow(0, 100), 0, 10,
-        300000, 300000)));
-    parcels.add(new AddParcelEvent(new ParcelDTO(new Point(1, 4.5), new Point(
-        2, 5), new TimeWindow(10, 100), new TimeWindow(0, 100), 0, 10, 300000,
-        300000)));
-    parcels.add(new AddParcelEvent(new ParcelDTO(new Point(1, 5), new Point(0,
-        2), new TimeWindow(10, 100), new TimeWindow(0, 100), 0, 10, 300000,
-        300000)));
+    parcels.add(new AddParcelEvent(
+        ParcelDTO.builder(new Point(1, 1), new Point(2, 2))
+            .pickupTimeWindow(new TimeWindow(10, 100000))
+            .deliveryTimeWindow(new TimeWindow(0, 1000000))
+            .neededCapacity(0)
+            .orderAnnounceTime(10L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build()));
+    parcels.add(new AddParcelEvent(
+        ParcelDTO.builder(new Point(3, 1), new Point(0.1, 3))
+            .pickupTimeWindow(new TimeWindow(10, 100))
+            .deliveryTimeWindow(new TimeWindow(0, 100))
+            .neededCapacity(0)
+            .orderAnnounceTime(10L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build()));
+    parcels.add(new AddParcelEvent(
+        ParcelDTO.builder(new Point(1, 4.5), new Point(2, 5))
+            .pickupTimeWindow(new TimeWindow(10, 100))
+            .deliveryTimeWindow(new TimeWindow(0, 100))
+            .neededCapacity(0)
+            .orderAnnounceTime(10L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build()));
+    parcels.add(new AddParcelEvent(
+        ParcelDTO.builder(new Point(1, 5), new Point(0, 2))
+            .pickupTimeWindow(new TimeWindow(10, 100))
+            .deliveryTimeWindow(new TimeWindow(0, 100))
+            .neededCapacity(0)
+            .orderAnnounceTime(10L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build()));
 
     final Gendreau06Scenario scenario = GendreauTestUtil.create(parcels, 2);
     final DebugSolverCreator dsc = new DebugSolverCreator(
@@ -105,5 +128,4 @@ public class MultiVehicleHeuristicSolverTest {
       assertEquals(arrObjVal, objVal, 0.01);
     }
   }
-
 }

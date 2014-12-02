@@ -35,11 +35,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
-import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
-import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
-import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
-import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import com.github.rinde.rinsim.central.arrays.RandomMVArraysSolver;
 import com.github.rinde.rinsim.core.Simulator;
@@ -69,7 +64,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Tests all known implementations of the {@link RoutePlanner} interface.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 @RunWith(Parameterized.class)
 public class RoutePlannerTest {
@@ -295,29 +290,42 @@ public class RoutePlannerTest {
   }
 
   static Parcel createParcel(RandomGenerator rng) {
-    final ParcelDTO dto = new ParcelDTO(/* */
-        new Point(rng.nextDouble(), rng.nextDouble()),/* start pos */
-        new Point(rng.nextDouble(), rng.nextDouble()),/* dest pos */
-        new TimeWindow(0, 100000),/* pickup tw */
-        new TimeWindow(0, 100000),/* deliver tw */
-        0,/* needed capacity */
-        -1,/* order arrival time */
-        3000,/* pickup duration */
-        3000 /* delivery duration */);
-
+    final ParcelDTO dto = ParcelDTO
+        .builder(new Point(rng.nextDouble(), rng.nextDouble()),
+            new Point(rng.nextDouble(), rng.nextDouble()))
+        .pickupTimeWindow(new TimeWindow(0, 100000))
+        .deliveryTimeWindow(new TimeWindow(0, 100000))
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(3000L)
+        .deliveryDuration(3000L)
+        .build();
     return new DefaultParcel(dto);
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination) {
-    return new AddParcelEvent(new ParcelDTO(origin, destination,
-        new TimeWindow(0, 3600000), new TimeWindow(1800000, 5400000), 0, -1,
-        300000, 300000));
+    return new AddParcelEvent(
+        ParcelDTO.builder(origin, destination)
+            .pickupTimeWindow(new TimeWindow(0, 3600000))
+            .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
+            .neededCapacity(0)
+            .orderAnnounceTime(-1)
+            .pickupDuration(3000L)
+            .deliveryDuration(3000L)
+            .build());
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination,
       TimeWindow pickup, TimeWindow delivery) {
-    return new AddParcelEvent(new ParcelDTO(origin, destination, pickup,
-        delivery, 0, -1, 300000, 300000));
+    return new AddParcelEvent(
+        ParcelDTO.builder(origin, destination)
+            .pickupTimeWindow(pickup)
+            .deliveryTimeWindow(delivery)
+            .neededCapacity(0)
+            .orderAnnounceTime(-1L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build());
   }
 
   class TestConfiguration extends DefaultMASConfiguration {

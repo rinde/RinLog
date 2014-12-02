@@ -29,10 +29,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.mas.Truck;
-import com.github.rinde.logistics.pdptw.mas.TruckConfiguration;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.TestBidder;
@@ -45,9 +44,9 @@ import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
 import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
+import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
-import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
@@ -71,12 +70,11 @@ import com.github.rinde.rinsim.scenario.TimedEvent;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.github.rinde.rinsim.util.TimeWindow;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  * 
  */
 public class SingleTruckTest {
@@ -86,6 +84,19 @@ public class SingleTruckTest {
   protected RoadModel roadModel;
   protected PDPModel pdpModel;
   protected TestTruck truck;
+  protected static ParcelDTO.Builder builder;
+
+  @BeforeClass
+  public static void setUp() {
+    builder = ParcelDTO
+        .builder(new Point(1, 1), new Point(3, 3))
+        .pickupTimeWindow(new TimeWindow(1, 60000))
+        .deliveryTimeWindow(new TimeWindow(1, 60000))
+        .neededCapacity(0)
+        .orderAnnounceTime(1L)
+        .pickupDuration(1000L)
+        .deliveryDuration(3000L);
+  }
 
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
@@ -136,9 +147,7 @@ public class SingleTruckTest {
 
   @Test
   public void oneParcel() {
-    final ParcelDTO parcel1dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 3000, 3000);
+    final ParcelDTO parcel1dto = builder.build();
 
     setUp(asList(parcel1dto), 1, null);
 
@@ -211,18 +220,10 @@ public class SingleTruckTest {
 
   @Test
   public void twoParcels() {
-    final ParcelDTO parcel1dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 3000, 3000);
-    final ParcelDTO parcel2dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 3000, 3000);
-    final ParcelDTO parcel3dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 3000, 3000);
-
+    final ParcelDTO parcel1dto = builder.build();
+    final ParcelDTO parcel2dto = builder.build();
+    final ParcelDTO parcel3dto = builder.build();
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 2, null);
-
     simulator.start();
   }
 
@@ -232,15 +233,9 @@ public class SingleTruckTest {
    */
   @Test
   public void intermediateChange() {
-    final ParcelDTO parcel1dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
-    final ParcelDTO parcel2dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
-    final ParcelDTO parcel3dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
+    final ParcelDTO parcel1dto = builder.build();
+    final ParcelDTO parcel2dto = builder.build();
+    final ParcelDTO parcel3dto = builder.build();
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
         SolverRoutePlanner
@@ -279,13 +274,8 @@ public class SingleTruckTest {
    */
   @Test
   public void intermediateChange2() {
-    final ParcelDTO parcel1dto = new ParcelDTO(new Point(1, 1),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
-    final ParcelDTO parcel2dto = new ParcelDTO(new Point(1, 2),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
-
+    final ParcelDTO parcel1dto = builder.build();
+    final ParcelDTO parcel2dto = builder.build();
     setUp(asList(parcel1dto, parcel2dto), 1, null);
 
     final DebugRoutePlanner drp = (DebugRoutePlanner) truck.getRoutePlanner();
@@ -294,9 +284,7 @@ public class SingleTruckTest {
     assertEquals(1, drp.getUpdateCount());
 
     // introduce new parcel
-    final ParcelDTO parcel3dto = new ParcelDTO(new Point(1, 3),
-        new Point(3, 3), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
+    final ParcelDTO parcel3dto = builder.build();
     simulator.register(new DefaultParcel(parcel3dto));
 
     // goto
@@ -305,9 +293,7 @@ public class SingleTruckTest {
     }
     assertEquals(1, drp.getUpdateCount());
     // introduce new parcel
-    final ParcelDTO parcel4dto = new ParcelDTO(new Point(1, 4),
-        new Point(3, 4), new TimeWindow(1, 60000), new TimeWindow(1, 60000), 0,
-        1, 1000, 3000);
+    final ParcelDTO parcel4dto = builder.build();
     simulator.register(new DefaultParcel(parcel4dto));
     // service
     while (truck.getState().equals(truck.getServiceState())) {

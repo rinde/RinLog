@@ -38,20 +38,19 @@ import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.RandomBidder;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import com.github.rinde.logistics.pdptw.solver.HeuristicSolver;
 import com.github.rinde.rinsim.central.arrays.ArraysSolverDebugger;
+import com.github.rinde.rinsim.central.arrays.ArraysSolverDebugger.SVASDebugger;
 import com.github.rinde.rinsim.central.arrays.ArraysSolverValidator;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleArraysSolver;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleSolverAdapter;
 import com.github.rinde.rinsim.central.arrays.SolutionObject;
-import com.github.rinde.rinsim.central.arrays.ArraysSolverDebugger.SVASDebugger;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.geom.Point;
+import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
-import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
 import com.github.rinde.rinsim.pdptw.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.pdptw.experiment.ExperimentTest;
 import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
@@ -73,7 +72,7 @@ import com.google.common.collect.ImmutableList;
  * calculated by the {@link SingleVehicleArraysSolver} is always worse compared
  * to the objective calculated by the {@link Gendreau06ObjectiveFunction}.
  * 
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 @RunWith(Parameterized.class)
 public class SingleVehicleSolverTest {
@@ -210,15 +209,28 @@ public class SingleVehicleSolverTest {
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination) {
-    return new AddParcelEvent(new ParcelDTO(origin, destination,
-        new TimeWindow(0, 3600000), new TimeWindow(1800000, 5400000), 0, -1,
-        300000, 300000));
+    return new AddParcelEvent(
+        ParcelDTO.builder(origin, destination)
+            .pickupTimeWindow(new TimeWindow(0, 3600000))
+            .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
+            .neededCapacity(0)
+            .orderAnnounceTime(-1L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build());
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination,
       TimeWindow pickup, TimeWindow delivery) {
-    return new AddParcelEvent(new ParcelDTO(origin, destination, pickup,
-        delivery, 0, -1, 300000, 300000));
+    return new AddParcelEvent(
+        ParcelDTO.builder(origin, destination)
+            .pickupTimeWindow(pickup)
+            .deliveryTimeWindow(delivery)
+            .neededCapacity(0)
+            .orderAnnounceTime(-1L)
+            .pickupDuration(300000L)
+            .deliveryDuration(300000L)
+            .build());
   }
 
   static class TestConfigurator extends DefaultMASConfiguration {
