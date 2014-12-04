@@ -35,12 +35,12 @@ import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.pdptw.experiment.Experiment;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Parser;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Scenario;
-import com.github.rinde.rinsim.pdptw.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.scenario.AddParcelEvent;
 import com.github.rinde.rinsim.scenario.TimedEvent;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
+import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.util.TimeWindow;
 
 /**

@@ -265,6 +265,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.rinde</groupId>
+			<artifactId>rinsim-scenario-util</artifactId>
+			<version>${rinsim.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.rinde</groupId>
 			<artifactId>rinsim-experiment</artifactId>
 			<version>${rinsim.version}</version>
 		</dependency>
@@ -283,6 +288,13 @@
 		<dependency>
 			<groupId>com.github.rinde</groupId>
 			<artifactId>rinsim-problem</artifactId>
+			<version>${rinsim.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.rinde</groupId>
+			<artifactId>rinsim-scenario-util</artifactId>
 			<version>${rinsim.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
