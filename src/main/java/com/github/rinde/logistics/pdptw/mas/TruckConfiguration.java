@@ -20,15 +20,15 @@ import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
+import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
-import com.github.rinde.rinsim.pdptw.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.scenario.AddVehicleEvent;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A {@link com.github.rinde.rinsim.pdptw.experiment.MASConfiguration} that configures a
+ * A {@link com.github.rinde.rinsim.experiment.MASConfiguration} that configures a
  * simulation to use a {@link Truck} instance as vehicle.
  * @author Rinde van Lon 
  */
