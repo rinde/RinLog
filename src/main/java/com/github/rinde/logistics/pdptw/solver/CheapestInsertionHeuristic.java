@@ -23,9 +23,9 @@ import java.util.Set;
 
 import com.github.rinde.opt.localsearch.Insertions;
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers;
-import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -33,10 +33,19 @@ import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+/**
+ * An implementation of a cheapest insertion heuristic.
+ * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ */
 public class CheapestInsertionHeuristic implements Solver {
 
   private final ObjectiveFunction objectiveFunction;
 
+  /**
+   * Creates a new instance.
+   * @param objFunc The objective function used to calculate the cost of a
+   *          schedule.
+   */
   public CheapestInsertionHeuristic(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
   }
@@ -80,6 +89,7 @@ public class CheapestInsertionHeuristic implements Solver {
     return builder.build();
   }
 
+  @SuppressWarnings("null")
   ImmutableList<ImmutableList<ParcelDTO>> decomposed(GlobalStateObject state) {
     ImmutableList<ImmutableList<ParcelDTO>> schedule = createSchedule(state);
     ImmutableList<Double> costs = decomposedCost(state, schedule);

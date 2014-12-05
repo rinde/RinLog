@@ -27,13 +27,12 @@ import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 
 /**
  * A {@link RoutePlanner} implementation that lets a vehicle go to its closest
  * destination.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 
@@ -91,11 +90,13 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link GotoClosestRoutePlanner}
-   *         instances.
+   * @return A {@link StochasticSupplier} that supplies
+   *         {@link GotoClosestRoutePlanner} instances.
    */
   public static StochasticSupplier<GotoClosestRoutePlanner> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<GotoClosestRoutePlanner>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public GotoClosestRoutePlanner get(long seed) {
         return new GotoClosestRoutePlanner();
@@ -119,5 +120,4 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
       return Double.compare(Point.distance(cur, p0), Point.distance(cur, p1));
     }
   }
-
 }

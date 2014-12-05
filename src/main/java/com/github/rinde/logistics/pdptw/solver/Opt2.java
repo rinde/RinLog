@@ -124,8 +124,8 @@ public class Opt2 implements Solver {
 
     @Override
     public Solver get(long seed) {
-      final RandomGenerator rng = new MersenneTwister(seed);
-      return new Opt2(rng.nextLong(), delegate.get(rng.nextLong()),
+      final RandomGenerator rand = new MersenneTwister(seed);
+      return new Opt2(rand.nextLong(), delegate.get(rand.nextLong()),
           objectiveFunction, depthFirstSearch);
     }
   }

@@ -33,7 +33,6 @@ import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -41,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  * A {@link RoutePlanner} implementation that uses a {@link Solver} that
  * computes a complete route each time {@link #update(Collection, long)} is
  * called.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class SolverRoutePlanner extends AbstractRoutePlanner implements
     SimulatorUser {
@@ -100,7 +99,6 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
         args.useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
         try {
           final GlobalStateObject gso = solverHandle.get().convert(args).state;
-
           LOGGER.info("destination {} available: {}",
               gso.vehicles.get(0).destination, gso.availableParcels);
 
@@ -162,8 +160,8 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    * @param solverSupplier A {@link StochasticSupplier} that supplies the
    *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
    *          .
-   * @return A {@link StochasticSupplier} that supplies {@link SolverRoutePlanner}
-   *         instances.
+   * @return A {@link StochasticSupplier} that supplies
+   *         {@link SolverRoutePlanner} instances.
    */
   public static StochasticSupplier<SolverRoutePlanner> supplierWithoutCurrentRoutes(
       final StochasticSupplier<? extends Solver> solverSupplier) {
@@ -174,8 +172,8 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    * @param solverSupplier A {@link StochasticSupplier} that supplies the
    *          {@link Solver} that will be used in the {@link SolverRoutePlanner}
    *          .
-   * @return A {@link StochasticSupplier} that supplies {@link SolverRoutePlanner}
-   *         instances.
+   * @return A {@link StochasticSupplier} that supplies
+   *         {@link SolverRoutePlanner} instances.
    */
   public static StochasticSupplier<SolverRoutePlanner> supplier(
       final StochasticSupplier<? extends Solver> solverSupplier) {
@@ -184,6 +182,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
   private static class SRPSupplier extends
       StochasticSuppliers.AbstractStochasticSupplier<SolverRoutePlanner> {
+    private static final long serialVersionUID = -5592714216595546915L;
     final StochasticSupplier<? extends Solver> solverSupplier;
     final boolean reuseCurrentRoutes;
 

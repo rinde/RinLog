@@ -21,11 +21,10 @@ import org.apache.commons.math3.random.RandomGenerator;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * A {@link Bidder} implementation that creates random bids.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class RandomBidder extends AbstractBidder {
 
@@ -45,10 +44,13 @@ public class RandomBidder extends AbstractBidder {
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link RandomBidder} instances.
+   * @return A {@link StochasticSupplier} that supplies {@link RandomBidder}
+   *         instances.
    */
   public static StochasticSupplier<RandomBidder> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<RandomBidder>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public RandomBidder get(long seed) {
         return new RandomBidder(seed);

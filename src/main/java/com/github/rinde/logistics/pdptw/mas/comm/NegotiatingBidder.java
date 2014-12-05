@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,7 +39,7 @@ import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
-import com.github.rinde.rinsim.util.StochasticSuppliers;
+import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -207,7 +208,9 @@ public class NegotiatingBidder extends SolverBidder {
       final StochasticSupplier<? extends Solver> negoSolverSupplier,
       final int numOfNegotiators,
       final SelectNegotiatorsHeuristic heuristic) {
-    return new StochasticSuppliers.AbstractStochasticSupplier<NegotiatingBidder>() {
+    return new AbstractStochasticSupplier<NegotiatingBidder>() {
+      private static final long serialVersionUID = 8739438748665308053L;
+
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),
@@ -252,7 +255,10 @@ public class NegotiatingBidder extends SolverBidder {
     }
   }
 
-  private static class TruckDistComparator implements Comparator<TruckDist> {
+  private static class TruckDistComparator implements Comparator<TruckDist>,
+      Serializable {
+    private static final long serialVersionUID = 6283995706218900520L;
+
     TruckDistComparator() {}
 
     @Override

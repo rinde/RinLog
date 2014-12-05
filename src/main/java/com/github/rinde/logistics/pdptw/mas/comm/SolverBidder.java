@@ -34,14 +34,13 @@ import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
-import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
  * A {@link Bidder} that uses a {@link Solver} for computing the bid value.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
@@ -140,7 +139,9 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
   public static StochasticSupplier<SolverBidder> supplier(
       final ObjectiveFunction objFunc,
       final StochasticSupplier<? extends Solver> solverSupplier) {
-    return new StochasticSuppliers.AbstractStochasticSupplier<SolverBidder>() {
+    return new AbstractStochasticSupplier<SolverBidder>() {
+      private static final long serialVersionUID = -3290309520168516504L;
+
       @Override
       public SolverBidder get(long seed) {
         return new SolverBidder(objFunc, solverSupplier.get(seed));

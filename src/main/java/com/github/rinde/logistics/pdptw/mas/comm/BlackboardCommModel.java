@@ -24,7 +24,6 @@ import java.util.Set;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * This is an implementation of a blackboard communication model. It allows
@@ -32,7 +31,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSuppli
  * all other {@link BlackboardUser}s are notified of claims. With this
  * communication strategy race conditions between {@link BlackboardUser}s can be
  * prevented.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   private final Set<DefaultParcel> unclaimedParcels;
@@ -104,11 +103,13 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link BlackboardCommModel}
-   *         instances.
+   * @return A {@link StochasticSupplier} that supplies
+   *         {@link BlackboardCommModel} instances.
    */
   public static StochasticSupplier<BlackboardCommModel> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<BlackboardCommModel>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public BlackboardCommModel get(long seed) {
         return new BlackboardCommModel();

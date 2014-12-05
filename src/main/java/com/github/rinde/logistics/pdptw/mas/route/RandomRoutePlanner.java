@@ -29,14 +29,13 @@ import org.apache.commons.math3.random.RandomAdaptor;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
 /**
  * A {@link RoutePlanner} implementation that creates random routes.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class RandomRoutePlanner extends AbstractRoutePlanner {
 
@@ -99,11 +98,13 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link RandomRoutePlanner}
-   *         instances.
+   * @return A {@link StochasticSupplier} that supplies
+   *         {@link RandomRoutePlanner} instances.
    */
   public static StochasticSupplier<RandomRoutePlanner> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<RandomRoutePlanner>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public RandomRoutePlanner get(long seed) {
         return new RandomRoutePlanner(seed);

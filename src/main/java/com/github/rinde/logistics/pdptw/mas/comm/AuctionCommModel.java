@@ -27,11 +27,10 @@ import org.apache.commons.math3.random.RandomGenerator;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * A communication model that supports auctions.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class AuctionCommModel extends AbstractCommModel<Bidder> {
   private static final double TOLERANCE = .0001;
@@ -82,6 +81,8 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
    */
   public static StochasticSupplier<AuctionCommModel> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<AuctionCommModel>() {
+      private static final long serialVersionUID = 1701618808844264668L;
+
       @Override
       public AuctionCommModel get(long seed) {
         return new AuctionCommModel(seed);
