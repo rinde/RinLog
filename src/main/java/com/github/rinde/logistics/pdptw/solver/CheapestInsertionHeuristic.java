@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * An implementation of a cheapest insertion heuristic.
- * @author Rinde van Lon <rinde.vanlon@cs.kuleuven.be>
+ * @author Rinde van Lon
  */
 public class CheapestInsertionHeuristic implements Solver {
 
