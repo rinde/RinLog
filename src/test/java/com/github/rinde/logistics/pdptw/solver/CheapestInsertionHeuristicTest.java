@@ -23,14 +23,13 @@ import java.io.File;
 
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.experiment.Experiment;
 import com.github.rinde.rinsim.experiment.ExperimentResults;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Parser;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
 import com.google.common.collect.ImmutableList;
 
 public class CheapestInsertionHeuristicTest {
@@ -53,7 +52,6 @@ public class CheapestInsertionHeuristicTest {
         .addConfiguration(
             Central.solverConfiguration(SolverValidator
                 .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
-
         .repeat(3)
         .withThreads(3)
         .perform();

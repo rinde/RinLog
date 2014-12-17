@@ -38,10 +38,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.TruckConfiguration;
-import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import com.github.rinde.logistics.pdptw.mas.comm.Bidder;
-import com.github.rinde.logistics.pdptw.mas.comm.RandomBidder;
-import com.github.rinde.logistics.pdptw.mas.comm.SolverBidder;
 import com.github.rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.CommTestModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
@@ -61,10 +57,10 @@ import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Parser;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.AddParcelEvent;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.github.rinde.rinsim.util.TimeWindow;
@@ -73,7 +69,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Tests for the auction mechanism.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 @RunWith(Parameterized.class)
 public class AuctionTest {
@@ -99,7 +95,7 @@ public class AuctionTest {
   }
 
   /**
-   * 
+   *
    */
   @Before
   public void setUp() {
@@ -243,7 +239,7 @@ public class AuctionTest {
 
     final AuctionCommModel cm = Optional.fromNullable(
         problem.getSimulator().getModelProvider()
-            .getModel(AuctionCommModel.class))
+        .getModel(AuctionCommModel.class))
         .get();
 
     final List<Truck> trucks = newArrayList(rm.getObjectsOfType(Truck.class));

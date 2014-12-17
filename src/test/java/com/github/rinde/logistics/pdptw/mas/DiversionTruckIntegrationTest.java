@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.rinde.logistics.pdptw.mas.TruckConfiguration;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.SolverBidder;
@@ -37,11 +36,11 @@ import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.rinsim.central.RandomSolver;
 import com.github.rinde.rinsim.experiment.Experiment;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06ObjectiveFunction;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Parser;
-import com.github.rinde.rinsim.pdptw.gendreau06.Gendreau06Scenario;
-import com.github.rinde.rinsim.pdptw.gendreau06.GendreauProblemClass;
 import com.github.rinde.rinsim.scenario.AddParcelEvent;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
+import com.github.rinde.rinsim.scenario.gendreau06.GendreauProblemClass;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +70,7 @@ public class DiversionTruckIntegrationTest {
             GotoClosestRoutePlanner.supplier(),
             RandomRoutePlanner.supplier(),
             SolverRoutePlanner.supplier(RandomSolver.supplier())
-        );
+            );
 
     final ImmutableList<StochasticSupplier<? extends Communicator>> communicators = ImmutableList
         .<StochasticSupplier<? extends Communicator>> of(SolverBidder
