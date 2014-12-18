@@ -7,3 +7,8 @@ jdk:
 install: mvn install -DskipTests=true
 
 script: mvn test
+
+sudo:false
+cache:
+  directories:
+    - '$HOME/.m2/repository'
