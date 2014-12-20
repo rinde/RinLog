@@ -28,11 +28,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A {@link com.github.rinde.rinsim.experiment.MASConfiguration} that configures a
- * simulation to use a {@link Truck} instance as vehicle.
- * @author Rinde van Lon 
+ * A {@link com.github.rinde.rinsim.experiment.MASConfiguration} that configures
+ * a simulation to use a {@link Truck} instance as vehicle.
+ * @author Rinde van Lon
  */
 public class TruckConfiguration extends DefaultMASConfiguration {
+  private static final long serialVersionUID = -824149700034664324L;
+
   /**
    * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
    * <i>every</i> {@link Truck}.

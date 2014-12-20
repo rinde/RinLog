@@ -16,10 +16,13 @@
 package com.github.rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
 
@@ -80,7 +83,7 @@ public final class Insertions {
    * formed in a set of size <code>n</code>. See <a
    * href="https://en.wikipedia.org/wiki/Combination#
    * Number_of_combinations_with_repetition">Wikipedia</a> for a description.
-   * 
+   *
    * @param n The size of the set to create subsets from.
    * @param k The size of the multisubsets.
    * @return The number of multisubsets.
@@ -133,8 +136,9 @@ public final class Insertions {
     }
 
     @Override
-    public ImmutableList<T> apply(ImmutableList<Integer> input) {
-      return insert(originalList, input, item);
+    public @Nullable ImmutableList<T> apply(
+        @Nullable ImmutableList<Integer> input) {
+      return insert(originalList, checkNotNull(input), item);
     }
   }
 

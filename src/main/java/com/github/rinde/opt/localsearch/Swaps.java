@@ -16,6 +16,7 @@
 package com.github.rinde.opt.localsearch;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Collections2.filter;
@@ -29,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -227,7 +230,7 @@ public final class Swaps {
    * <code>toRow</code> at the specified indices. The modified schedule is only
    * returned if it improves over the specified <code>threshold</code> value.
    * The quality of a schedule is determined by its {@link Schedule#evaluator}.
-   * 
+   *
    * @param s The schedule to perform the swap on.
    * @param itemToSwap The item to swap.
    * @param fromRow The originating row of the item.
@@ -430,7 +433,7 @@ public final class Swaps {
   }
 
   static class IndexToSwapTransform<T> implements
-      Function<ImmutableList<Integer>, Swap<T>> {
+  Function<ImmutableList<Integer>, Swap<T>> {
     private final T item;
     private final int fromRow;
     private final int toRow;
@@ -442,8 +445,8 @@ public final class Swaps {
     }
 
     @Override
-    public Swap<T> apply(ImmutableList<Integer> input) {
-      return new Swap<T>(item, fromRow, toRow, input);
+    public @Nullable Swap<T> apply(@Nullable ImmutableList<Integer> input) {
+      return new Swap<T>(item, fromRow, toRow, checkNotNull(input));
     }
   }
 }

@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
@@ -166,7 +167,7 @@ public class NegotiatingBidder extends SolverBidder {
         .build()
         .solve(
             SolveArgs.create().useCurrentRoutes(currentRoutes.build())
-                .useParcels(availableParcels));
+            .useParcels(availableParcels));
 
     final List<DefaultParcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
@@ -174,13 +175,13 @@ public class NegotiatingBidder extends SolverBidder {
       ((SolverRoutePlanner) trucks.get(i).getRoutePlanner()).changeRoute(route);
       trucks.get(i).setRoute(route);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-          .clear();
+      .clear();
 
       final Set<DefaultParcel> newAssignedParcels = newLinkedHashSet(route);
       newAssignedParcels.retainAll(ps);
       list.addAll(newAssignedParcels);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-          .addAll(newAssignedParcels);
+      .addAll(newAssignedParcels);
 
       final List<DefaultParcel> l = newArrayList(route);
       checkArgument(!newAssignedParcels.retainAll(route), "", l,
@@ -256,14 +257,15 @@ public class NegotiatingBidder extends SolverBidder {
   }
 
   private static class TruckDistComparator implements Comparator<TruckDist>,
-      Serializable {
+  Serializable {
     private static final long serialVersionUID = 6283995706218900520L;
 
     TruckDistComparator() {}
 
     @Override
-    public int compare(TruckDist o1, TruckDist o2) {
-      return Double.compare(o1.distance, o2.distance);
+    public int compare(@Nullable TruckDist o1, @Nullable TruckDist o2) {
+      return Double.compare(checkNotNull(o1).distance,
+          checkNotNull(o2).distance);
     }
   }
 

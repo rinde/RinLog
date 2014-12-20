@@ -15,12 +15,15 @@
  */
 package com.github.rinde.logistics.pdptw.mas.route;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
@@ -113,10 +116,11 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 
   class ClosestDistanceComparator implements Comparator<DefaultParcel> {
     @Override
-    public int compare(DefaultParcel arg0, DefaultParcel arg1) {
+    public int compare(@Nullable DefaultParcel arg0,
+        @Nullable DefaultParcel arg1) {
       final Point cur = roadModel.get().getPosition(vehicle.get());
-      final Point p0 = getPos(arg0, pdpModel.get());
-      final Point p1 = getPos(arg1, pdpModel.get());
+      final Point p0 = getPos(checkNotNull(arg0), pdpModel.get());
+      final Point p1 = getPos(checkNotNull(arg1), pdpModel.get());
       return Double.compare(Point.distance(cur, p0), Point.distance(cur, p1));
     }
   }
