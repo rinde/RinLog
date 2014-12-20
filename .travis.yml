@@ -8,7 +8,7 @@ install: mvn install -DskipTests=true
 
 script: mvn test
 
-sudo:false
+sudo: false
 cache:
   directories:
     - '$HOME/.m2/repository'
