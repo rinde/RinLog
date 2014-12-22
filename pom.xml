@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.rinde</groupId>
 	<artifactId>rinlog</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<name>RinLog</name>
 	<description>RinLog is a collection of (agent) implementations for logistics problems.</description>
@@ -221,15 +221,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<configuration>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-					<pushChanges>false</pushChanges>
-				</configuration>
 			</plugin>
 
 			<plugin>
