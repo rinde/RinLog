@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.rinde</groupId>
 	<artifactId>rinlog</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<name>RinLog</name>
 	<description>RinLog is a collection of (agent) implementations for logistics problems.</description>
@@ -48,8 +48,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<rinsim.version>3.0.0</rinsim.version>
+		<rinsim.version>[3.0.0,4.0.0)</rinsim.version>
 		<sonar.language>java</sonar.language>
+		<reference.version>1.0.0</reference.version>
 	</properties>
 
 	<build>
@@ -145,6 +146,54 @@
 		</pluginManagement>
 
 		<plugins>
+			<!-- Checks API for backwards compatibility -->
+			<plugin>
+				<groupId>com.googlecode.japi-checker</groupId>
+				<artifactId>japi-checker-maven-plugin</artifactId>
+				<version>0.1.4</version>
+				<configuration>
+					<reference>
+						<!-- Replace here with the reference artifact of your project. -->
+						<groupId>com.github.rinde</groupId>
+						<artifactId>${project.artifactId}</artifactId>
+						<version>${reference.version}</version>
+					</reference>
+					<rules>
+						<rule>com.googlecode.japi.checker.rules.AllRules</rule>
+					</rules>
+				</configuration>
+				<executions>
+					<execution>
+						<id>check-bc</id>		<!-- this is used for inheritance merges -->
+						<phase>verify</phase> 	<!-- bind to the packaging phase -->
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<!--  Release plugin -->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.3</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<pushChanges>false</pushChanges>
+				</configuration>
+			</plugin>
+
 			<!-- adds a source jar to every executable jar -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -257,7 +306,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.4</version>
+						<version>1.5</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
