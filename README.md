@@ -1,5 +1,6 @@
+
 # RinLog 1.0.1-SNAPSHOT
-[![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) 
+[![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) [![DOI](https://zenodo.org/badge/7417/rinde/RinLog.svg)](http://dx.doi.org/10.5281/zenodo.13344)
 
 Code for experiments in logistics. See [release notes](releasenotes.md). This library uses [semantic versioning](http://semver.org/) and is open source under the [Apache License Version 2.0](LICENSE).
  * Solvers:
