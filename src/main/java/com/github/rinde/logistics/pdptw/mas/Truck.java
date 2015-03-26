@@ -42,7 +42,7 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon
  */
 public class Truck extends RouteFollowingVehicle implements Listener,
-    SimulatorUser {
+SimulatorUser {
 
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
@@ -124,7 +124,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       // when diverting -> unclaim previous
       if ((event.trigger == DefaultEvent.REROUTE || event.trigger == DefaultEvent.NOGO)
           && !pdpModel.get().getParcelState(gotoState.getPreviousDestination())
-              .isPickedUp()) {
+          .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
       }
 
@@ -163,8 +163,12 @@ public class Truck extends RouteFollowingVehicle implements Listener,
 
   @Override
   public void setSimulator(SimulatorAPI api) {
-    api.register(communicator);
-    api.register(routePlanner);
+    try {
+      api.register(communicator);
+    } catch (final IllegalArgumentException e) {}
+    try {
+      api.register(routePlanner);
+    } catch (final IllegalArgumentException e) {}
   }
 
   @Override
