@@ -24,15 +24,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import javax.measure.Measure;
-import javax.measure.unit.SI;
-
-import org.apache.commons.math3.random.MersenneTwister;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
@@ -57,7 +52,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Tests for {@link Truck} specifically for when diversion is allowed.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class DiversionTruckTest {
 
@@ -81,30 +76,33 @@ public class DiversionTruckTest {
    */
   @Before
   public void setUp() {
-    rm = new PDPRoadModel(new PlaneRoadModel(new Point(0, 0), new Point(5, 5),
-        50d), true);
-    pm = new DefaultPDPModel(TimeWindowPolicies.TARDY_ALLOWED);
+    rm = new PDPRoadModel(PlaneRoadModel.builder()
+      .setMinPoint(new Point(0, 0))
+      .setMaxPoint(new Point(5, 5))
+      .setMaxSpeed(50d)
+      .build()
+      , true);
+    pm = DefaultPDPModel.create(TimeWindowPolicies.TARDY_ALLOWED);
 
-    sim = new Simulator(new MersenneTwister(123), Measure.valueOf(1000L,
-        SI.MILLI(SI.SECOND)));
-    sim.register(rm);
-    sim.register(pm);
-    sim.configure();
+    sim = Simulator.builder()
+      .addModel(rm)
+      .addModel(pm)
+      .build();
     final DefaultDepot dp = new DefaultDepot(new Point(2, 2));
 
     sim.register(dp);
     p1 = new DefaultParcel(ParcelDTO.builder(new Point(1, 1), new Point(2, 2))
-        .build());
+      .build());
     p2 = new DefaultParcel(ParcelDTO.builder(new Point(2, 4), new Point(1, 2))
-        .build());
+      .build());
     p3 = new DefaultParcel(ParcelDTO
-        .builder(new Point(.99, 0), new Point(1, 2))
-        .pickupTimeWindow(
-            new TimeWindow((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000)).build());
+      .builder(new Point(.99, 0), new Point(1, 2))
+      .pickupTimeWindow(
+        new TimeWindow((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000)).build());
     p4 = new DefaultParcel(ParcelDTO.builder(new Point(0, 0), new Point(1, 2))
-        .build());
+      .build());
     p5 = new DefaultParcel(ParcelDTO.builder(new Point(2, 0), new Point(1, 2))
-        .pickupDuration(1001).build());
+      .pickupDuration(1001).build());
     sim.register(p1);
     sim.register(p2);
     sim.register(p3);
@@ -114,11 +112,11 @@ public class DiversionTruckTest {
     routePlanner = mock(RoutePlanner.class);
     communicator = mock(Communicator.class);
     final VehicleDTO dto = VehicleDTO.builder()
-        .startPosition(new Point(0, 0))
-        .speed(30d)
-        .capacity(100)
-        .availabilityTimeWindow(TimeWindow.ALWAYS)
-        .build();
+      .startPosition(new Point(0, 0))
+      .speed(30d)
+      .capacity(100)
+      .availabilityTimeWindow(TimeWindow.ALWAYS)
+      .build();
 
     truck = new TestTruck(dto, routePlanner, communicator);
     sim.register(truck);
@@ -389,14 +387,14 @@ public class DiversionTruckTest {
   private void routePlannerGotoNowhere() {
     when(routePlanner.current()).thenReturn(Optional.<DefaultParcel> absent());
     when(routePlanner.currentRoute()).thenReturn(
-        Optional.of(ImmutableList.<DefaultParcel> of()));
+      Optional.of(ImmutableList.<DefaultParcel> of()));
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   private void routePlannerGoto(DefaultParcel dp) {
     when(routePlanner.current()).thenReturn(Optional.of(dp));
     when(routePlanner.currentRoute()).thenReturn(
-        Optional.of(ImmutableList.of(dp)));
+      Optional.of(ImmutableList.of(dp)));
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
@@ -408,7 +406,7 @@ public class DiversionTruckTest {
     assertEquals(truck.waitState(), truck.getState());
 
     while (truck.waitState().equals(truck.getState())
-        || truck.gotoState().equals(truck.getState())) {
+      || truck.gotoState().equals(truck.getState())) {
       sim.tick();
     }
     assertEquals(truck.waitForServiceState(), truck.getState());
