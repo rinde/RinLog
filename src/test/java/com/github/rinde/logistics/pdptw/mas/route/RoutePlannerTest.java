@@ -38,12 +38,12 @@ import org.junit.runners.Parameterized.Parameters;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import com.github.rinde.rinsim.central.arrays.RandomMVArraysSolver;
 import com.github.rinde.rinsim.core.Simulator;
-import com.github.rinde.rinsim.core.TimeLapse;
-import com.github.rinde.rinsim.core.TimeLapseFactory;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.time.TimeLapse;
+import com.github.rinde.rinsim.core.model.time.TimeLapseFactory;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
@@ -83,13 +83,13 @@ public class RoutePlannerTest {
   @Parameters
   public static Collection<Object[]> configs() {
     return Arrays
-        .asList(new Object[][] {
-            { RandomRoutePlanner.supplier() },
-            { SolverRoutePlanner.supplier(MultiVehicleHeuristicSolver.supplier(
-                50, 100)) },
-            { SolverRoutePlanner.supplier(RandomMVArraysSolver.solverSupplier()) },
-            { GotoClosestRoutePlanner.supplier() },
-            { TestRoutePlanner.supplier() } });
+      .asList(new Object[][] {
+          { RandomRoutePlanner.supplier() },
+          { SolverRoutePlanner.supplier(MultiVehicleHeuristicSolver.supplier(
+            50, 100)) },
+          { SolverRoutePlanner.supplier(RandomMVArraysSolver.solverSupplier()) },
+          { GotoClosestRoutePlanner.supplier() },
+          { TestRoutePlanner.supplier() } });
   }
 
   @Before
@@ -102,8 +102,8 @@ public class RoutePlannerTest {
     final List<TimedEvent> events = newLinkedList();
     for (int i = 0; i < numOnMap; i++) {
       events.add(newParcelEvent(
-          new Point(rng.nextDouble() * 5, rng.nextDouble() * 5),
-          new Point(rng.nextDouble() * 5, rng.nextDouble() * 5)));
+        new Point(rng.nextDouble() * 5, rng.nextDouble() * 5),
+        new Point(rng.nextDouble() * 5, rng.nextDouble() * 5)));
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events);
 
@@ -149,7 +149,7 @@ public class RoutePlannerTest {
     }
 
     final Collection<DefaultParcel> onMap = roadModel
-        .getObjectsOfType(DefaultParcel.class);
+      .getObjectsOfType(DefaultParcel.class);
     final Collection<Parcel> inCargo = pdpModel.getContents(truck);
     final List<Parcel> visited = newLinkedList();
     routePlanner.update(onMap, 0);
@@ -157,7 +157,7 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.prev().isPresent());
     assertTrue(routePlanner.current().isPresent());
     assertEquals(routePlanner.current().get(), routePlanner.currentRoute()
-        .get().get(0));
+      .get().get(0));
     assertTrue(routePlanner.hasNext());
     assertTrue(routePlanner.getHistory().isEmpty());
     if (routePlanner instanceof AbstractRoutePlanner) {
@@ -167,8 +167,8 @@ public class RoutePlannerTest {
     while (routePlanner.hasNext()) {
       visited.add(routePlanner.current().get());
       assertEquals(
-          "current must keep the same value during repeated invocations",
-          routePlanner.current(), routePlanner.current());
+        "current must keep the same value during repeated invocations",
+        routePlanner.current(), routePlanner.current());
       routePlanner.next(0);
       assertEquals(visited.get(visited.size() - 1), routePlanner.prev().get());
     }
@@ -178,7 +178,7 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.next(0).isPresent());
 
     assertEquals("total number of stops should equal num locations",
-        (onMap.size() * 2) + inCargo.size(), visited.size());
+      (onMap.size() * 2) + inCargo.size(), visited.size());
 
     for (final Parcel p : onMap) {
       assertEquals(2, Collections.frequency(visited, p));
@@ -195,9 +195,9 @@ public class RoutePlannerTest {
 
     final Collection<DefaultParcel> empty = ImmutableSet.of();
     final Collection<DefaultParcel> singleCargo = ImmutableSet
-        .of((DefaultParcel) pdpModel.getContents(truck).iterator().next());
+      .of((DefaultParcel) pdpModel.getContents(truck).iterator().next());
     final DefaultParcel mapParcel = roadModel
-        .getObjectsOfType(DefaultParcel.class).iterator().next();
+      .getObjectsOfType(DefaultParcel.class).iterator().next();
     final Collection<DefaultParcel> singleOnMap = ImmutableSet.of(mapParcel);
 
     routePlanner.update(empty, 0);
@@ -213,7 +213,7 @@ public class RoutePlannerTest {
       final Parcel cur = it.next();
       while (!roadModel.getPosition(truck).equals(cur.getDestination())) {
         roadModel
-            .moveTo(truck, cur, TimeLapseFactory.create(time, time + 1000));
+          .moveTo(truck, cur, TimeLapseFactory.create(time, time + 1000));
         time += 1000;
       }
       pdpModel.deliver(truck, cur, TimeLapseFactory.create(time, time + 10000));
@@ -255,11 +255,11 @@ public class RoutePlannerTest {
   @Test
   public void testEmpty() {
     final TestTruck emptyTruck = new TestTruck(VehicleDTO.builder()
-        .startPosition(new Point(0, 0))
-        .speed(10d)
-        .capacity(10)
-        .availabilityTimeWindow(new TimeWindow(0, 1))
-        .build());
+      .startPosition(new Point(0, 0))
+      .speed(10d)
+      .capacity(10)
+      .availabilityTimeWindow(new TimeWindow(0, 1))
+      .build());
     simulator.register(emptyTruck);
 
     routePlanner.init(roadModel, pdpModel, emptyTruck);
@@ -273,7 +273,7 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.prev().isPresent());
 
     final Collection<DefaultParcel> onMap = roadModel
-        .getObjectsOfType(DefaultParcel.class);
+      .getObjectsOfType(DefaultParcel.class);
     routePlanner.update(onMap, 0);
     assertTrue(routePlanner.current().isPresent());
     assertTrue(routePlanner.currentRoute().isPresent());
@@ -291,41 +291,41 @@ public class RoutePlannerTest {
 
   static Parcel createParcel(RandomGenerator rng) {
     final ParcelDTO dto = ParcelDTO
-        .builder(new Point(rng.nextDouble(), rng.nextDouble()),
-            new Point(rng.nextDouble(), rng.nextDouble()))
-        .pickupTimeWindow(new TimeWindow(0, 100000))
-        .deliveryTimeWindow(new TimeWindow(0, 100000))
-        .neededCapacity(0)
-        .orderAnnounceTime(-1L)
-        .pickupDuration(3000L)
-        .deliveryDuration(3000L)
-        .build();
+      .builder(new Point(rng.nextDouble(), rng.nextDouble()),
+        new Point(rng.nextDouble(), rng.nextDouble()))
+      .pickupTimeWindow(new TimeWindow(0, 100000))
+      .deliveryTimeWindow(new TimeWindow(0, 100000))
+      .neededCapacity(0)
+      .orderAnnounceTime(-1L)
+      .pickupDuration(3000L)
+      .deliveryDuration(3000L)
+      .build();
     return new DefaultParcel(dto);
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination) {
     return new AddParcelEvent(
-        ParcelDTO.builder(origin, destination)
-            .pickupTimeWindow(new TimeWindow(0, 3600000))
-            .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
-            .neededCapacity(0)
-            .orderAnnounceTime(-1)
-            .pickupDuration(3000L)
-            .deliveryDuration(3000L)
-            .build());
+      ParcelDTO.builder(origin, destination)
+        .pickupTimeWindow(new TimeWindow(0, 3600000))
+        .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
+        .neededCapacity(0)
+        .orderAnnounceTime(-1)
+        .pickupDuration(3000L)
+        .deliveryDuration(3000L)
+        .build());
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination,
-      TimeWindow pickup, TimeWindow delivery) {
+    TimeWindow pickup, TimeWindow delivery) {
     return new AddParcelEvent(
-        ParcelDTO.builder(origin, destination)
-            .pickupTimeWindow(pickup)
-            .deliveryTimeWindow(delivery)
-            .neededCapacity(0)
-            .orderAnnounceTime(-1L)
-            .pickupDuration(300000L)
-            .deliveryDuration(300000L)
-            .build());
+      ParcelDTO.builder(origin, destination)
+        .pickupTimeWindow(pickup)
+        .deliveryTimeWindow(delivery)
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(300000L)
+        .deliveryDuration(300000L)
+        .build());
   }
 
   class TestConfiguration extends DefaultMASConfiguration {
@@ -335,7 +335,8 @@ public class RoutePlannerTest {
       return new Creator<AddVehicleEvent>() {
         @Override
         public boolean create(Simulator sim, AddVehicleEvent event) {
-          return sim.register(new TestTruck(event.vehicleDTO));
+          sim.register(new TestTruck(event.vehicleDTO));
+          return true;
         }
       };
     }

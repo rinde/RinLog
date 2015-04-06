@@ -17,8 +17,8 @@ package com.github.rinde.logistics.pdptw.mas;
 
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
+import com.github.rinde.rinsim.core.Model;
 import com.github.rinde.rinsim.core.Simulator;
-import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
 import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
@@ -60,9 +60,9 @@ public class TruckConfiguration extends DefaultMASConfiguration {
    * @param modelSuppliers {@link #mSuppliers}.
    */
   public TruckConfiguration(
-      StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
-      StochasticSupplier<? extends Communicator> communicatorSupplier,
-      ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
+    StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
+    StochasticSupplier<? extends Communicator> communicatorSupplier,
+    ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
     rpSupplier = routePlannerSupplier;
     cSupplier = communicatorSupplier;
     mSuppliers = modelSuppliers;
@@ -74,10 +74,11 @@ public class TruckConfiguration extends DefaultMASConfiguration {
       @Override
       public boolean create(Simulator sim, AddVehicleEvent event) {
         final RoutePlanner rp = rpSupplier.get(sim.getRandomGenerator()
-            .nextLong());
+          .nextLong());
         final Communicator c = cSupplier.get(sim.getRandomGenerator()
-            .nextLong());
-        return sim.register(createTruck(event.vehicleDTO, rp, c));
+          .nextLong());
+        sim.register(createTruck(event.vehicleDTO, rp, c));
+        return true;
       }
     };
   }

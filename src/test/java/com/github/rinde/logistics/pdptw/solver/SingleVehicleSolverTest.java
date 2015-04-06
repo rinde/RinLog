@@ -44,8 +44,8 @@ import com.github.rinde.rinsim.central.arrays.ArraysSolverValidator;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleArraysSolver;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleSolverAdapter;
 import com.github.rinde.rinsim.central.arrays.SolutionObject;
+import com.github.rinde.rinsim.core.Model;
 import com.github.rinde.rinsim.core.Simulator;
-import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.experiment.ExperimentTest;
@@ -71,7 +71,7 @@ import com.google.common.collect.ImmutableList;
  * expected. In fact, this discrepancy is checked to see if the objective
  * calculated by the {@link SingleVehicleArraysSolver} is always worse compared
  * to the objective calculated by the {@link Gendreau06ObjectiveFunction}.
- * 
+ *
  * @author Rinde van Lon
  */
 @RunWith(Parameterized.class)
@@ -88,7 +88,7 @@ public class SingleVehicleSolverTest {
   @Parameters
   public static Collection<Object[]> configs() {
     return Arrays.asList(new Object[][] {//
-        { new HeuristicSolver(new MersenneTwister(123)) } });
+      { new HeuristicSolver(new MersenneTwister(123)) } });
   }
 
   @Test
@@ -104,7 +104,7 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        Gendreau06ObjectiveFunction.instance(), false);
+      Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
@@ -117,8 +117,8 @@ public class SingleVehicleSolverTest {
 
     assertEquals(simObj, solverObj, EPSILON);
     assertTrue(
-        "the solver should have a slightly pessimistic view on the world",
-        solverObj > simObj);
+      "the solver should have a slightly pessimistic view on the world",
+      solverObj > simObj);
   }
 
   /**
@@ -139,12 +139,12 @@ public class SingleVehicleSolverTest {
     final List<TimedEvent> events = newArrayList();
     for (int i = 0; i < points.size() / 2; i++) {
       events.add(newParcelEvent(points.get(i),
-          points.get(points.size() - 1 - i)));
+        points.get(points.size() - 1 - i)));
     }
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        Gendreau06ObjectiveFunction.instance(), false);
+      Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
@@ -156,8 +156,8 @@ public class SingleVehicleSolverTest {
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
     assertEquals(simObj, solverObj, EPSILON);
     assertTrue(
-        "the solver should have a slightly pessimistic view on the world",
-        solverObj > simObj);
+      "the solver should have a slightly pessimistic view on the world",
+      solverObj > simObj);
   }
 
   /**
@@ -184,14 +184,14 @@ public class SingleVehicleSolverTest {
     final List<TimedEvent> events = newArrayList();
     for (int i = 0; i < points.size() / 2; i++) {
       events.add(newParcelEvent(points.get(i),
-          points.get(points.size() - 1 - i), timeWindows.get(i),
-          timeWindows.get(points.size() - 1 - i)));
+        points.get(points.size() - 1 - i), timeWindows.get(i),
+        timeWindows.get(points.size() - 1 - i)));
     }
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
-        Gendreau06ObjectiveFunction.instance(), false);
+      Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, tc.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
@@ -204,33 +204,33 @@ public class SingleVehicleSolverTest {
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
     assertEquals(simObj, solverObj, EPSILON);
     assertTrue(
-        "the solver should have a slightly pessimistic view on the world",
-        solverObj > simObj);
+      "the solver should have a slightly pessimistic view on the world",
+      solverObj > simObj);
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination) {
     return new AddParcelEvent(
-        ParcelDTO.builder(origin, destination)
-            .pickupTimeWindow(new TimeWindow(0, 3600000))
-            .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
-            .neededCapacity(0)
-            .orderAnnounceTime(-1L)
-            .pickupDuration(300000L)
-            .deliveryDuration(300000L)
-            .build());
+      ParcelDTO.builder(origin, destination)
+        .pickupTimeWindow(new TimeWindow(0, 3600000))
+        .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(300000L)
+        .deliveryDuration(300000L)
+        .build());
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination,
-      TimeWindow pickup, TimeWindow delivery) {
+    TimeWindow pickup, TimeWindow delivery) {
     return new AddParcelEvent(
-        ParcelDTO.builder(origin, destination)
-            .pickupTimeWindow(pickup)
-            .deliveryTimeWindow(delivery)
-            .neededCapacity(0)
-            .orderAnnounceTime(-1L)
-            .pickupDuration(300000L)
-            .deliveryDuration(300000L)
-            .build());
+      ParcelDTO.builder(origin, destination)
+        .pickupTimeWindow(pickup)
+        .deliveryTimeWindow(delivery)
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(300000L)
+        .deliveryDuration(300000L)
+        .build());
   }
 
   static class TestConfigurator extends DefaultMASConfiguration {
@@ -239,7 +239,7 @@ public class SingleVehicleSolverTest {
     final Unit<Duration> timeUnit;
 
     public TestConfigurator(SingleVehicleArraysSolver solver,
-        Unit<Duration> timeUnit) {
+      Unit<Duration> timeUnit) {
       this.solver = solver;
       this.timeUnit = timeUnit;
       debuggers = newArrayList();
@@ -254,11 +254,12 @@ public class SingleVehicleSolverTest {
           sim.register(c);
 
           final SVASDebugger sd = ArraysSolverDebugger.wrap(
-              ArraysSolverValidator.wrap(solver), false);
+            ArraysSolverValidator.wrap(solver), false);
           debuggers.add(sd);
-          return sim.register(new Truck(event.vehicleDTO,
-              new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
-                  timeUnit), true), c));
+          sim.register(new Truck(event.vehicleDTO,
+            new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
+              timeUnit), true), c));
+          return true;
         }
       };
     }

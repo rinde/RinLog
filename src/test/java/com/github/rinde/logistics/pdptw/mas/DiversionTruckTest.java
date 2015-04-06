@@ -48,6 +48,7 @@ import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.util.TimeWindow;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -85,8 +86,8 @@ public class DiversionTruckTest {
     pm = DefaultPDPModel.create(TimeWindowPolicies.TARDY_ALLOWED);
 
     sim = Simulator.builder()
-      .addModel(rm)
-      .addModel(pm)
+      .addModel(Suppliers.ofInstance(rm))
+      .addModel(Suppliers.ofInstance(pm))
       .build();
     final DefaultDepot dp = new DefaultDepot(new Point(2, 2));
 
