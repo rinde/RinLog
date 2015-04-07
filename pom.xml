@@ -48,10 +48,19 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<rinsim.version>[3.0.0,4.0.0)</rinsim.version>
+		<rinsim.version>4.0.0-SNAPSHOT</rinsim.version>
 		<sonar.language>java</sonar.language>
 		<reference.version>1.0.0</reference.version>
 	</properties>
+	
+	<repositories>
+       <repository>
+         <id>snapshots-repo</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+         <releases><enabled>false</enabled></releases>
+         <snapshots><enabled>true</enabled></snapshots>
+       </repository>
+     </repositories>
 
 	<build>
 		<pluginManagement>
