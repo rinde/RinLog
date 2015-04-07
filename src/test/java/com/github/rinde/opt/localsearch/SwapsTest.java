@@ -33,9 +33,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.rinde.opt.localsearch.RouteEvaluator;
-import com.github.rinde.opt.localsearch.Schedule;
-import com.github.rinde.opt.localsearch.Swaps;
 import com.github.rinde.opt.localsearch.Swaps.Swap;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

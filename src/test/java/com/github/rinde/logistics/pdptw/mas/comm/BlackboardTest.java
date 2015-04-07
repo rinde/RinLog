@@ -29,8 +29,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.mas.comm.BlackboardCommModel;
-import com.github.rinde.logistics.pdptw.mas.comm.BlackboardUser;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;

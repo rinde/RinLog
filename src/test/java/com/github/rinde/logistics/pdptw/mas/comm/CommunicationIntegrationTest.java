@@ -31,7 +31,7 @@ import com.github.rinde.logistics.pdptw.mas.TruckConfiguration;
 import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.rinsim.central.RandomSolver;
-import com.github.rinde.rinsim.core.AbstractModel;
+import com.github.rinde.rinsim.core.Model.AbstractModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.time.TickListener;

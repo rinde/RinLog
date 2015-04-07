@@ -29,7 +29,6 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import com.github.rinde.opt.localsearch.Insertions;
 import com.github.rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

@@ -15,12 +15,9 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import com.github.rinde.logistics.pdptw.mas.comm.Bidder;
-import com.github.rinde.logistics.pdptw.mas.comm.RandomBidder;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 
 /**
  * {@link Bidder} implementation that adds some methods for easier testing.

@@ -21,11 +21,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Queue;
 
-import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
-import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Optional;
 
 /**
