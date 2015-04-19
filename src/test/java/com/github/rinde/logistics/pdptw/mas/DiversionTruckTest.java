@@ -36,7 +36,7 @@ import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.TimeWindowPolicy.TimeWindowPolicies;
-import com.github.rinde.rinsim.core.model.road.PlaneRoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.core.pdptw.DefaultDepot;
 import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
 import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
@@ -77,7 +77,7 @@ public class DiversionTruckTest {
    */
   @Before
   public void setUp() {
-    rm = new PDPRoadModel(PlaneRoadModel.builder()
+    rm = new PDPRoadModel(RoadModelBuilders.plane()
       .setMinPoint(new Point(0, 0))
       .setMaxPoint(new Point(5, 5))
       .setMaxSpeed(50d)

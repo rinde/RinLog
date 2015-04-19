@@ -17,8 +17,9 @@ package com.github.rinde.logistics.pdptw.mas;
 
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
-import com.github.rinde.rinsim.core.Model;
 import com.github.rinde.rinsim.core.Simulator;
+import com.github.rinde.rinsim.core.model.Model;
+import com.github.rinde.rinsim.core.model.ModelBuilder;
 import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
 import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
@@ -51,7 +52,7 @@ public class TruckConfiguration extends DefaultMASConfiguration {
    * Suppliers for {@link Model}s, for each model a new instance is created for
    * each simulation.
    */
-  protected final ImmutableList<? extends StochasticSupplier<? extends Model<?>>> mSuppliers;
+  protected final ImmutableList<ModelBuilder<?, ?>> mSuppliers;
 
   /**
    * Instantiate a new configuration.
@@ -59,13 +60,14 @@ public class TruckConfiguration extends DefaultMASConfiguration {
    * @param communicatorSupplier {@link #cSupplier}.
    * @param modelSuppliers {@link #mSuppliers}.
    */
+  @SuppressWarnings("unchecked")
   public TruckConfiguration(
     StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
     StochasticSupplier<? extends Communicator> communicatorSupplier,
     ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
     rpSupplier = routePlannerSupplier;
     cSupplier = communicatorSupplier;
-    mSuppliers = modelSuppliers;
+    mSuppliers = (ImmutableList<ModelBuilder<?, ?>>) modelSuppliers;
   }
 
   @Override
@@ -96,7 +98,7 @@ public class TruckConfiguration extends DefaultMASConfiguration {
   }
 
   @Override
-  public ImmutableList<? extends StochasticSupplier<? extends Model<?>>> getModels() {
+  public ImmutableList<? extends ModelBuilder<?, ?>> getModels() {
     return mSuppliers;
   }
 
