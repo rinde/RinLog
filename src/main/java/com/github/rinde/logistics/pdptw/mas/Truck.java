@@ -25,10 +25,10 @@ import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
@@ -61,7 +61,7 @@ SimulatorUser {
     communicator = c;
     communicator.addUpdateListener(this);
     stateMachine.getEventAPI().addListener(this,
-        StateMachineEvent.STATE_TRANSITION);
+      StateMachineEvent.STATE_TRANSITION);
   }
 
   @Override
@@ -81,7 +81,7 @@ SimulatorUser {
         updateRoute();
       }
     } else if (changed && isDiversionAllowed()
-        && !stateMachine.stateIs(serviceState)) {
+      && !stateMachine.stateIs(serviceState)) {
       updateAssignmentAndRoutePlanner();
       updateRoute();
     }
@@ -95,7 +95,7 @@ SimulatorUser {
     changed = false;
 
     routePlanner.update(communicator.getParcels(), getCurrentTime().getTime());
-    final Optional<DefaultParcel> cur = routePlanner.current();
+    final Optional<Parcel> cur = routePlanner.current();
     if (cur.isPresent()) {
       communicator.waitFor(cur.get());
     }
@@ -108,7 +108,7 @@ SimulatorUser {
     if (routePlanner.current().isPresent()) {
       setRoute(routePlanner.currentRoute().get());
     } else {
-      setRoute(new LinkedList<DefaultParcel>());
+      setRoute(new LinkedList<Parcel>());
     }
   }
 
@@ -123,15 +123,15 @@ SimulatorUser {
 
       // when diverting -> unclaim previous
       if ((event.trigger == DefaultEvent.REROUTE || event.trigger == DefaultEvent.NOGO)
-          && !pdpModel.get().getParcelState(gotoState.getPreviousDestination())
+        && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
           .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
       }
 
       if (event.trigger == DefaultEvent.GOTO
-          || event.trigger == DefaultEvent.REROUTE) {
-        final DefaultParcel cur = getRoute().iterator().next();
-        if (!pdpModel.get().getParcelState(cur).isPickedUp()) {
+        || event.trigger == DefaultEvent.REROUTE) {
+        final Parcel cur = getRoute().iterator().next();
+        if (!getPDPModel().getParcelState(cur).isPickedUp()) {
           communicator.claim(cur);
         }
       } else if (event.trigger == DefaultEvent.DONE) {
@@ -140,7 +140,7 @@ SimulatorUser {
       }
 
       if ((event.newState == waitState || (isDiversionAllowed() && event.newState != serviceState))
-          && changed) {
+        && changed) {
         updateAssignmentAndRoutePlanner();
         updateRoute();
       }
@@ -174,9 +174,9 @@ SimulatorUser {
   @Override
   public String toString() {
     return toStringHelper(this)
-        .addValue(Integer.toHexString(hashCode()))
-        .add("rp", routePlanner)
-        .add("c", communicator)
-        .toString();
+      .addValue(Integer.toHexString(hashCode()))
+      .add("rp", routePlanner)
+      .add("c", communicator)
+      .toString();
   }
 }

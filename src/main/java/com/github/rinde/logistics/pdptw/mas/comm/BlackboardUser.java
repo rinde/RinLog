@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Set;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
@@ -44,7 +44,7 @@ public class BlackboardUser implements Communicator {
 
   private Optional<BlackboardCommModel> bcModel;
   private final EventDispatcher eventDispatcher;
-  private final Set<DefaultParcel> claimedParcels;
+  private final Set<Parcel> claimedParcels;
 
   /**
    * Constructor.
@@ -63,23 +63,23 @@ public class BlackboardUser implements Communicator {
   }
 
   @Override
-  public void waitFor(DefaultParcel p) {}
+  public void waitFor(Parcel p) {}
 
   /**
-   * Lay a claim on the specified {@link DefaultParcel}.
+   * Lay a claim on the specified {@link Parcel}.
    * @param p The parcel to claim.
    */
   @Override
-  public void claim(DefaultParcel p) {
+  public void claim(Parcel p) {
     checkArgument(!claimedParcels.contains(p), "Parcel %s is already claimed.",
-        p);
+      p);
     // forward call to model
     bcModel.get().claim(this, p);
     claimedParcels.add(p);
   }
 
   @Override
-  public void unclaim(DefaultParcel p) {
+  public void unclaim(Parcel p) {
     checkArgument(claimedParcels.contains(p), "Parcel %s is not claimed.", p);
     bcModel.get().unclaim(this, p);
     claimedParcels.remove(p);
@@ -95,7 +95,7 @@ public class BlackboardUser implements Communicator {
    */
   public void update() {
     eventDispatcher
-        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
@@ -104,24 +104,24 @@ public class BlackboardUser implements Communicator {
   }
 
   @Override
-  public Collection<DefaultParcel> getParcels() {
+  public Collection<Parcel> getParcels() {
     return Sets.union(bcModel.get().getUnclaimedParcels(), claimedParcels);
   }
 
   @Override
-  public Collection<DefaultParcel> getClaimedParcels() {
+  public Collection<Parcel> getClaimedParcels() {
     return unmodifiableSet(claimedParcels);
   }
 
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-        .toString();
+      .toString();
   }
 
   // not needed
   @Override
-  public void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {}
+  public void init(RoadModel rm, PDPModel pm, Vehicle v) {}
 
   /**
    * @return A {@link StochasticSupplier} that supplies {@link BlackboardUser}

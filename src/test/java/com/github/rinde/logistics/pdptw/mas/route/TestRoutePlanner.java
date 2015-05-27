@@ -18,28 +18,28 @@ package com.github.rinde.logistics.pdptw.mas.route;
 import static com.google.common.collect.Lists.newLinkedList;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Queue;
+import java.util.Set;
 
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.google.common.base.Optional;
 
 /**
- * @author Rinde van Lon 
- * 
+ * @author Rinde van Lon
+ *
  */
 public class TestRoutePlanner extends AbstractRoutePlanner {
 
-  protected final Queue<DefaultParcel> route;
+  protected final Queue<Parcel> route;
 
   public TestRoutePlanner() {
     route = newLinkedList();
   }
 
   @Override
-  public Optional<DefaultParcel> current() {
+  public Optional<Parcel> current() {
     return Optional.fromNullable(route.peek());
   }
 
@@ -49,11 +49,8 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    final Collection<DefaultParcel> inCargo = Collections.checkedCollection(
-        (Collection) pdpModel.get().getContents(vehicle.get()),
-        DefaultParcel.class);
+  protected void doUpdate(Collection<Parcel> onMap, long time) {
+    final Set<Parcel> inCargo = pdpModel.get().getContents(vehicle.get());
     route.clear();
     route.addAll(onMap);
     route.addAll(inCargo);

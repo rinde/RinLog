@@ -20,7 +20,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -30,14 +29,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
 import com.github.rinde.rinsim.event.ListenerEventHistory;
 import com.github.rinde.rinsim.geom.Point;
 
 /**
- * @author Rinde van Lon 
- * 
+ * @author Rinde van Lon
+ *
  */
 public class BlackboardTest {
 
@@ -74,7 +71,7 @@ public class BlackboardTest {
    */
   @Test
   public void testClaim() {
-    final DefaultParcel p = parcel();
+    final Parcel p = parcel();
     assertEquals(new HashSet<Parcel>(), model.getUnclaimedParcels());
     model.receiveParcel(p, 0);
     assertEquals(newHashSet(p), model.getUnclaimedParcels());
@@ -89,7 +86,7 @@ public class BlackboardTest {
     // all other users should also dispatch an event for the claim
     for (int i = 1; i < 5; i++) {
       assertEquals(asList(CHANGE, CHANGE), listeners.get(i)
-          .getEventTypeHistory());
+        .getEventTypeHistory());
     }
   }
 
@@ -99,7 +96,7 @@ public class BlackboardTest {
    */
   @Test
   public void claimUnclaimScenario() {
-    final DefaultParcel p = parcel();
+    final Parcel p = parcel();
     model.receiveParcel(p, 0L);
     for (int i = 0; i < users.size(); i++) {
       final BlackboardUser bu = users.get(i);
@@ -171,7 +168,7 @@ public class BlackboardTest {
    */
   @Test
   public void claimFail() {
-    final DefaultParcel p = parcel();
+    final Parcel p = parcel();
     model.receiveParcel(p, 0);
     users.get(0).claim(p);
     // try claim via user
@@ -205,7 +202,7 @@ public class BlackboardTest {
     }
     assertTrue(fail);
     fail = false;
-    final DefaultParcel p = parcel();
+    final Parcel p = parcel();
     model.receiveParcel(p, 0L);
     try {
       model.unclaim(users.get(0), p);
@@ -215,17 +212,7 @@ public class BlackboardTest {
     assertTrue(fail);
   }
 
-  /**
-   * Test the suppliers.
-   */
-  @Test
-  public void supplierTest() {
-    assertNotNull(BlackboardCommModel.supplier().get(0));
-    assertNotNull(BlackboardUser.supplier().get(0));
-  }
-
-  static DefaultParcel parcel() {
-    return new DefaultParcel(ParcelDTO
-        .builder(new Point(0, 0), new Point(1, 1)).build());
+  static Parcel parcel() {
+    return Parcel.builder(new Point(0, 0), new Point(1, 1)).build();
   }
 }

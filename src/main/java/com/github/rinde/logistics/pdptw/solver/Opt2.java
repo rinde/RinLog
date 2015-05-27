@@ -22,7 +22,7 @@ import com.github.rinde.opt.localsearch.Swaps;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.central.Solver;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableList;
  * and
  * {@link Swaps#dfsOpt2(ImmutableList, ImmutableList, Object, com.github.rinde.opt.localsearch.RouteEvaluator, org.apache.commons.math3.random.RandomGenerator)}
  * .
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class Opt2 implements Solver {
 
@@ -66,16 +66,16 @@ public class Opt2 implements Solver {
   }
 
   @Override
-  public ImmutableList<ImmutableList<ParcelDTO>> solve(GlobalStateObject state) {
-    final ImmutableList<ImmutableList<ParcelDTO>> schedule = delegate
-        .solve(state);
+  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state) {
+    final ImmutableList<ImmutableList<Parcel>> schedule = delegate
+      .solve(state);
     final ImmutableList.Builder<Integer> indexBuilder = ImmutableList.builder();
     for (final VehicleStateObject vso : state.vehicles) {
       indexBuilder.add(vso.destination == null ? 0 : 1);
     }
     if (depthFirstSearch) {
       return Swaps.dfsOpt2(schedule, indexBuilder.build(), state, evaluator,
-          rng);
+        rng);
     }
     return Swaps.bfsOpt2(schedule, indexBuilder.build(), state, evaluator);
   }
@@ -90,7 +90,7 @@ public class Opt2 implements Solver {
    *         {@link Opt2}.
    */
   public static StochasticSupplier<Solver> breadthFirstSupplier(
-      final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
+    final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
     return new Opt2Supplier(delegate, objFunc, false);
   }
 
@@ -105,7 +105,7 @@ public class Opt2 implements Solver {
    *         {@link Opt2}.
    */
   public static StochasticSupplier<Solver> depthFirstSupplier(
-      final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
+    final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
     return new Opt2Supplier(delegate, objFunc, true);
   }
 
@@ -116,7 +116,7 @@ public class Opt2 implements Solver {
     private final boolean depthFirstSearch;
 
     Opt2Supplier(StochasticSupplier<Solver> del, ObjectiveFunction objFunc,
-        boolean dfs) {
+      boolean dfs) {
       delegate = del;
       objectiveFunction = objFunc;
       depthFirstSearch = dfs;
@@ -126,7 +126,7 @@ public class Opt2 implements Solver {
     public Solver get(long seed) {
       final RandomGenerator rand = new MersenneTwister(seed);
       return new Opt2(rand.nextLong(), delegate.get(rand.nextLong()),
-          objectiveFunction, depthFirstSearch);
+        objectiveFunction, depthFirstSearch);
     }
   }
 }

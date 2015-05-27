@@ -27,9 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -44,7 +44,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * Logger.
    */
   protected static final Logger LOGGER = LoggerFactory
-      .getLogger(AbstractRoutePlanner.class);
+    .getLogger(AbstractRoutePlanner.class);
 
   /**
    * Reference to the {@link RoadModel}.
@@ -57,10 +57,9 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   protected Optional<PDPModel> pdpModel;
 
   /**
-   * Reference to the {@link DefaultVehicle} that this planner is responsible
-   * for.
+   * Reference to the {@link Vehicle} that this planner is responsible for.
    */
-  protected Optional<DefaultVehicle> vehicle;
+  protected Optional<Vehicle> vehicle;
 
   /**
    * Indicates that this route planner has been updated (via a call to
@@ -68,7 +67,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected boolean updated;
 
-  private final List<DefaultParcel> history;
+  private final List<Parcel> history;
   private boolean initialized;
 
   /**
@@ -82,7 +81,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public final void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
+  public final void init(RoadModel rm, PDPModel pm, Vehicle dv) {
     LOGGER.info("init {}", dv);
     checkState(!isInitialized(), "init shoud be called only once");
     initialized = true;
@@ -93,7 +92,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public final void update(Collection<DefaultParcel> onMap, long time) {
+  public final void update(Collection<Parcel> onMap, long time) {
     checkIsInitialized();
     LOGGER.info("update {} {} size {}", vehicle.get(), time, onMap.size());
     updated = true;
@@ -102,11 +101,11 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public final Optional<DefaultParcel> next(long time) {
+  public final Optional<Parcel> next(long time) {
     checkIsInitialized();
     LOGGER.info("next {} {}", vehicle.get(), time);
     checkState(updated,
-        "RoutePlanner should be udpated before it can be used, see update()");
+      "RoutePlanner should be udpated before it can be used, see update()");
     if (current().isPresent()) {
       history.add(current().get());
     }
@@ -116,7 +115,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public Optional<ImmutableList<DefaultParcel>> currentRoute() {
+  public Optional<ImmutableList<Parcel>> currentRoute() {
     if (current().isPresent()) {
       return Optional.of(ImmutableList.of(current().get()));
     }
@@ -124,7 +123,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public Optional<DefaultParcel> prev() {
+  public Optional<Parcel> prev() {
     if (history.isEmpty()) {
       return Optional.absent();
     }
@@ -132,7 +131,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public List<DefaultParcel> getHistory() {
+  public List<Parcel> getHistory() {
     return unmodifiableList(history);
   }
 
@@ -144,7 +143,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * @param time The current simulation time, this may be relevant for some
    *          route planners that want to take time windows into account.
    */
-  protected abstract void doUpdate(Collection<DefaultParcel> onMap, long time);
+  protected abstract void doUpdate(Collection<Parcel> onMap, long time);
 
   /**
    * Should implement functionality of {@link #next(long)} according to the
@@ -156,7 +155,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
 
   /**
    * This method can optionally be overridden to execute additional code right
-   * after {@link #init(RoadModel, PDPModel, DefaultVehicle)} is called.
+   * after {@link #init(RoadModel, PDPModel, Vehicle)} is called.
    */
   protected void afterInit() {}
 
@@ -166,7 +165,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected final void checkIsInitialized() {
     checkState(isInitialized(),
-        "RoutePlanner should be initialized before it can be used, see init()");
+      "RoutePlanner should be initialized before it can be used, see init()");
   }
 
   /**
@@ -188,6 +187,6 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-        .toString();
+      .toString();
   }
 }

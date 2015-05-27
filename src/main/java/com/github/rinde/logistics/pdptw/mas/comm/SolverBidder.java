@@ -22,16 +22,15 @@ import java.util.Set;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
-import com.github.rinde.rinsim.central.Solvers.SimulationSolver;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.Solvers.StateContext;
-import com.github.rinde.rinsim.core.SimulatorAPI;
-import com.github.rinde.rinsim.core.SimulatorUser;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
@@ -42,12 +41,7 @@ import com.google.common.collect.ImmutableList;
  * A {@link Bidder} that uses a {@link Solver} for computing the bid value.
  * @author Rinde van Lon
  */
-public class SolverBidder extends AbstractBidder implements SimulatorUser {
-
-  /**
-   * A reference to the simulator.
-   */
-  protected Optional<SimulatorAPI> simulator;
+public class SolverBidder extends AbstractBidder implements SolverUser {
 
   private final ObjectiveFunction objectiveFunction;
   private final Solver solver;
@@ -64,26 +58,24 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
-    simulator = Optional.absent();
   }
 
   @Override
-  public double getBidFor(DefaultParcel p, long time) {
+  public double getBidFor(Parcel p, long time) {
     LOGGER.info("{} getBidFor {}", this, p);
-    final Set<DefaultParcel> parcels = newLinkedHashSet(assignedParcels);
+    final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
-    final ImmutableList<DefaultParcel> currentRoute = ImmutableList
-        .copyOf(((Truck) vehicle.get()).getRoute());
+    final ImmutableList<Parcel> currentRoute = ImmutableList
+      .copyOf(((Truck) vehicle.get()).getRoute());
     LOGGER.trace(" > currentRoute {}", currentRoute);
-    final ImmutableList<ParcelDTO> dtoRoute = Solvers.toDtoList(currentRoute);
     final StateContext context = solverHandle.get().convert(
-        SolveArgs.create().noCurrentRoutes().useParcels(parcels));
+      SolveArgs.create().noCurrentRoutes().useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
-        context.state, ImmutableList.of(dtoRoute)));
+      context.state, ImmutableList.of(currentRoute)));
 
     // make sure that all parcels in the route are always in the available
     // parcel list when needed. This is needed to satisfy the solver.
-    for (final DefaultParcel dp : currentRoute) {
+    for (final Parcel dp : currentRoute) {
       if (!pdpModel.get().getParcelState(dp).isPickedUp()) {
         parcels.add(dp);
       }
@@ -91,7 +83,7 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
 
     // check whether the RoutePlanner produces routes compatible with the solver
     final SolveArgs args = SolveArgs.create().useParcels(parcels)
-        .useCurrentRoutes(ImmutableList.of(currentRoute));
+      .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
       final GlobalStateObject gso = solverHandle.get().convert(args).state;
       SolverValidator.checkRoute(gso.vehicles.get(0), 0);
@@ -99,35 +91,40 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
       args.noCurrentRoutes();
     }
     // if the route is not compatible, don't use routes at all
-    final Queue<DefaultParcel> newRoute = solverHandle.get().solve(args).get(0);
+    final Queue<Parcel> newRoute = solverHandle.get().solve(args).get(0);
     final double newCost = objectiveFunction.computeCost(Solvers.computeStats(
-        context.state, ImmutableList.of(Solvers.toDtoList(newRoute))));
+      context.state, ImmutableList.of(ImmutableList.copyOf(newRoute))));
 
     return newCost - baseline;
   }
 
-  @Override
-  protected void afterInit() {
-    initSolver();
-  }
+  // @Override
+  // protected void afterInit() {
+  // // initSolver();
+  // }
+
+  // @Override
+  // public void setSimulator(SimulatorAPI api) {
+  // simulator = Optional.of(api);
+  // // initSolver();
+  // }
+
+  // private void initSolver() {
+  // if (simulator.isPresent() && roadModel.isPresent()
+  // && !solverHandle.isPresent()) {
+  // solverHandle = Optional.of(Solvers.solverBuilder(solver)
+  // .with(roadModel.get())
+  // .with(pdpModel.get())
+  // // .with(simulator.get())
+  // .with(vehicle.get())
+  // .buildSingle());
+  //
+  // }
+  // }
 
   @Override
-  public void setSimulator(SimulatorAPI api) {
-    simulator = Optional.of(api);
-    initSolver();
-  }
-
-  private void initSolver() {
-    if (simulator.isPresent() && roadModel.isPresent()
-        && !solverHandle.isPresent()) {
-      solverHandle = Optional.of(Solvers.solverBuilder(solver)
-          .with(roadModel.get())
-          .with(pdpModel.get())
-          .with(simulator.get())
-          .with(vehicle.get())
-          .buildSingle());
-
-    }
+  public void setSolverProvider(SimulationSolverBuilder builder) {
+    solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
   }
 
   /**
@@ -137,8 +134,8 @@ public class SolverBidder extends AbstractBidder implements SimulatorUser {
    * @return A supplier of {@link SolverBidder} instances.
    */
   public static StochasticSupplier<SolverBidder> supplier(
-      final ObjectiveFunction objFunc,
-      final StochasticSupplier<? extends Solver> solverSupplier) {
+    final ObjectiveFunction objFunc,
+    final StochasticSupplier<? extends Solver> solverSupplier) {
     return new AbstractStochasticSupplier<SolverBidder>() {
       private static final long serialVersionUID = -3290309520168516504L;
 

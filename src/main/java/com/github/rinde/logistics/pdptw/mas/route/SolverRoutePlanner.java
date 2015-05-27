@@ -21,16 +21,14 @@ import java.util.Collection;
 import java.util.Queue;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
-import com.github.rinde.rinsim.central.Solvers;
-import com.github.rinde.rinsim.central.Solvers.SimulationSolver;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
-import com.github.rinde.rinsim.core.SimulatorAPI;
-import com.github.rinde.rinsim.core.SimulatorUser;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.google.common.base.Optional;
@@ -43,12 +41,11 @@ import com.google.common.collect.ImmutableList;
  * @author Rinde van Lon
  */
 public class SolverRoutePlanner extends AbstractRoutePlanner implements
-    SimulatorUser {
+  SolverUser {
 
   private final Solver solver;
-  private Queue<? extends DefaultParcel> route;
+  private Queue<? extends Parcel> route;
   private Optional<SimulationSolver> solverHandle;
-  private Optional<SimulatorAPI> simulator;
   private final boolean reuseCurRoutes;
 
   /**
@@ -61,7 +58,6 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     solver = s;
     route = newLinkedList();
     solverHandle = Optional.absent();
-    simulator = Optional.absent();
     reuseCurRoutes = reuseCurrentRoutes;
   }
 
@@ -71,13 +67,13 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    * computations are done.
    * @param r The new route.
    */
-  public void changeRoute(Queue<? extends DefaultParcel> r) {
+  public void changeRoute(Queue<? extends Parcel> r) {
     updated = true;
     route = newLinkedList(r);
   }
 
   @Override
-  protected void doUpdate(Collection<DefaultParcel> onMap, long time) {
+  protected void doUpdate(Collection<Parcel> onMap, long time) {
     if (onMap.isEmpty() && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
@@ -85,12 +81,12 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
       LOGGER.info("vehicle {}", pdpModel.get().getVehicleState(vehicle.get()));
       if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
         LOGGER.info("parcel {} {}",
-            pdpModel.get().getVehicleActionInfo(vehicle.get())
-                .getParcel(),
+          pdpModel.get().getVehicleActionInfo(vehicle.get())
+            .getParcel(),
 
-            pdpModel.get().getParcelState(
-                pdpModel.get().getVehicleActionInfo(vehicle.get())
-                    .getParcel()));
+          pdpModel.get().getParcelState(
+            pdpModel.get().getVehicleActionInfo(vehicle.get())
+              .getParcel()));
       }
 
       final SolveArgs args = SolveArgs.create().useParcels(onMap);
@@ -100,7 +96,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
         try {
           final GlobalStateObject gso = solverHandle.get().convert(args).state;
           LOGGER.info("destination {} available: {}",
-              gso.vehicles.get(0).destination, gso.availableParcels);
+            gso.vehicles.get(0).destination, gso.availableParcels);
 
           SolverValidator.checkRoute(gso.vehicles.get(0), 0);
         } catch (final IllegalArgumentException e) {
@@ -112,24 +108,25 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     LOGGER.info("{}", pdpModel.get().getVehicleState(vehicle.get()));
   }
 
-  @Override
-  public void setSimulator(SimulatorAPI api) {
-    simulator = Optional.of(api);
-    initSolver();
-  }
+  // @Override
+  // public void setSimulator(SimulatorAPI api) {
+  // simulator = Optional.of(api);
+  // initSolver();
+  // }
 
-  private void initSolver() {
-    if (!solverHandle.isPresent() && isInitialized() && simulator.isPresent()) {
-      solverHandle = Optional.of(Solvers.solverBuilder(solver)
-          .with((PDPRoadModel) roadModel.get()).with(pdpModel.get())
-          .with(simulator.get()).with(vehicle.get()).buildSingle());
-    }
-  }
+  // private void initSolver() {
+  // if (!solverHandle.isPresent() && isInitialized() && simulator.isPresent())
+  // {
+  // solverHandle = Optional.of(Solvers.solverBuilder(solver)
+  // .with((PDPRoadModel) roadModel.get()).with(pdpModel.get())
+  // .with(simulator.get()).with(vehicle.get()).buildSingle());
+  // }
+  // }
 
-  @Override
-  protected void afterInit() {
-    initSolver();
-  }
+  // @Override
+  // protected void afterInit() {
+  // initSolver();
+  // }
 
   @Override
   public boolean hasNext() {
@@ -137,12 +134,12 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   }
 
   @Override
-  public Optional<DefaultParcel> current() {
-    return Optional.fromNullable((DefaultParcel) route.peek());
+  public Optional<Parcel> current() {
+    return Optional.fromNullable((Parcel) route.peek());
   }
 
   @Override
-  public Optional<ImmutableList<DefaultParcel>> currentRoute() {
+  public Optional<ImmutableList<Parcel>> currentRoute() {
     if (route.isEmpty()) {
       return Optional.absent();
     }
@@ -164,7 +161,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    *         {@link SolverRoutePlanner} instances.
    */
   public static StochasticSupplier<SolverRoutePlanner> supplierWithoutCurrentRoutes(
-      final StochasticSupplier<? extends Solver> solverSupplier) {
+    final StochasticSupplier<? extends Solver> solverSupplier) {
     return new SRPSupplier(solverSupplier, false);
   }
 
@@ -176,12 +173,12 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
    *         {@link SolverRoutePlanner} instances.
    */
   public static StochasticSupplier<SolverRoutePlanner> supplier(
-      final StochasticSupplier<? extends Solver> solverSupplier) {
+    final StochasticSupplier<? extends Solver> solverSupplier) {
     return new SRPSupplier(solverSupplier, true);
   }
 
   private static class SRPSupplier extends
-      StochasticSuppliers.AbstractStochasticSupplier<SolverRoutePlanner> {
+    StochasticSuppliers.AbstractStochasticSupplier<SolverRoutePlanner> {
     private static final long serialVersionUID = -5592714216595546915L;
     final StochasticSupplier<? extends Solver> solverSupplier;
     final boolean reuseCurrentRoutes;
@@ -194,12 +191,17 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     @Override
     public SolverRoutePlanner get(long seed) {
       return new SolverRoutePlanner(solverSupplier.get(seed),
-          reuseCurrentRoutes);
+        reuseCurrentRoutes);
     }
 
     @Override
     public String toString() {
       return super.toString() + "-" + solverSupplier.toString();
     }
+  }
+
+  @Override
+  public void setSolverProvider(SimulationSolverBuilder builder) {
+    solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
   }
 }

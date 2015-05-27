@@ -26,7 +26,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
@@ -39,10 +39,10 @@ import com.google.common.base.Optional;
  */
 public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 
-  Comparator<DefaultParcel> comp;
+  Comparator<Parcel> comp;
 
-  private Optional<DefaultParcel> current;
-  private final List<DefaultParcel> parcels;
+  private Optional<Parcel> current;
+  private final List<Parcel> parcels;
 
   /**
    * New instance.
@@ -54,11 +54,11 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected final void doUpdate(Collection<DefaultParcel> onMap, long time) {
+  protected final void doUpdate(Collection<Parcel> onMap, long time) {
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    final Collection<DefaultParcel> inCargo = Collections.checkedCollection(
-        (Collection) pdpModel.get().getContents(vehicle.get()),
-        DefaultParcel.class);
+    final Collection<Parcel> inCargo = Collections.checkedCollection(
+      (Collection) pdpModel.get().getContents(vehicle.get()),
+      Parcel.class);
     parcels.clear();
     parcels.addAll(onMap);
     parcels.addAll(onMap);
@@ -83,7 +83,7 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  public Optional<DefaultParcel> current() {
+  public Optional<Parcel> current() {
     return current;
   }
 
@@ -107,17 +107,17 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
     };
   }
 
-  static Point getPos(DefaultParcel parcel, PDPModel model) {
+  static Point getPos(Parcel parcel, PDPModel model) {
     if (model.getParcelState(parcel).isPickedUp()) {
-      return parcel.dto.deliveryLocation;
+      return parcel.getDto().getDeliveryLocation();
     }
-    return parcel.dto.pickupLocation;
+    return parcel.getDto().getPickupLocation();
   }
 
-  class ClosestDistanceComparator implements Comparator<DefaultParcel> {
+  class ClosestDistanceComparator implements Comparator<Parcel> {
     @Override
-    public int compare(@Nullable DefaultParcel arg0,
-        @Nullable DefaultParcel arg1) {
+    public int compare(@Nullable Parcel arg0,
+      @Nullable Parcel arg1) {
       final Point cur = roadModel.get().getPosition(vehicle.get());
       final Point p0 = getPos(checkNotNull(arg0), pdpModel.get());
       final Point p1 = getPos(checkNotNull(arg1), pdpModel.get());

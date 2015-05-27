@@ -39,19 +39,17 @@ import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
-import com.github.rinde.rinsim.core.model.Model;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.ParcelDTO;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
-import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.experiment.ExperimentTest;
@@ -61,9 +59,9 @@ import com.github.rinde.rinsim.fsm.State;
 import com.github.rinde.rinsim.fsm.StateMachine;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem;
+import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
+import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
-import com.github.rinde.rinsim.scenario.AddParcelEvent;
 import com.github.rinde.rinsim.scenario.TimedEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
@@ -75,35 +73,34 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * @author Rinde van Lon
- * 
+ *
  */
 public class SingleTruckTest {
 
-  protected DynamicPDPTWProblem prob;
   protected Simulator simulator;
   protected RoadModel roadModel;
   protected PDPModel pdpModel;
   protected TestTruck truck;
-  protected static ParcelDTO.Builder builder;
+  protected static Parcel.Builder builder;
 
   @BeforeClass
   public static void setUp() {
-    builder = ParcelDTO
-        .builder(new Point(1, 1), new Point(3, 3))
-        .pickupTimeWindow(new TimeWindow(1, 60000))
-        .deliveryTimeWindow(new TimeWindow(1, 60000))
-        .neededCapacity(0)
-        .orderAnnounceTime(1L)
-        .pickupDuration(1000L)
-        .deliveryDuration(3000L);
+    builder = Parcel
+      .builder(new Point(1, 1), new Point(3, 3))
+      .pickupTimeWindow(new TimeWindow(1, 60000))
+      .deliveryTimeWindow(new TimeWindow(1, 60000))
+      .neededCapacity(0)
+      .orderAnnounceTime(1L)
+      .pickupDuration(1000L)
+      .deliveryDuration(3000L);
   }
 
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
-      @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
+    @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
     final Collection<TimedEvent> events = newArrayList();
     for (final ParcelDTO p : parcels) {
-      events.add(new AddParcelEvent(p));
+      events.add(AddParcelEvent.create(p));
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
 
@@ -111,12 +108,19 @@ public class SingleTruckTest {
       rp = RandomRoutePlanner.supplier();
     }
 
-    final MASConfiguration randomRandom = new TestTruckConfiguration(
-        DebugRoutePlanner.supplier(rp), TestBidder.supplier(),
-        ImmutableList.of(AuctionCommModel.supplier()));
+    final MASConfiguration randomRandom =
+      MASConfiguration
+        .pdptwBuilder()
+        .addEventHandler(
+          AddVehicleEvent.class,
+          new TestTruckHandler(DebugRoutePlanner.supplier(rp), TestBidder
+            .supplier()))
+        .addModel(AuctionCommModel.builder())
+        .addModel(SolverModel.builder())
+        .build();
 
-    prob = ExperimentTest.init(scen, randomRandom, 123, false);
-    simulator = prob.getSimulator();
+    simulator = ExperimentTest.init(scen, randomRandom, 123, false);
+
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
     assertNotNull(roadModel);
@@ -138,7 +142,6 @@ public class SingleTruckTest {
   @After
   public void tearDown() {
     // to avoid accidental reuse of objects
-    prob = null;
     simulator = null;
     roadModel = null;
     pdpModel = null;
@@ -147,24 +150,25 @@ public class SingleTruckTest {
 
   @Test
   public void oneParcel() {
-    final ParcelDTO parcel1dto = builder.build();
+    final ParcelDTO parcel1dto = builder.buildDTO();
 
     setUp(asList(parcel1dto), 1, null);
 
     assertEquals(truck.getStateMachine().getCurrentState(),
-        truck.getWaitState());
-    assertEquals(truck.getDTO().startPosition, roadModel.getPosition(truck));
+      truck.getWaitState());
+    assertEquals(truck.getDTO().getStartPosition(),
+      roadModel.getPosition(truck));
 
     simulator.tick();
     assertEquals(1, roadModel.getObjectsOfType(Parcel.class).size());
     final Parcel parcel1 = roadModel.getObjectsOfType(Parcel.class).iterator()
-        .next();
+      .next();
     assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
     assertEquals(truck.getState(), truck.getGotoState());
-    assertFalse(truck.getDTO().startPosition.equals(roadModel
-        .getPosition(truck)));
-    final DefaultParcel cur2 = truck.getRoute().iterator().next();
-    assertEquals(parcel1dto, cur2.dto);
+    assertFalse(truck.getDTO().getStartPosition().equals(roadModel
+      .getPosition(truck)));
+    final Parcel cur2 = truck.getRoute().iterator().next();
+    assertEquals(parcel1dto, cur2.getDto());
 
     // move to pickup
     while (truck.getState() == truck.getGotoState()) {
@@ -173,18 +177,18 @@ public class SingleTruckTest {
     }
     assertEquals(truck.getState(), truck.getServiceState());
     assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
-    assertEquals(parcel1dto.pickupLocation, roadModel.getPosition(truck));
+    assertEquals(parcel1dto.getPickupLocation(), roadModel.getPosition(truck));
 
     // pickup
     while (truck.getState() == truck.getServiceState()) {
-      assertEquals(parcel1dto.pickupLocation, roadModel.getPosition(truck));
+      assertEquals(parcel1dto.getPickupLocation(), roadModel.getPosition(truck));
       assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
     assertEquals(truck.getWaitState(), truck.getState());
     assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
     assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
-        pdpModel.getContents(truck));
+      pdpModel.getContents(truck));
 
     simulator.tick();
     assertEquals(truck.getGotoState(), truck.getState());
@@ -193,16 +197,17 @@ public class SingleTruckTest {
     while (truck.getState() == truck.getGotoState()) {
       assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
       assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
-          pdpModel.getContents(truck));
+        pdpModel.getContents(truck));
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.getServiceState());
-    assertEquals(parcel1dto.deliveryLocation, roadModel.getPosition(truck));
+    assertEquals(parcel1dto.getDeliveryLocation(), roadModel.getPosition(truck));
     assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
 
     // deliver
     while (truck.getState() == truck.getServiceState()) {
-      assertEquals(parcel1dto.deliveryLocation, roadModel.getPosition(truck));
+      assertEquals(parcel1dto.getDeliveryLocation(),
+        roadModel.getPosition(truck));
       assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
@@ -211,18 +216,20 @@ public class SingleTruckTest {
     assertEquals(truck.getState(), truck.getWaitState());
 
     while (truck.getState() == truck.getWaitState()
-        && !roadModel.getPosition(truck).equals(truck.getDTO().startPosition)) {
+      && !roadModel.getPosition(truck)
+        .equals(truck.getDTO().getStartPosition())) {
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.getWaitState());
-    assertEquals(truck.getDTO().startPosition, roadModel.getPosition(truck));
+    assertEquals(truck.getDTO().getStartPosition(),
+      roadModel.getPosition(truck));
   }
 
   @Test
   public void twoParcels() {
-    final ParcelDTO parcel1dto = builder.build();
-    final ParcelDTO parcel2dto = builder.build();
-    final ParcelDTO parcel3dto = builder.build();
+    final ParcelDTO parcel1dto = builder.buildDTO();
+    final ParcelDTO parcel2dto = builder.buildDTO();
+    final ParcelDTO parcel3dto = builder.buildDTO();
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 2, null);
     simulator.start();
   }
@@ -233,14 +240,14 @@ public class SingleTruckTest {
    */
   @Test
   public void intermediateChange() {
-    final ParcelDTO parcel1dto = builder.build();
-    final ParcelDTO parcel2dto = builder.build();
-    final ParcelDTO parcel3dto = builder.build();
+    final ParcelDTO parcel1dto = builder.buildDTO();
+    final ParcelDTO parcel2dto = builder.buildDTO();
+    final ParcelDTO parcel3dto = builder.buildDTO();
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
-        SolverRoutePlanner
-            .supplierWithoutCurrentRoutes(MultiVehicleHeuristicSolver.supplier(
-                50, 100)));
+      SolverRoutePlanner
+        .supplierWithoutCurrentRoutes(MultiVehicleHeuristicSolver.supplier(
+          50, 100)));
 
     final List<Event> events = newArrayList();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {
@@ -257,14 +264,14 @@ public class SingleTruckTest {
 
     ((TestBidder) truck.getCommunicator()).removeAll();
     final int before = ((DebugRoutePlanner) truck.getRoutePlanner())
-        .getUpdateCount();
+      .getUpdateCount();
 
     while (truck.getGotoState() == truck.getState()) {
       simulator.tick();
     }
     simulator.tick();
     final int after = ((DebugRoutePlanner) truck.getRoutePlanner())
-        .getUpdateCount();
+      .getUpdateCount();
     assertEquals(before + 1, after);
   }
 
@@ -274,8 +281,8 @@ public class SingleTruckTest {
    */
   @Test
   public void intermediateChange2() {
-    final ParcelDTO parcel1dto = builder.build();
-    final ParcelDTO parcel2dto = builder.build();
+    final ParcelDTO parcel1dto = builder.buildDTO();
+    final ParcelDTO parcel2dto = builder.buildDTO();
     setUp(asList(parcel1dto, parcel2dto), 1, null);
 
     final DebugRoutePlanner drp = (DebugRoutePlanner) truck.getRoutePlanner();
@@ -284,8 +291,8 @@ public class SingleTruckTest {
     assertEquals(1, drp.getUpdateCount());
 
     // introduce new parcel
-    final ParcelDTO parcel3dto = builder.build();
-    simulator.register(new DefaultParcel(parcel3dto));
+    final ParcelDTO parcel3dto = builder.buildDTO();
+    simulator.register(new Parcel(parcel3dto));
 
     // goto
     while (truck.getState().equals(truck.getGotoState())) {
@@ -293,8 +300,8 @@ public class SingleTruckTest {
     }
     assertEquals(1, drp.getUpdateCount());
     // introduce new parcel
-    final ParcelDTO parcel4dto = builder.build();
-    simulator.register(new DefaultParcel(parcel4dto));
+    final ParcelDTO parcel4dto = builder.buildDTO();
+    simulator.register(new Parcel(parcel4dto));
     // service
     while (truck.getState().equals(truck.getServiceState())) {
       assertEquals(1, drp.getUpdateCount());
@@ -302,15 +309,38 @@ public class SingleTruckTest {
     }
 
     assertEquals(2,
-        ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
+      ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
   }
 
-  static class TestTruckConfiguration extends TruckConfiguration {
-    TestTruckConfiguration(
-        StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
-        StochasticSupplier<? extends Communicator> communicatorSupplier,
-        ImmutableList<? extends StochasticSupplier<? extends Model<?>>> modelSuppliers) {
-      super(routePlannerSupplier, communicatorSupplier, modelSuppliers);
+  // static class TestTruckConfiguration extends TruckConfiguration {
+  // TestTruckConfiguration(
+  // StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
+  // StochasticSupplier<? extends Communicator> communicatorSupplier,
+  // ImmutableList<? extends StochasticSupplier<? extends Model<?>>>
+  // modelSuppliers) {
+  // super(routePlannerSupplier, communicatorSupplier, modelSuppliers);
+  // }
+  //
+  // @Override
+  // protected Truck createTruck(VehicleDTO dto, RoutePlanner rp, Communicator
+  // c) {
+  // return new TestTruck(dto, rp, c);
+  // }
+  // }
+
+  // static MASConfiguration testTruckConfiguration(
+  // StochasticSupplier<? extends RoutePlanner> rp,
+  // StochasticSupplier<? extends Communicator> c) {
+  // MASConfiguration.pdptwBuilder()
+  // .addEventHandler(AddVehicleEvent.class, new TestTruckHandler(rp,c))
+  // .addModels(models)
+  // }
+
+  static class TestTruckHandler extends VehicleHandler {
+
+    TestTruckHandler(StochasticSupplier<? extends RoutePlanner> rp,
+      StochasticSupplier<? extends Communicator> c) {
+      super(rp, c);
     }
 
     @Override
@@ -346,7 +376,7 @@ public class SingleTruckTest {
     }
 
     @Override
-    public Collection<DefaultParcel> getRoute() {
+    public Collection<Parcel> getRoute() {
       return super.getRoute();
     }
   }
@@ -361,12 +391,12 @@ public class SingleTruckTest {
     }
 
     @Override
-    public void init(RoadModel rm, PDPModel pm, DefaultVehicle dv) {
+    public void init(RoadModel rm, PDPModel pm, Vehicle dv) {
       delegate.init(rm, pm, dv);
     }
 
     @Override
-    public void update(Collection<DefaultParcel> onMap, long time) {
+    public void update(Collection<Parcel> onMap, long time) {
       delegate.update(onMap, time);
       updateCounter++;
     }
@@ -376,27 +406,27 @@ public class SingleTruckTest {
     }
 
     @Override
-    public Optional<DefaultParcel> current() {
+    public Optional<Parcel> current() {
       return delegate.current();
     }
 
     @Override
-    public Optional<ImmutableList<DefaultParcel>> currentRoute() {
+    public Optional<ImmutableList<Parcel>> currentRoute() {
       return delegate.currentRoute();
     }
 
     @Override
-    public Optional<DefaultParcel> next(long time) {
+    public Optional<Parcel> next(long time) {
       return delegate.next(time);
     }
 
     @Override
-    public Optional<DefaultParcel> prev() {
+    public Optional<Parcel> prev() {
       return delegate.prev();
     }
 
     @Override
-    public List<DefaultParcel> getHistory() {
+    public List<Parcel> getHistory() {
       return delegate.getHistory();
     }
 
@@ -406,7 +436,7 @@ public class SingleTruckTest {
     }
 
     public static StochasticSupplier<RoutePlanner> supplier(
-        final StochasticSupplier<? extends RoutePlanner> rp) {
+      final StochasticSupplier<? extends RoutePlanner> rp) {
       return new StochasticSuppliers.AbstractStochasticSupplier<RoutePlanner>() {
         @Override
         public RoutePlanner get(long seed) {

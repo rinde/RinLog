@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,16 +32,18 @@ import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
+import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
-import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -53,8 +54,8 @@ import com.google.common.collect.Lists;
  */
 public class NegotiatingBidder extends SolverBidder {
 
-  private static final Comparator<TruckDist> TRUCK_DIST_COMPARATOR = new TruckDistComparator();
-  private static final Function<TruckDist, Truck> TRUCK_DIST_TO_TRUCK = new ToTruckFunc();
+  private static final Comparator<TruckDist> TRUCK_DIST_COMPARATOR = TruckDistComparator.INSTANCE;
+  private static final Function<TruckDist, Truck> TRUCK_DIST_TO_TRUCK = ToTruckFunc.INSTANCE;
 
   /**
    * This heuristic determines the property on which the selection of
@@ -77,6 +78,7 @@ public class NegotiatingBidder extends SolverBidder {
   private final Solver negotiationSolver;
   private final int negotiators;
   private final SelectNegotiatorsHeuristic heuristic;
+  Optional<SimulationSolverBuilder> simSolvBuilder;
 
   /**
    * Create a new instance.
@@ -88,26 +90,27 @@ public class NegotiatingBidder extends SolverBidder {
    * @param h The heuristic to use for selecting negotiators.
    */
   protected NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
-      int numOfNegotiators, SelectNegotiatorsHeuristic h) {
+    int numOfNegotiators, SelectNegotiatorsHeuristic h) {
     super(objFunc, s1);
     negotiationSolver = s2;
     checkArgument(numOfNegotiators >= 2);
     negotiators = numOfNegotiators;
     heuristic = h;
+    simSolvBuilder = Optional.absent();
   }
 
   private List<Truck> findTrucks() {
     final Point reference = convertToPos((Truck) vehicle.get());
     final List<TruckDist> pos = newArrayList(Collections2.transform(roadModel
-        .get().getObjectsOfType(Truck.class), new ToTruckDistFunc(reference)));
+      .get().getObjectsOfType(Truck.class), new ToTruckDistFunc(reference)));
 
     checkState(
-        pos.size() >= negotiators,
-        "There are not enough vehicles in the system to hold a %s-party negotiation, there are only %s vehicle(s).",
-        negotiators, pos.size());
+      pos.size() >= negotiators,
+      "There are not enough vehicles in the system to hold a %s-party negotiation, there are only %s vehicle(s).",
+      negotiators, pos.size());
     Collections.sort(pos, TRUCK_DIST_COMPARATOR);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,
-        TRUCK_DIST_TO_TRUCK).subList(0, negotiators));
+      TRUCK_DIST_TO_TRUCK).subList(0, negotiators));
 
     if (!trucks.contains(vehicle.get())) {
       // remove the last one in the list
@@ -121,76 +124,90 @@ public class NegotiatingBidder extends SolverBidder {
   Point convertToPos(Truck t) {
     Point p;
     if (t.getRoute().isEmpty()
-        || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
+      || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
       p = roadModel.get().getPosition(t);
     } else {
-      final DefaultParcel firstDestination = t.getRoute().iterator().next();
+      final Parcel firstDestination = t.getRoute().iterator().next();
       if (pdpModel.get().getParcelState(firstDestination).isPickedUp()) {
-        p = firstDestination.dto.deliveryLocation;
+        p = firstDestination.getDto().getDeliveryLocation();
       } else {
-        p = firstDestination.dto.pickupLocation;
+        p = firstDestination.getDto().getPickupLocation();
       }
     }
     return p;
   }
 
   @Override
-  public void receiveParcel(DefaultParcel p) {
+  public void receiveParcel(Parcel p) {
     final List<Truck> trucks = findTrucks();
-    final Set<DefaultParcel> ps = newLinkedHashSet();
+    final Set<Parcel> ps = newLinkedHashSet();
     ps.add(p);
     for (final Truck t : trucks) {
       ps.addAll(((NegotiatingBidder) t.getCommunicator()).assignedParcels);
     }
 
-    final Set<DefaultParcel> availableParcels = newLinkedHashSet(ps);
+    final Set<Parcel> availableParcels = newLinkedHashSet(ps);
     for (final Truck truck : trucks) {
-      for (final DefaultParcel dp : truck.getRoute()) {
+      for (final Parcel dp : truck.getRoute()) {
         if (!pdpModel.get().getParcelState(dp).isPickedUp()) {
           availableParcels.add(dp);
         }
       }
     }
 
-    final ImmutableList.Builder<ImmutableList<DefaultParcel>> currentRoutes = ImmutableList
-        .<ImmutableList<DefaultParcel>> builder();
+    final ImmutableList.Builder<ImmutableList<Parcel>> currentRoutes = ImmutableList
+      .<ImmutableList<Parcel>> builder();
     for (final Truck t : trucks) {
       currentRoutes.add(ImmutableList.copyOf(t.getRoute()));
     }
 
-    final List<Queue<DefaultParcel>> routes = Solvers
-        .solverBuilder(negotiationSolver)
-        .with(trucks)
-        .with(pdpModel.get())
-        .with(roadModel.get())
-        .with(simulator.get())
-        .build()
-        .solve(
-            SolveArgs.create().useCurrentRoutes(currentRoutes.build())
-            .useParcels(availableParcels));
+    final SimulationSolver sol = simSolvBuilder.get()
+      .setVehicles(trucks)
+      .build(negotiationSolver);
+    final List<Queue<Parcel>> routes = sol.solve(SolveArgs.create()
+      .useCurrentRoutes(currentRoutes.build())
+      .useParcels(availableParcels));
 
-    final List<DefaultParcel> list = newArrayList();
+    // Solvers
+    // .solverBuilder(negotiationSolver)
+    // .with(trucks)
+    // .with(pdpModel.get())
+    // .with(roadModel.get())
+    // .with(simulator.get())
+    // .buildDTO()
+    // .solve(
+    // SolveArgs.create()
+    // .useCurrentRoutes(currentRoutes.build())
+    // .useParcels(availableParcels));
+
+    final List<Parcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
-      final Queue<DefaultParcel> route = routes.get(i);
+      final Queue<Parcel> route = routes.get(i);
       ((SolverRoutePlanner) trucks.get(i).getRoutePlanner()).changeRoute(route);
       trucks.get(i).setRoute(route);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-      .clear();
+        .clear();
 
-      final Set<DefaultParcel> newAssignedParcels = newLinkedHashSet(route);
+      final Set<Parcel> newAssignedParcels = newLinkedHashSet(route);
       newAssignedParcels.retainAll(ps);
       list.addAll(newAssignedParcels);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-      .addAll(newAssignedParcels);
+        .addAll(newAssignedParcels);
 
-      final List<DefaultParcel> l = newArrayList(route);
+      final List<Parcel> l = newArrayList(route);
       checkArgument(!newAssignedParcels.retainAll(route), "", l,
-          newAssignedParcels);
+        newAssignedParcels);
 
       // FIXME update all trucks by dispatching events? or is this not needed???
     }
     checkArgument(list.size() == ps.size());
     checkArgument(newLinkedHashSet(list).equals(ps));
+  }
+
+  @Override
+  public void setSolverProvider(SimulationSolverBuilder builder) {
+    super.setSolverProvider(builder);
+    simSolvBuilder = Optional.of(builder);
   }
 
   /**
@@ -204,38 +221,40 @@ public class NegotiatingBidder extends SolverBidder {
    * @return The new supplier.
    */
   public static StochasticSupplier<NegotiatingBidder> supplier(
-      final ObjectiveFunction objFunc,
-      final StochasticSupplier<? extends Solver> bidderSolverSupplier,
-      final StochasticSupplier<? extends Solver> negoSolverSupplier,
-      final int numOfNegotiators,
-      final SelectNegotiatorsHeuristic heuristic) {
+    final ObjectiveFunction objFunc,
+    final StochasticSupplier<? extends Solver> bidderSolverSupplier,
+    final StochasticSupplier<? extends Solver> negoSolverSupplier,
+    final int numOfNegotiators,
+    final SelectNegotiatorsHeuristic heuristic) {
     return new AbstractStochasticSupplier<NegotiatingBidder>() {
       private static final long serialVersionUID = 8739438748665308053L;
 
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),
-            negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
+          negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
       }
 
       @Override
       public String toString() {
         return Joiner.on('-').join(
-            Arrays.<Object> asList(super.toString(),
-                bidderSolverSupplier.toString(), negoSolverSupplier.toString(),
-                numOfNegotiators, heuristic.toString().replaceAll("_", "-")));
+          Arrays.<Object> asList(super.toString(),
+            bidderSolverSupplier.toString(), negoSolverSupplier.toString(),
+            numOfNegotiators, heuristic.toString().replaceAll("_", "-")));
       }
     };
   }
 
-  static class ToTruckFunc implements Function<TruckDist, Truck> {
-    @Override
-    @Nullable
-    public Truck apply(@Nullable TruckDist input) {
-      if (input == null) {
-        throw new IllegalArgumentException("Null input is not allowed.");
+  enum ToTruckFunc implements Function<TruckDist, Truck> {
+    INSTANCE {
+      @Override
+      @Nullable
+      public Truck apply(@Nullable TruckDist input) {
+        if (input == null) {
+          throw new IllegalArgumentException("Null input is not allowed.");
+        }
+        return input.truck;
       }
-      return input.truck;
     }
   }
 
@@ -256,17 +275,14 @@ public class NegotiatingBidder extends SolverBidder {
     }
   }
 
-  private static class TruckDistComparator implements Comparator<TruckDist>,
-  Serializable {
-    private static final long serialVersionUID = 6283995706218900520L;
-
-    TruckDistComparator() {}
-
-    @Override
-    public int compare(@Nullable TruckDist o1, @Nullable TruckDist o2) {
-      return Double.compare(checkNotNull(o1).distance,
+  private enum TruckDistComparator implements Comparator<TruckDist> {
+    INSTANCE {
+      @Override
+      public int compare(@Nullable TruckDist o1, @Nullable TruckDist o2) {
+        return Double.compare(checkNotNull(o1).distance,
           checkNotNull(o2).distance);
-    }
+      }
+    };
   }
 
   private static class TruckDist {

@@ -33,14 +33,13 @@ import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventT
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
+import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.TimeWindowPolicy.TimeWindowPolicies;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
-import com.github.rinde.rinsim.core.pdptw.DefaultDepot;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
-import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.fsm.State;
 import com.github.rinde.rinsim.geom.Point;
@@ -48,7 +47,6 @@ import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.util.TimeWindow;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -62,7 +60,7 @@ public class DiversionTruckTest {
   @SuppressWarnings("null")
   PDPModel pm;
   @SuppressWarnings("null")
-  DefaultParcel p1, p2, p3, p4, p5;
+  Parcel p1, p2, p3, p4, p5;
   @SuppressWarnings("null")
   TestTruck truck;
   @SuppressWarnings("null")
@@ -77,33 +75,41 @@ public class DiversionTruckTest {
    */
   @Before
   public void setUp() {
-    rm = new PDPRoadModel(RoadModelBuilders.plane()
-      .setMinPoint(new Point(0, 0))
-      .setMaxPoint(new Point(5, 5))
-      .setMaxSpeed(50d)
-      .build()
-      , true);
-    pm = DefaultPDPModel.create(TimeWindowPolicies.TARDY_ALLOWED);
 
-    sim = Simulator.builder()
-      .addModel(Suppliers.ofInstance(rm))
-      .addModel(Suppliers.ofInstance(pm))
+    sim = Simulator
+      .builder()
+      .addModel(
+        PDPRoadModel.builder(
+          RoadModelBuilders.plane()
+          .withMinPoint(new Point(0, 0))
+          .withMaxPoint(new Point(5, 5))
+          .withMaxSpeed(50d)
+          )
+          .withAllowVehicleDiversion(true)
+      )
+      .addModel(
+        DefaultPDPModel.builder().withTimeWindowPolicy(
+          TimeWindowPolicies.TARDY_ALLOWED)
+      )
       .build();
-    final DefaultDepot dp = new DefaultDepot(new Point(2, 2));
+    final Depot dp = new Depot(new Point(2, 2));
+
+    rm = sim.getModelProvider().getModel(PDPRoadModel.class);
+    pm = sim.getModelProvider().getModel(PDPModel.class);
 
     sim.register(dp);
-    p1 = new DefaultParcel(ParcelDTO.builder(new Point(1, 1), new Point(2, 2))
-      .build());
-    p2 = new DefaultParcel(ParcelDTO.builder(new Point(2, 4), new Point(1, 2))
-      .build());
-    p3 = new DefaultParcel(ParcelDTO
+    p1 = new Parcel(Parcel.builder(new Point(1, 1), new Point(2, 2))
+      .buildDTO());
+    p2 = new Parcel(Parcel.builder(new Point(2, 4), new Point(1, 2))
+      .buildDTO());
+    p3 = new Parcel(Parcel
       .builder(new Point(.99, 0), new Point(1, 2))
       .pickupTimeWindow(
-        new TimeWindow((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000)).build());
-    p4 = new DefaultParcel(ParcelDTO.builder(new Point(0, 0), new Point(1, 2))
-      .build());
-    p5 = new DefaultParcel(ParcelDTO.builder(new Point(2, 0), new Point(1, 2))
-      .pickupDuration(1001).build());
+        new TimeWindow((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000)).buildDTO());
+    p4 = new Parcel(Parcel.builder(new Point(0, 0), new Point(1, 2))
+      .buildDTO());
+    p5 = new Parcel(Parcel.builder(new Point(2, 0), new Point(1, 2))
+      .pickupDuration(1001).buildDTO());
     sim.register(p1);
     sim.register(p2);
     sim.register(p3);
@@ -386,13 +392,13 @@ public class DiversionTruckTest {
   }
 
   private void routePlannerGotoNowhere() {
-    when(routePlanner.current()).thenReturn(Optional.<DefaultParcel> absent());
+    when(routePlanner.current()).thenReturn(Optional.<Parcel> absent());
     when(routePlanner.currentRoute()).thenReturn(
-      Optional.of(ImmutableList.<DefaultParcel> of()));
+      Optional.of(ImmutableList.<Parcel> of()));
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
-  private void routePlannerGoto(DefaultParcel dp) {
+  private void routePlannerGoto(Parcel dp) {
     when(routePlanner.current()).thenReturn(Optional.of(dp));
     when(routePlanner.currentRoute()).thenReturn(
       Optional.of(ImmutableList.of(dp)));

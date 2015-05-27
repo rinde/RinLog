@@ -44,24 +44,21 @@ import com.github.rinde.rinsim.central.arrays.ArraysSolverValidator;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleArraysSolver;
 import com.github.rinde.rinsim.central.arrays.SingleVehicleSolverAdapter;
 import com.github.rinde.rinsim.central.arrays.SolutionObject;
-import com.github.rinde.rinsim.core.Simulator;
-import com.github.rinde.rinsim.core.model.Model;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
-import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
+import com.github.rinde.rinsim.core.SimulatorAPI;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
+import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
+import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
-import com.github.rinde.rinsim.scenario.AddParcelEvent;
-import com.github.rinde.rinsim.scenario.AddVehicleEvent;
 import com.github.rinde.rinsim.scenario.TimedEvent;
+import com.github.rinde.rinsim.scenario.TimedEventHandler;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
-import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.TimeWindow;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Checks whether the objective as calculated by the simulator via
@@ -102,16 +99,21 @@ public class SingleVehicleSolverTest {
     events.add(newParcelEvent(c, d));
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
-    final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
+
+    final Creator creator = new Creator(solver, SI.SECOND);
+    final MASConfiguration tc = MASConfiguration.builder()
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
-    assertEquals(1, tc.debuggers.size());
+    assertEquals(1, creator.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue("invalid result", objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
+    final List<SolutionObject> solObjs = creator.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
 
@@ -142,15 +144,19 @@ public class SingleVehicleSolverTest {
         points.get(points.size() - 1 - i)));
     }
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
-    final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
+    final Creator creator = new Creator(solver, SI.SECOND);
+    final MASConfiguration tc = MASConfiguration.builder()
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
-    assertEquals(1, tc.debuggers.size());
+    assertEquals(1, creator.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
+    final List<SolutionObject> solObjs = creator.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
@@ -189,16 +195,21 @@ public class SingleVehicleSolverTest {
     }
 
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
-    final TestConfigurator tc = new TestConfigurator(solver, SI.SECOND);
+
+    final Creator creator = new Creator(solver, SI.SECOND);
+    final MASConfiguration tc = MASConfiguration.builder()
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
-    assertEquals(1, tc.debuggers.size());
+    assertEquals(1, creator.debuggers.size());
 
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     assertTrue(objFunc.isValidResult(stats));
     final double simObj = objFunc.computeCost(stats);
 
-    final List<SolutionObject> solObjs = tc.debuggers.get(0).getOutputs();
+    final List<SolutionObject> solObjs = creator.debuggers.get(0).getOutputs();
     assertEquals(1, solObjs.size());
 
     final double solverObj = solObjs.get(0).objectiveValue / 60.0;
@@ -209,65 +220,91 @@ public class SingleVehicleSolverTest {
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination) {
-    return new AddParcelEvent(
-      ParcelDTO.builder(origin, destination)
+    return AddParcelEvent.create(
+      Parcel.builder(origin, destination)
         .pickupTimeWindow(new TimeWindow(0, 3600000))
         .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
         .neededCapacity(0)
         .orderAnnounceTime(-1L)
         .pickupDuration(300000L)
         .deliveryDuration(300000L)
-        .build());
+        .buildDTO());
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination,
     TimeWindow pickup, TimeWindow delivery) {
-    return new AddParcelEvent(
-      ParcelDTO.builder(origin, destination)
+    return AddParcelEvent.create(
+      Parcel.builder(origin, destination)
         .pickupTimeWindow(pickup)
         .deliveryTimeWindow(delivery)
         .neededCapacity(0)
         .orderAnnounceTime(-1L)
         .pickupDuration(300000L)
         .deliveryDuration(300000L)
-        .build());
+        .buildDTO());
   }
 
-  static class TestConfigurator extends DefaultMASConfiguration {
+  static class Creator implements TimedEventHandler<AddVehicleEvent> {
     final List<SVASDebugger> debuggers;
     final SingleVehicleArraysSolver solver;
     final Unit<Duration> timeUnit;
 
-    public TestConfigurator(SingleVehicleArraysSolver solver,
-      Unit<Duration> timeUnit) {
-      this.solver = solver;
-      this.timeUnit = timeUnit;
+    Creator(SingleVehicleArraysSolver s, Unit<Duration> tu) {
+      solver = s;
+      timeUnit = tu;
       debuggers = newArrayList();
     }
 
     @Override
-    public Creator<AddVehicleEvent> getVehicleCreator() {
-      return new Creator<AddVehicleEvent>() {
-        @Override
-        public boolean create(Simulator sim, AddVehicleEvent event) {
-          final Communicator c = new RandomBidder(123);
-          sim.register(c);
+    public void handleTimedEvent(AddVehicleEvent event, SimulatorAPI simulator) {
+      final Communicator c = new RandomBidder(123);
+      simulator.register(c);
 
-          final SVASDebugger sd = ArraysSolverDebugger.wrap(
-            ArraysSolverValidator.wrap(solver), false);
-          debuggers.add(sd);
-          sim.register(new Truck(event.vehicleDTO,
-            new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
-              timeUnit), true), c));
-          return true;
-        }
-      };
-    }
-
-    @Override
-    public ImmutableList<? extends StochasticSupplier<? extends Model<?>>> getModels() {
-      return ImmutableList.of(AuctionCommModel.supplier());
+      final SVASDebugger sd = ArraysSolverDebugger.wrap(
+        ArraysSolverValidator.wrap(solver), false);
+      debuggers.add(sd);
+      simulator.register(new Truck(event.getVehicleDTO(),
+        new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd, timeUnit),
+          true), c));
     }
   }
+
+  // static class TestConfigurator extends DefaultMASConfiguration {
+  // final List<SVASDebugger> debuggers;
+  // final SingleVehicleArraysSolver solver;
+  // final Unit<Duration> timeUnit;
+  //
+  // public TestConfigurator(SingleVehicleArraysSolver solver,
+  // Unit<Duration> timeUnit) {
+  // this.solver = solver;
+  // this.timeUnit = timeUnit;
+  // debuggers = newArrayList();
+  // }
+  //
+  // @Override
+  // public Creator<AddVehicleEvent> getVehicleCreator() {
+  // return new Creator<AddVehicleEvent>() {
+  // @Override
+  // public boolean create(Simulator sim, AddVehicleEvent event) {
+  // final Communicator c = new RandomBidder(123);
+  // sim.register(c);
+  //
+  // final SVASDebugger sd = ArraysSolverDebugger.wrap(
+  // ArraysSolverValidator.wrap(solver), false);
+  // debuggers.add(sd);
+  // sim.register(new Truck(event.getVehicleDTO(),
+  // new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd,
+  // timeUnit), true), c));
+  // return true;
+  // }
+  // };
+  // }
+  //
+  // @Override
+  // public ImmutableList<? extends StochasticSupplier<? extends Model<?>>>
+  // getModels() {
+  // return ImmutableList.of(AuctionCommModel.supplier());
+  // }
+  // }
 
 }

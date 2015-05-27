@@ -26,7 +26,7 @@ import java.util.Random;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
 
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 import com.google.common.base.Optional;
@@ -39,8 +39,8 @@ import com.google.common.collect.Multiset;
  */
 public class RandomRoutePlanner extends AbstractRoutePlanner {
 
-  private final Multiset<DefaultParcel> assignedParcels;
-  private Optional<DefaultParcel> current;
+  private final Multiset<Parcel> assignedParcels;
+  private Optional<Parcel> current;
   private final Random rng;
 
   /**
@@ -55,13 +55,13 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected final void doUpdate(Collection<DefaultParcel> onMap, long time) {
+  protected final void doUpdate(Collection<Parcel> onMap, long time) {
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    final Collection<DefaultParcel> inCargo = Collections.checkedCollection(
-        (Collection) pdpModel.get().getContents(vehicle.get()),
-        DefaultParcel.class);
+    final Collection<Parcel> inCargo = Collections.checkedCollection(
+      (Collection) pdpModel.get().getContents(vehicle.get()),
+      Parcel.class);
     assignedParcels.clear();
-    for (final DefaultParcel dp : onMap) {
+    for (final Parcel dp : onMap) {
       assignedParcels.add(dp, 2);
     }
     assignedParcels.addAll(inCargo);
@@ -72,8 +72,8 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
     if (assignedParcels.isEmpty()) {
       current = Optional.absent();
     } else {
-      final List<DefaultParcel> list = newArrayList(assignedParcels
-          .elementSet());
+      final List<Parcel> list = newArrayList(assignedParcels
+        .elementSet());
       current = Optional.of(list.get(rng.nextInt(list.size())));
     }
   }
@@ -93,7 +93,7 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  public final Optional<DefaultParcel> current() {
+  public final Optional<Parcel> current() {
     return current;
   }
 

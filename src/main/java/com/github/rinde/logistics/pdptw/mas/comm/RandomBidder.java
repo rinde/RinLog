@@ -18,7 +18,7 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers;
 
@@ -39,7 +39,7 @@ public class RandomBidder extends AbstractBidder {
   }
 
   @Override
-  public double getBidFor(DefaultParcel p, long time) {
+  public double getBidFor(Parcel p, long time) {
     return rng.nextDouble();
   }
 

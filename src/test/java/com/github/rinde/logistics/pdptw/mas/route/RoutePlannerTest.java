@@ -36,26 +36,25 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.arrays.RandomMVArraysSolver;
 import com.github.rinde.rinsim.core.Simulator;
+import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.ParcelDTO;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.core.model.time.TimeLapseFactory;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
-import com.github.rinde.rinsim.core.pdptw.ParcelDTO;
-import com.github.rinde.rinsim.core.pdptw.VehicleDTO;
-import com.github.rinde.rinsim.experiment.DefaultMASConfiguration;
 import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem;
-import com.github.rinde.rinsim.pdptw.common.DynamicPDPTWProblem.Creator;
-import com.github.rinde.rinsim.scenario.AddParcelEvent;
-import com.github.rinde.rinsim.scenario.AddVehicleEvent;
+import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
+import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.scenario.TimedEvent;
+import com.github.rinde.rinsim.scenario.TimedEventHandler;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -70,11 +69,10 @@ import com.google.common.collect.ImmutableSet;
 public class RoutePlannerTest {
   protected final StochasticSupplier<RoutePlanner> supplier;
   protected RoutePlanner routePlanner;
-  protected DynamicPDPTWProblem problem;
   protected RoadModel roadModel;
   protected PDPModel pdpModel;
   protected Simulator simulator;
-  protected DefaultVehicle truck;
+  protected Vehicle truck;
 
   public RoutePlannerTest(StochasticSupplier<RoutePlanner> rp) {
     supplier = rp;
@@ -107,15 +105,19 @@ public class RoutePlannerTest {
     }
     final Gendreau06Scenario scen = GendreauTestUtil.create(events);
 
-    problem = ExperimentTest.init(scen, new TestConfiguration(), 123, false);
-    simulator = problem.getSimulator();
+    final MASConfiguration config = MASConfiguration.pdptwBuilder()
+      .addEventHandler(AddVehicleEvent.class, TestTruckHandler.INSTANCE)
+      .addModel(SolverModel.builder())
+      .build();
+
+    simulator = ExperimentTest.init(scen, config, 123, false);
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
     simulator.register(routePlanner);
     simulator.tick();
 
     assertEquals(1, roadModel.getObjectsOfType(Vehicle.class).size());
-    truck = roadModel.getObjectsOfType(DefaultVehicle.class).iterator().next();
+    truck = roadModel.getObjectsOfType(Vehicle.class).iterator().next();
 
     for (int i = 0; i < numInCargo; i++) {
       final Parcel p = createParcel(rng);
@@ -148,8 +150,8 @@ public class RoutePlannerTest {
       assertFalse(((AbstractRoutePlanner) routePlanner).isUpdated());
     }
 
-    final Collection<DefaultParcel> onMap = roadModel
-      .getObjectsOfType(DefaultParcel.class);
+    final Collection<Parcel> onMap = roadModel
+      .getObjectsOfType(Parcel.class);
     final Collection<Parcel> inCargo = pdpModel.getContents(truck);
     final List<Parcel> visited = newLinkedList();
     routePlanner.update(onMap, 0);
@@ -193,12 +195,12 @@ public class RoutePlannerTest {
   public void testMultiUpdate() {
     routePlanner.init(roadModel, pdpModel, truck);
 
-    final Collection<DefaultParcel> empty = ImmutableSet.of();
-    final Collection<DefaultParcel> singleCargo = ImmutableSet
-      .of((DefaultParcel) pdpModel.getContents(truck).iterator().next());
-    final DefaultParcel mapParcel = roadModel
-      .getObjectsOfType(DefaultParcel.class).iterator().next();
-    final Collection<DefaultParcel> singleOnMap = ImmutableSet.of(mapParcel);
+    final Collection<Parcel> empty = ImmutableSet.of();
+    final Collection<Parcel> singleCargo = ImmutableSet
+      .of(pdpModel.getContents(truck).iterator().next());
+    final Parcel mapParcel = roadModel
+      .getObjectsOfType(Parcel.class).iterator().next();
+    final Collection<Parcel> singleOnMap = ImmutableSet.of(mapParcel);
 
     routePlanner.update(empty, 0);
     assertFalse(routePlanner.prev().isPresent());
@@ -211,7 +213,7 @@ public class RoutePlannerTest {
     long time = 0;
     while (it.hasNext()) {
       final Parcel cur = it.next();
-      while (!roadModel.getPosition(truck).equals(cur.getDestination())) {
+      while (!roadModel.getPosition(truck).equals(cur.getDeliveryLocation())) {
         roadModel
           .moveTo(truck, cur, TimeLapseFactory.create(time, time + 1000));
         time += 1000;
@@ -264,7 +266,7 @@ public class RoutePlannerTest {
 
     routePlanner.init(roadModel, pdpModel, emptyTruck);
 
-    final Collection<DefaultParcel> s1 = ImmutableSet.of();
+    final Collection<Parcel> s1 = ImmutableSet.of();
     routePlanner.update(s1, 0);
     assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.currentRoute().isPresent());
@@ -272,8 +274,8 @@ public class RoutePlannerTest {
     assertTrue(routePlanner.getHistory().isEmpty());
     assertFalse(routePlanner.prev().isPresent());
 
-    final Collection<DefaultParcel> onMap = roadModel
-      .getObjectsOfType(DefaultParcel.class);
+    final Collection<Parcel> onMap = roadModel
+      .getObjectsOfType(Parcel.class);
     routePlanner.update(onMap, 0);
     assertTrue(routePlanner.current().isPresent());
     assertTrue(routePlanner.currentRoute().isPresent());
@@ -290,7 +292,7 @@ public class RoutePlannerTest {
   }
 
   static Parcel createParcel(RandomGenerator rng) {
-    final ParcelDTO dto = ParcelDTO
+    final ParcelDTO dto = Parcel
       .builder(new Point(rng.nextDouble(), rng.nextDouble()),
         new Point(rng.nextDouble(), rng.nextDouble()))
       .pickupTimeWindow(new TimeWindow(0, 100000))
@@ -299,50 +301,45 @@ public class RoutePlannerTest {
       .orderAnnounceTime(-1L)
       .pickupDuration(3000L)
       .deliveryDuration(3000L)
-      .build();
-    return new DefaultParcel(dto);
+      .buildDTO();
+    return new Parcel(dto);
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination) {
-    return new AddParcelEvent(
-      ParcelDTO.builder(origin, destination)
+    return AddParcelEvent.create(
+      Parcel.builder(origin, destination)
         .pickupTimeWindow(new TimeWindow(0, 3600000))
         .deliveryTimeWindow(new TimeWindow(1800000, 5400000))
         .neededCapacity(0)
         .orderAnnounceTime(-1)
         .pickupDuration(3000L)
         .deliveryDuration(3000L)
-        .build());
+        .buildDTO());
   }
 
   AddParcelEvent newParcelEvent(Point origin, Point destination,
     TimeWindow pickup, TimeWindow delivery) {
-    return new AddParcelEvent(
-      ParcelDTO.builder(origin, destination)
+    return AddParcelEvent.create(
+      Parcel.builder(origin, destination)
         .pickupTimeWindow(pickup)
         .deliveryTimeWindow(delivery)
         .neededCapacity(0)
         .orderAnnounceTime(-1L)
         .pickupDuration(300000L)
         .deliveryDuration(300000L)
-        .build());
+        .buildDTO());
   }
 
-  class TestConfiguration extends DefaultMASConfiguration {
-
-    @Override
-    public Creator<AddVehicleEvent> getVehicleCreator() {
-      return new Creator<AddVehicleEvent>() {
-        @Override
-        public boolean create(Simulator sim, AddVehicleEvent event) {
-          sim.register(new TestTruck(event.vehicleDTO));
-          return true;
-        }
-      };
+  enum TestTruckHandler implements TimedEventHandler<AddVehicleEvent> {
+    INSTANCE {
+      @Override
+      public void handleTimedEvent(AddVehicleEvent event, SimulatorAPI simulator) {
+        simulator.register(new TestTruck(event.getVehicleDTO()));
+      }
     }
   }
 
-  class TestTruck extends DefaultVehicle {
+  static class TestTruck extends Vehicle {
     public TestTruck(VehicleDTO dto) {
       super(dto);
     }

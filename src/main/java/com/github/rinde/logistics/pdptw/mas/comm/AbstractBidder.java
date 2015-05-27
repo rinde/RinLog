@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.core.pdptw.DefaultVehicle;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
@@ -47,17 +47,17 @@ public abstract class AbstractBidder implements Bidder {
    * The logger.
    */
   protected static final Logger LOGGER = LoggerFactory
-      .getLogger(AbstractBidder.class);
+    .getLogger(AbstractBidder.class);
 
   /**
    * The set of parcels that are assigned to this bidder.
    */
-  protected final Set<DefaultParcel> assignedParcels;
+  protected final Set<Parcel> assignedParcels;
 
   /**
    * The set of parcels that are claimed by this bidder.
    */
-  protected final Set<DefaultParcel> claimedParcels;
+  protected final Set<Parcel> claimedParcels;
 
   /**
    * The event dispatcher.
@@ -77,7 +77,7 @@ public abstract class AbstractBidder implements Bidder {
   /**
    * The vehicle for which this bidder operates.
    */
-  protected Optional<DefaultVehicle> vehicle;
+  protected Optional<Vehicle> vehicle;
 
   /**
    * Initializes bidder.
@@ -98,32 +98,32 @@ public abstract class AbstractBidder implements Bidder {
 
   // ignore
   @Override
-  public void waitFor(DefaultParcel p) {}
+  public void waitFor(Parcel p) {}
 
   @Override
-  public void claim(DefaultParcel p) {
+  public void claim(Parcel p) {
     LOGGER.info("claim {}", p);
     checkArgument(!claimedParcels.contains(p),
-        "Can not claim parcel %s because it is already claimed.", p);
+      "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
-        "Can not claim parcel %s which is not in assigned parcels: %s.", p,
-        assignedParcels);
+      "Can not claim parcel %s which is not in assigned parcels: %s.", p,
+      assignedParcels);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     checkArgument(claimedParcels.isEmpty(),
-        "claimed parcels must be empty, is %s.", claimedParcels);
+      "claimed parcels must be empty, is %s.", claimedParcels);
     claimedParcels.add(p);
     LOGGER.info(" > assigned parcels {}", assignedParcels);
     LOGGER.info(" > claimed parcels {}", claimedParcels);
   }
 
   @Override
-  public void unclaim(DefaultParcel p) {
+  public void unclaim(Parcel p) {
     LOGGER.info("unclaim {}", p);
     checkArgument(claimedParcels.contains(p),
-        "Can not unclaim %s because it is not claimed.", p);
+      "Can not unclaim %s because it is not claimed.", p);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     claimedParcels.remove(p);
   }
 
@@ -135,34 +135,34 @@ public abstract class AbstractBidder implements Bidder {
   }
 
   @Override
-  public final Collection<DefaultParcel> getParcels() {
+  public final Collection<Parcel> getParcels() {
     return unmodifiableSet(assignedParcels);
   }
 
   @Override
-  public final Collection<DefaultParcel> getClaimedParcels() {
+  public final Collection<Parcel> getClaimedParcels() {
     return unmodifiableSet(claimedParcels);
   }
 
   @Override
-  public void receiveParcel(DefaultParcel p) {
+  public void receiveParcel(Parcel p) {
     LOGGER.info("{} receiveParcel {}", this, p);
     assignedParcels.add(p);
     eventDispatcher
-        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
-  public void releaseParcel(DefaultParcel p) {
+  public void releaseParcel(Parcel p) {
     LOGGER.info("{} releaseParcel {}", this, p);
     checkArgument(assignedParcels.contains(p));
     assignedParcels.remove(p);
     eventDispatcher
-        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
-  public final void init(RoadModel rm, PDPModel pm, DefaultVehicle v) {
+  public final void init(RoadModel rm, PDPModel pm, Vehicle v) {
     roadModel = Optional.of((PDPRoadModel) rm);
     pdpModel = Optional.of(pm);
     vehicle = Optional.of(v);
@@ -171,13 +171,13 @@ public abstract class AbstractBidder implements Bidder {
 
   /**
    * This method can optionally be overridden to execute additional code right
-   * after {@link #init(RoadModel, PDPModel, DefaultVehicle)} is called.
+   * after {@link #init(RoadModel, PDPModel, Vehicle)} is called.
    */
   protected void afterInit() {}
 
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-        .toString();
+      .toString();
   }
 }

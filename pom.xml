@@ -354,6 +354,12 @@
 			<version>1.1.2</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+                <groupId>com.google.auto.value</groupId>
+                <artifactId>auto-value</artifactId>
+                <version>1.1</version>
+                <scope>provided</scope>
+            </dependency>
 		<!-- TEST DEPENDENCIES -->
 		<dependency>
 			<groupId>com.github.rinde</groupId>

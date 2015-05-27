@@ -18,15 +18,17 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 
-import com.github.rinde.rinsim.core.pdptw.DefaultParcel;
-import com.github.rinde.rinsim.util.StochasticSupplier;
-import com.github.rinde.rinsim.util.StochasticSuppliers;
+import com.github.rinde.rinsim.core.model.DependencyProvider;
+import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.rand.RandomProvider;
+import com.google.auto.value.AutoValue;
 
 /**
  * A communication model that supports auctions.
@@ -36,16 +38,12 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
   private static final double TOLERANCE = .0001;
   private final RandomGenerator rng;
 
-  /**
-   * New instance.
-   * @param seed The seed to use for the random number generator.
-   */
-  public AuctionCommModel(long seed) {
-    rng = new MersenneTwister(seed);
+  AuctionCommModel(RandomGenerator r) {
+    rng = r;
   }
 
   @Override
-  protected void receiveParcel(DefaultParcel p, long time) {
+  protected void receiveParcel(Parcel p, long time) {
     checkState(!communicators.isEmpty(), "there are no bidders..");
     final Iterator<Bidder> it = communicators.iterator();
     final List<Bidder> bestBidders = newArrayList();
@@ -76,17 +74,35 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link AuctionCommModel}
-   *         instances.
+   * @return A new {@link Builder} instance.
    */
-  public static StochasticSupplier<AuctionCommModel> supplier() {
-    return new StochasticSuppliers.AbstractStochasticSupplier<AuctionCommModel>() {
-      private static final long serialVersionUID = 1701618808844264668L;
+  public static Builder builder() {
+    return Builder.create();
+  }
 
-      @Override
-      public AuctionCommModel get(long seed) {
-        return new AuctionCommModel(seed);
-      }
-    };
+  /**
+   * Builder for creating {@link AuctionCommModel}.
+   * @author Rinde van Lon
+   */
+  @AutoValue
+  public abstract static class Builder extends
+    AbstractModelBuilder<AuctionCommModel, Bidder> implements Serializable {
+
+    private static final long serialVersionUID = 8978754638217623793L;
+
+    Builder() {
+      setDependencies(RandomProvider.class);
+    }
+
+    @Override
+    public AuctionCommModel build(DependencyProvider dependencyProvider) {
+      final RandomGenerator rng = dependencyProvider.get(RandomProvider.class)
+        .newInstance();
+      return new AuctionCommModel(rng);
+    }
+
+    static Builder create() {
+      return new AutoValue_AuctionCommModel_Builder();
+    }
   }
 }
