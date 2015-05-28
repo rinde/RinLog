@@ -98,30 +98,6 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
     return newCost - baseline;
   }
 
-  // @Override
-  // protected void afterInit() {
-  // // initSolver();
-  // }
-
-  // @Override
-  // public void setSimulator(SimulatorAPI api) {
-  // simulator = Optional.of(api);
-  // // initSolver();
-  // }
-
-  // private void initSolver() {
-  // if (simulator.isPresent() && roadModel.isPresent()
-  // && !solverHandle.isPresent()) {
-  // solverHandle = Optional.of(Solvers.solverBuilder(solver)
-  // .with(roadModel.get())
-  // .with(pdpModel.get())
-  // // .with(simulator.get())
-  // .with(vehicle.get())
-  // .buildSingle());
-  //
-  // }
-  // }
-
   @Override
   public void setSolverProvider(SimulationSolverBuilder builder) {
     solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));

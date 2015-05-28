@@ -168,18 +168,6 @@ public class NegotiatingBidder extends SolverBidder {
       .useCurrentRoutes(currentRoutes.build())
       .useParcels(availableParcels));
 
-    // Solvers
-    // .solverBuilder(negotiationSolver)
-    // .with(trucks)
-    // .with(pdpModel.get())
-    // .with(roadModel.get())
-    // .with(simulator.get())
-    // .buildDTO()
-    // .solve(
-    // SolveArgs.create()
-    // .useCurrentRoutes(currentRoutes.build())
-    // .useParcels(availableParcels));
-
     final List<Parcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
       final Queue<Parcel> route = routes.get(i);

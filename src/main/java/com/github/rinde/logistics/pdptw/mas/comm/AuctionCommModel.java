@@ -96,9 +96,9 @@ public class AuctionCommModel extends AbstractCommModel<Bidder> {
 
     @Override
     public AuctionCommModel build(DependencyProvider dependencyProvider) {
-      final RandomGenerator rng = dependencyProvider.get(RandomProvider.class)
+      final RandomGenerator r = dependencyProvider.get(RandomProvider.class)
         .newInstance();
-      return new AuctionCommModel(rng);
+      return new AuctionCommModel(r);
     }
 
     static Builder create() {
