@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import javax.measure.unit.SI;
@@ -111,8 +110,7 @@ public class MultiVehicleHeuristicSolverTest {
         .deliveryDuration(300000L)
         .buildDTO()));
 
-    final Gendreau06Scenario scenario = GendreauTestUtil.create(
-      (Collection<TimedEvent>) parcels, 2);
+    final Gendreau06Scenario scenario = GendreauTestUtil.createWithTrucks(parcels, 2);
     final DebugSolverCreator dsc = new DebugSolverCreator(
       new MultiVehicleHeuristicSolver(new MersenneTwister(123), 50, 1000,
         false, true), SI.MILLI(SI.SECOND));

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.rinde</groupId>
 	<artifactId>rinlog</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>2.0.0-SNAPSHOT</version>
 
 	<name>RinLog</name>
 	<description>RinLog is a collection of (agent) implementations for logistics problems.</description>
@@ -52,15 +52,19 @@
 		<sonar.language>java</sonar.language>
 		<reference.version>1.0.0</reference.version>
 	</properties>
-	
+
 	<repositories>
-       <repository>
-         <id>snapshots-repo</id>
-         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-         <releases><enabled>false</enabled></releases>
-         <snapshots><enabled>true</enabled></snapshots>
-       </repository>
-     </repositories>
+		<repository>
+			<id>snapshots-repo</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<build>
 		<pluginManagement>
@@ -156,13 +160,12 @@
 
 		<plugins>
 			<!-- Checks API for backwards compatibility -->
-			<plugin>
+ 		<!--	<plugin>
 				<groupId>com.googlecode.japi-checker</groupId>
 				<artifactId>japi-checker-maven-plugin</artifactId>
 				<version>0.1.4</version>
-				<configuration>
+				 <configuration>
 					<reference>
-						<!-- Replace here with the reference artifact of your project. -->
 						<groupId>com.github.rinde</groupId>
 						<artifactId>${project.artifactId}</artifactId>
 						<version>${reference.version}</version>
@@ -173,16 +176,15 @@
 				</configuration>
 				<executions>
 					<execution>
-						<id>check-bc</id>		<!-- this is used for inheritance merges -->
-						<phase>verify</phase> 	<!-- bind to the packaging phase -->
+						<id>check-bc</id>		
+						<phase>verify</phase> 	
 						<goals>
 							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			
-			<!--  Release plugin -->
+			</plugin> -->
+			<!-- Release plugin -->
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
@@ -259,12 +261,12 @@
 			<plugin>
 				<groupId>com.mycila</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>2.3</version>
+				<version>2.11</version>
 				<configuration>
 					<header>LICENSE_HEADER</header>
 					<properties>
 						<owner>Rinde van Lon, iMinds DistriNet, KU Leuven</owner>
-						<year>2014</year>
+						<year>2015</year>
 					</properties>
 					<mapping>
 						<java>SLASHSTAR_STYLE</java>
@@ -355,12 +357,18 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-                <groupId>com.google.auto.value</groupId>
-                <artifactId>auto-value</artifactId>
-                <version>1.1</version>
-                <scope>provided</scope>
-            </dependency>
+			<groupId>com.google.auto.value</groupId>
+			<artifactId>auto-value</artifactId>
+			<version>1.1</version>
+			<scope>provided</scope>
+		</dependency>
 		<!-- TEST DEPENDENCIES -->
+		<dependency>
+			<groupId>com.google.truth</groupId>
+			<artifactId>truth</artifactId>
+			<version>0.26</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.github.rinde</groupId>
 			<artifactId>rinsim-pdptw</artifactId>

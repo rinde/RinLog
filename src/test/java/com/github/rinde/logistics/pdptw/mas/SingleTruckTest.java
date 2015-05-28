@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
 package com.github.rinde.logistics.pdptw.mas;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,7 +41,9 @@ import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.SolverModel;
+import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
@@ -62,7 +66,6 @@ import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
-import com.github.rinde.rinsim.scenario.TimedEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -95,34 +98,45 @@ public class SingleTruckTest {
       .deliveryDuration(3000L);
   }
 
+  static Parcel.Builder setCommonProperties(Parcel.Builder b) {
+    return b
+      .pickupTimeWindow(new TimeWindow(1, 60000))
+      .deliveryTimeWindow(new TimeWindow(1, 60000))
+      .neededCapacity(0)
+      .orderAnnounceTime(1L)
+      .pickupDuration(3000L)
+      .deliveryDuration(3000L);
+  }
+
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
     @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
-    final Collection<TimedEvent> events = newArrayList();
+    final List<AddParcelEvent> events = newArrayList();
     for (final ParcelDTO p : parcels) {
       events.add(AddParcelEvent.create(p));
     }
-    final Gendreau06Scenario scen = GendreauTestUtil.create(events, trucks);
+    final Gendreau06Scenario scen = GendreauTestUtil.createWithTrucks(events, trucks);
 
     if (rp == null) {
       rp = RandomRoutePlanner.supplier();
     }
 
-    final MASConfiguration randomRandom =
-      MASConfiguration
-        .pdptwBuilder()
-        .addEventHandler(
-          AddVehicleEvent.class,
-          new TestTruckHandler(DebugRoutePlanner.supplier(rp), TestBidder
-            .supplier()))
-        .addModel(AuctionCommModel.builder())
-        .addModel(SolverModel.builder())
-        .build();
+    final MASConfiguration randomRandom = MASConfiguration.pdptwBuilder()
+      .addEventHandler(AddVehicleEvent.class,
+        new TestTruckHandler(
+          DebugRoutePlanner.supplier(rp),
+          TestBidder.supplier()
+        )
+      )
+      .addModel(AuctionCommModel.builder())
+      .addModel(SolverModel.builder())
+      .build();
 
     simulator = ExperimentTest.init(scen, randomRandom, 123, false);
 
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
+    simulator.getModelProvider().getModel(SolverModel.class);
     assertNotNull(roadModel);
     assertNotNull(pdpModel);
     assertEquals(0, simulator.getCurrentTime());
@@ -246,10 +260,11 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
       SolverRoutePlanner
-        .supplierWithoutCurrentRoutes(MultiVehicleHeuristicSolver.supplier(
-          50, 100)));
+        .supplierWithoutCurrentRoutes(
+        MultiVehicleHeuristicSolver.supplier(50, 100)
+        ));
 
-    final List<Event> events = newArrayList();
+    final List<Event> events = new ArrayList<>();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {
       @Override
       public void handleEvent(Event e) {
@@ -281,26 +296,34 @@ public class SingleTruckTest {
    */
   @Test
   public void intermediateChange2() {
-    final ParcelDTO parcel1dto = builder.buildDTO();
-    final ParcelDTO parcel2dto = builder.buildDTO();
+    final ParcelDTO parcel1dto = setCommonProperties(
+      Parcel.builder(new Point(0, 0), new Point(5, 0))
+      ).buildDTO();
+    final ParcelDTO parcel2dto = setCommonProperties(
+      Parcel.builder(new Point(0, 1), new Point(5, 1))
+      ).buildDTO();
     setUp(asList(parcel1dto, parcel2dto), 1, null);
-
     final DebugRoutePlanner drp = (DebugRoutePlanner) truck.getRoutePlanner();
     assertEquals(0, drp.getUpdateCount());
     simulator.tick();
+
     assertEquals(1, drp.getUpdateCount());
+    assertThat(truck.getState()).isEqualTo(truck.getGotoState());
 
     // introduce new parcel
-    final ParcelDTO parcel3dto = builder.buildDTO();
+    final ParcelDTO parcel3dto = setCommonProperties(
+      Parcel.builder(new Point(0, 2), new Point(5, 2))
+      ).buildDTO();
     simulator.register(new Parcel(parcel3dto));
-
     // goto
     while (truck.getState().equals(truck.getGotoState())) {
       simulator.tick();
     }
     assertEquals(1, drp.getUpdateCount());
     // introduce new parcel
-    final ParcelDTO parcel4dto = builder.buildDTO();
+    final ParcelDTO parcel4dto = setCommonProperties(
+      Parcel.builder(new Point(0, 3), new Point(5, 3))
+      ).buildDTO();
     simulator.register(new Parcel(parcel4dto));
     // service
     while (truck.getState().equals(truck.getServiceState())) {
@@ -311,30 +334,6 @@ public class SingleTruckTest {
     assertEquals(2,
       ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
   }
-
-  // static class TestTruckConfiguration extends TruckConfiguration {
-  // TestTruckConfiguration(
-  // StochasticSupplier<? extends RoutePlanner> routePlannerSupplier,
-  // StochasticSupplier<? extends Communicator> communicatorSupplier,
-  // ImmutableList<? extends StochasticSupplier<? extends Model<?>>>
-  // modelSuppliers) {
-  // super(routePlannerSupplier, communicatorSupplier, modelSuppliers);
-  // }
-  //
-  // @Override
-  // protected Truck createTruck(VehicleDTO dto, RoutePlanner rp, Communicator
-  // c) {
-  // return new TestTruck(dto, rp, c);
-  // }
-  // }
-
-  // static MASConfiguration testTruckConfiguration(
-  // StochasticSupplier<? extends RoutePlanner> rp,
-  // StochasticSupplier<? extends Communicator> c) {
-  // MASConfiguration.pdptwBuilder()
-  // .addEventHandler(AddVehicleEvent.class, new TestTruckHandler(rp,c))
-  // .addModels(models)
-  // }
 
   static class TestTruckHandler extends VehicleHandler {
 
@@ -381,7 +380,8 @@ public class SingleTruckTest {
     }
   }
 
-  static class DebugRoutePlanner implements RoutePlanner, SimulatorUser {
+  static class DebugRoutePlanner implements RoutePlanner, SimulatorUser,
+    SolverUser {
     private final RoutePlanner delegate;
     private int updateCounter;
 
@@ -449,6 +449,13 @@ public class SingleTruckTest {
     public void setSimulator(SimulatorAPI api) {
       if (delegate instanceof SimulatorUser) {
         ((SimulatorUser) delegate).setSimulator(api);
+      }
+    }
+
+    @Override
+    public void setSolverProvider(SimulationSolverBuilder b) {
+      if (delegate instanceof SolverUser) {
+        ((SolverUser) delegate).setSolverProvider(b);
       }
     }
   }

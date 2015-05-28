@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -38,6 +39,7 @@ import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.RandomBidder;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
+import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.arrays.ArraysSolverDebugger;
 import com.github.rinde.rinsim.central.arrays.ArraysSolverDebugger.SVASDebugger;
 import com.github.rinde.rinsim.central.arrays.ArraysSolverValidator;
@@ -101,9 +103,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
 
     final Creator creator = new Creator(solver, SI.SECOND);
-    final MASConfiguration tc = MASConfiguration.builder()
+    final MASConfiguration tc = MASConfiguration.pdptwBuilder()
       .addEventHandler(AddVehicleEvent.class, creator)
       .addModel(AuctionCommModel.builder())
+      .addModel(SolverModel.builder())
       .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
@@ -145,9 +148,10 @@ public class SingleVehicleSolverTest {
     }
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final Creator creator = new Creator(solver, SI.SECOND);
-    final MASConfiguration tc = MASConfiguration.builder()
+    final MASConfiguration tc = MASConfiguration.pdptwBuilder()
       .addEventHandler(AddVehicleEvent.class, creator)
       .addModel(AuctionCommModel.builder())
+      .addModel(SolverModel.builder())
       .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
@@ -197,9 +201,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
 
     final Creator creator = new Creator(solver, SI.SECOND);
-    final MASConfiguration tc = MASConfiguration.builder()
+    final MASConfiguration tc = MASConfiguration.pdptwBuilder()
       .addEventHandler(AddVehicleEvent.class, creator)
       .addModel(AuctionCommModel.builder())
+      .addModel(SolverModel.builder())
       .build();
     final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
@@ -244,7 +249,9 @@ public class SingleVehicleSolverTest {
         .buildDTO());
   }
 
-  static class Creator implements TimedEventHandler<AddVehicleEvent> {
+  static class Creator implements TimedEventHandler<AddVehicleEvent>,
+    Serializable {
+    private static final long serialVersionUID = 6621784477214246735L;
     final List<SVASDebugger> debuggers;
     final SingleVehicleArraysSolver solver;
     final Unit<Duration> timeUnit;

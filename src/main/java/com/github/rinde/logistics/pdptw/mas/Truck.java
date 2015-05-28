@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon
  */
 public class Truck extends RouteFollowingVehicle implements Listener,
-SimulatorUser {
+  SimulatorUser {
 
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
@@ -119,10 +119,12 @@ SimulatorUser {
     } else {
       // we know this is safe since it can only be one type of event
       @SuppressWarnings("unchecked")
-      final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event = (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
+      final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event =
+        (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
 
       // when diverting -> unclaim previous
-      if ((event.trigger == DefaultEvent.REROUTE || event.trigger == DefaultEvent.NOGO)
+      if ((event.trigger == DefaultEvent.REROUTE
+        || event.trigger == DefaultEvent.NOGO)
         && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
           .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
@@ -139,7 +141,8 @@ SimulatorUser {
         routePlanner.next(getCurrentTime().getTime());
       }
 
-      if ((event.newState == waitState || (isDiversionAllowed() && event.newState != serviceState))
+      if ((event.newState == waitState
+        || (isDiversionAllowed() && event.newState != serviceState))
         && changed) {
         updateAssignmentAndRoutePlanner();
         updateRoute();

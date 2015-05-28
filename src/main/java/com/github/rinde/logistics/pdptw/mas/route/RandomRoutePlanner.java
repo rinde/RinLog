@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
@@ -56,10 +56,7 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected final void doUpdate(Collection<Parcel> onMap, long time) {
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    final Collection<Parcel> inCargo = Collections.checkedCollection(
-      (Collection) pdpModel.get().getContents(vehicle.get()),
-      Parcel.class);
+    final Set<Parcel> inCargo = pdpModel.get().getContents(vehicle.get());
     assignedParcels.clear();
     for (final Parcel dp : onMap) {
       assignedParcels.add(dp, 2);

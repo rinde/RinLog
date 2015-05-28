@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -262,15 +262,8 @@ public class AuctionTest {
       .iterator().next();
     bidder1.releaseParcel(parcelToSwap);
     bidder2.receiveParcel(parcelToSwap);
-    System.out.println(truck1.getRoute());
-    System.out.println(truck2.getRoute());
 
     sim.tick();
-    System.out.println("swapped parcel: " + parcelToSwap);
-    System.out.println(truck1.getRoute());
-    System.out.println(truck2.getRoute());
-
-    System.out.println("GOGOGOGO");
     while (!pm.getParcelState(parcelToSwap).isPickedUp()) {
       sim.tick();
     }

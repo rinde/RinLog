@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   private final Solver solver;
   private Queue<? extends Parcel> route;
   private Optional<SimulationSolver> solverHandle;
+  private Optional<SimulationSolverBuilder> solverBuilder;
   private final boolean reuseCurRoutes;
 
   /**
@@ -58,6 +59,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     solver = s;
     route = newLinkedList();
     solverHandle = Optional.absent();
+    solverBuilder = Optional.absent();
     reuseCurRoutes = reuseCurrentRoutes;
   }
 
@@ -108,26 +110,6 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     LOGGER.info("{}", pdpModel.get().getVehicleState(vehicle.get()));
   }
 
-  // @Override
-  // public void setSimulator(SimulatorAPI api) {
-  // simulator = Optional.of(api);
-  // initSolver();
-  // }
-
-  // private void initSolver() {
-  // if (!solverHandle.isPresent() && isInitialized() && simulator.isPresent())
-  // {
-  // solverHandle = Optional.of(Solvers.solverBuilder(solver)
-  // .with((PDPRoadModel) roadModel.get()).with(pdpModel.get())
-  // .with(simulator.get()).with(vehicle.get()).buildSingle());
-  // }
-  // }
-
-  // @Override
-  // protected void afterInit() {
-  // initSolver();
-  // }
-
   @Override
   public boolean hasNext() {
     return !route.isEmpty();
@@ -149,6 +131,20 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   @Override
   protected void nextImpl(long time) {
     route.poll();
+  }
+
+  @Override
+  public void setSolverProvider(SimulationSolverBuilder builder) {
+    solverBuilder = Optional.of(builder);
+    afterInit();
+  }
+
+  @Override
+  public void afterInit() {
+    if (solverBuilder.isPresent() && vehicle.isPresent()) {
+      solverHandle = Optional.of(solverBuilder.get().setVehicle(vehicle.get())
+        .build(solver));
+    }
   }
 
   /**
@@ -198,10 +194,5 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
     public String toString() {
       return super.toString() + "-" + solverSupplier.toString();
     }
-  }
-
-  @Override
-  public void setSolverProvider(SimulationSolverBuilder builder) {
-    solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
   }
 }

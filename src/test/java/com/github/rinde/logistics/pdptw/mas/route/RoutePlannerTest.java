@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Rinde van Lon, iMinds DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,7 +113,9 @@ public class RoutePlannerTest {
     simulator = ExperimentTest.init(scen, config, 123, false);
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
-    simulator.register(routePlanner);
+    if (routePlanner instanceof SolverRoutePlanner) {
+      simulator.register(routePlanner);
+    }
     simulator.tick();
 
     assertEquals(1, roadModel.getObjectsOfType(Vehicle.class).size());

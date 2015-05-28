@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2015 Rinde van Lon, iMinds-DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import com.github.rinde.rinsim.util.StochasticSupplier;
  */
 public class VehicleHandler implements TimedEventHandler<AddVehicleEvent>,
   Serializable {
+
+  private static final long serialVersionUID = 3802558880510520740L;
 
   /**
    * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
