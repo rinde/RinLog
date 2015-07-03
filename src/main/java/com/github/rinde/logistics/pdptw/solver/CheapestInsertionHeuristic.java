@@ -102,8 +102,9 @@ public class CheapestInsertionHeuristic implements Solver {
       int cheapestRouteIndex = -1;
 
       for (int i = 0; i < state.getVehicles().size(); i++) {
-        final int startIndex = state.getVehicles().get(i).getDestination() == null ? 0
-          : 1;
+        final int startIndex = state.getVehicles().get(i).getDestination()
+          .isPresent() ? 1 : 0;
+
         final Iterator<ImmutableList<Parcel>> insertions = Insertions
           .insertionsIterator(schedule.get(i), p, startIndex, 2);
 
@@ -149,7 +150,8 @@ public class CheapestInsertionHeuristic implements Solver {
     return builder.build();
   }
 
-  static <T> ImmutableList<ImmutableList<T>> createEmptySchedule(int numVehicles) {
+  static <T> ImmutableList<ImmutableList<T>> createEmptySchedule(
+    int numVehicles) {
     final ImmutableList.Builder<ImmutableList<T>> builder = ImmutableList
       .builder();
     for (int i = 0; i < numVehicles; i++) {
