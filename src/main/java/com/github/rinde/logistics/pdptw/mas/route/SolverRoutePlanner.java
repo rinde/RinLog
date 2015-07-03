@@ -98,9 +98,9 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
         try {
           final GlobalStateObject gso = solverHandle.get().convert(args).state;
           LOGGER.info("destination {} available: {}",
-            gso.vehicles.get(0).destination, gso.availableParcels);
+            gso.getVehicles().get(0).getDestination(), gso.getAvailableParcels());
 
-          SolverValidator.checkRoute(gso.vehicles.get(0), 0);
+          SolverValidator.checkRoute(gso.getVehicles().get(0), 0);
         } catch (final IllegalArgumentException e) {
           args.noCurrentRoutes();
         }

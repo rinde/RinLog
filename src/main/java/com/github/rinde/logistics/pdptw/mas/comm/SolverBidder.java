@@ -86,7 +86,7 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
       .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
       final GlobalStateObject gso = solverHandle.get().convert(args).state;
-      SolverValidator.checkRoute(gso.vehicles.get(0), 0);
+      SolverValidator.checkRoute(gso.getVehicles().get(0), 0);
     } catch (final IllegalArgumentException e) {
       args.noCurrentRoutes();
     }

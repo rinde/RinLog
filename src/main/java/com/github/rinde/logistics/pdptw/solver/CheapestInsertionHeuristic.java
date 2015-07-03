@@ -51,10 +51,10 @@ public class CheapestInsertionHeuristic implements Solver {
   }
 
   static ImmutableSet<Parcel> unassignedParcels(GlobalStateObject state) {
-    final Set<Parcel> set = newLinkedHashSet(state.availableParcels);
-    for (final VehicleStateObject vso : state.vehicles) {
-      if (vso.route.isPresent()) {
-        set.removeAll(vso.route.get());
+    final Set<Parcel> set = newLinkedHashSet(state.getAvailableParcels());
+    for (final VehicleStateObject vso : state.getVehicles()) {
+      if (vso.getRoute().isPresent()) {
+        set.removeAll(vso.getRoute().get());
       }
     }
     return ImmutableSet.copyOf(set);
@@ -69,9 +69,9 @@ public class CheapestInsertionHeuristic implements Solver {
     GlobalStateObject state) {
     final ImmutableList.Builder<ImmutableList<Parcel>> b = ImmutableList
       .builder();
-    for (final VehicleStateObject vso : state.vehicles) {
-      if (vso.route.isPresent()) {
-        b.add(vso.route.get());
+    for (final VehicleStateObject vso : state.getVehicles()) {
+      if (vso.getRoute().isPresent()) {
+        b.add(vso.getRoute().get());
       } else {
         b.add(ImmutableList.<Parcel> of());
       }
@@ -101,8 +101,8 @@ public class CheapestInsertionHeuristic implements Solver {
       double cheapestRouteCost = 0;
       int cheapestRouteIndex = -1;
 
-      for (int i = 0; i < state.vehicles.size(); i++) {
-        final int startIndex = state.vehicles.get(i).destination == null ? 0
+      for (int i = 0; i < state.getVehicles().size(); i++) {
+        final int startIndex = state.getVehicles().get(i).getDestination() == null ? 0
           : 1;
         final Iterator<ImmutableList<Parcel>> insertions = Insertions
           .insertionsIterator(schedule.get(i), p, startIndex, 2);

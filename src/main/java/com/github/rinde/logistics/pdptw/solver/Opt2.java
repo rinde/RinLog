@@ -70,8 +70,8 @@ public class Opt2 implements Solver {
     final ImmutableList<ImmutableList<Parcel>> schedule = delegate
       .solve(state);
     final ImmutableList.Builder<Integer> indexBuilder = ImmutableList.builder();
-    for (final VehicleStateObject vso : state.vehicles) {
-      indexBuilder.add(vso.destination == null ? 0 : 1);
+    for (final VehicleStateObject vso : state.getVehicles()) {
+      indexBuilder.add(vso.getDestination() == null ? 0 : 1);
     }
     if (depthFirstSearch) {
       return Swaps.dfsOpt2(schedule, indexBuilder.build(), state, evaluator,
