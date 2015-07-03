@@ -22,7 +22,7 @@ import java.util.Set;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
-import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimSolver;
 import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverUser;
@@ -45,7 +45,7 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
 
   private final ObjectiveFunction objectiveFunction;
   private final Solver solver;
-  private Optional<SimulationSolver> solverHandle;
+  private Optional<SimSolver> solverHandle;
 
   /**
    * Creates a new bidder using the specified solver and objective function.

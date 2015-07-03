@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimSolver;
 import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
@@ -161,7 +161,7 @@ public class NegotiatingBidder extends SolverBidder {
       currentRoutes.add(ImmutableList.copyOf(t.getRoute()));
     }
 
-    final SimulationSolver sol = simSolvBuilder.get()
+    final SimSolver sol = simSolvBuilder.get()
       .setVehicles(trucks)
       .build(negotiationSolver);
     final List<Queue<Parcel>> routes = sol.solve(SolveArgs.create()

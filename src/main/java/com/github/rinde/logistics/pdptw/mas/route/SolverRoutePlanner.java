@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Queue;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
-import com.github.rinde.rinsim.central.SimulationSolver;
+import com.github.rinde.rinsim.central.SimSolver;
 import com.github.rinde.rinsim.central.SimulationSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverUser;
@@ -45,7 +45,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
 
   private final Solver solver;
   private Queue<? extends Parcel> route;
-  private Optional<SimulationSolver> solverHandle;
+  private Optional<SimSolver> solverHandle;
   private Optional<SimulationSolverBuilder> solverBuilder;
   private final boolean reuseCurRoutes;
 
