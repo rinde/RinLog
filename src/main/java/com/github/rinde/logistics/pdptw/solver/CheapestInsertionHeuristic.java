@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.solver;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Verify.verifyNotNull;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Iterator;
@@ -89,7 +90,6 @@ public class CheapestInsertionHeuristic implements Solver {
     return builder.build();
   }
 
-  @SuppressWarnings("null")
   ImmutableList<ImmutableList<Parcel>> decomposed(GlobalStateObject state) {
     ImmutableList<ImmutableList<Parcel>> schedule = createSchedule(state);
     ImmutableList<Double> costs = decomposedCost(state, schedule);
@@ -122,7 +122,8 @@ public class CheapestInsertionHeuristic implements Solver {
           }
         }
       }
-      schedule = modifySchedule(schedule, cheapestRoute, cheapestRouteIndex);
+      schedule = modifySchedule(schedule, verifyNotNull(cheapestRoute),
+        cheapestRouteIndex);
       costs = modifyCosts(costs, cheapestRouteCost, cheapestRouteIndex);
     }
     return schedule;
