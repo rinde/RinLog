@@ -41,7 +41,7 @@ import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
-import com.github.rinde.rinsim.central.SimulationSolverBuilder;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.core.Simulator;
@@ -453,7 +453,7 @@ public class SingleTruckTest {
     }
 
     @Override
-    public void setSolverProvider(SimulationSolverBuilder b) {
+    public void setSolverProvider(SimSolverBuilder b) {
       if (delegate instanceof SolverUser) {
         ((SolverUser) delegate).setSolverProvider(b);
       }

@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.rinsim.central.SimSolver;
-import com.github.rinde.rinsim.central.SimulationSolverBuilder;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -78,7 +78,7 @@ public class NegotiatingBidder extends SolverBidder {
   private final Solver negotiationSolver;
   private final int negotiators;
   private final SelectNegotiatorsHeuristic heuristic;
-  Optional<SimulationSolverBuilder> simSolvBuilder;
+  Optional<SimSolverBuilder> simSolvBuilder;
 
   /**
    * Create a new instance.
@@ -193,7 +193,7 @@ public class NegotiatingBidder extends SolverBidder {
   }
 
   @Override
-  public void setSolverProvider(SimulationSolverBuilder builder) {
+  public void setSolverProvider(SimSolverBuilder builder) {
     super.setSolverProvider(builder);
     simSolvBuilder = Optional.of(builder);
   }

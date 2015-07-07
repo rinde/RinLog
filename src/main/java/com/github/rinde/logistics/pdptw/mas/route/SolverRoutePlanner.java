@@ -22,7 +22,7 @@ import java.util.Queue;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.SimSolver;
-import com.github.rinde.rinsim.central.SimulationSolverBuilder;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
@@ -46,7 +46,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   private final Solver solver;
   private Queue<? extends Parcel> route;
   private Optional<SimSolver> solverHandle;
-  private Optional<SimulationSolverBuilder> solverBuilder;
+  private Optional<SimSolverBuilder> solverBuilder;
   private final boolean reuseCurRoutes;
 
   /**
@@ -134,7 +134,7 @@ public class SolverRoutePlanner extends AbstractRoutePlanner implements
   }
 
   @Override
-  public void setSolverProvider(SimulationSolverBuilder builder) {
+  public void setSolverProvider(SimSolverBuilder builder) {
     solverBuilder = Optional.of(builder);
     afterInit();
   }

@@ -23,7 +23,7 @@ import java.util.Set;
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.SimSolver;
-import com.github.rinde.rinsim.central.SimulationSolverBuilder;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
@@ -99,7 +99,7 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
   }
 
   @Override
-  public void setSolverProvider(SimulationSolverBuilder builder) {
+  public void setSolverProvider(SimSolverBuilder builder) {
     solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
   }
 
