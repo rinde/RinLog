@@ -47,18 +47,18 @@ public class CheapestInsertionHeuristicTest {
     final ExperimentResults er = Experiment
         .build(objFunc)
         .addScenario(
-            Gendreau06Parser.parse(new File(
-                "files/scenarios/gendreau06/req_rapide_1_240_24")))
+          Gendreau06Parser.parse(new File(
+              "files/scenarios/gendreau06/req_rapide_1_240_24")))
         .addConfiguration(
-            Central.solverConfiguration(SolverValidator
-                .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
+          Central.solverConfiguration(SolverValidator
+              .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
         .repeat(3)
         .withThreads(3)
         .perform();
-    for (int i = 0; i < er.results.size(); i++) {
+    for (int i = 0; i < er.getResults().size(); i++) {
       assertEquals(979.898336,
-          objFunc.computeCost(er.results.asList().get(i).stats),
-          0.0001);
+        objFunc.computeCost(er.getResults().asList().get(i).stats),
+        0.0001);
     }
   }
 
@@ -67,9 +67,9 @@ public class CheapestInsertionHeuristicTest {
   public void modifyScheduleTest() {
     final ImmutableList<ImmutableList<String>> schedule = schedule(r(A), r(B));
     assertEquals(schedule(r(C), r(B)),
-        modifySchedule(schedule, ImmutableList.of(C), 0));
+      modifySchedule(schedule, ImmutableList.of(C), 0));
     assertEquals(schedule(r(A), r(C)),
-        modifySchedule(schedule, ImmutableList.of(C), 1));
+      modifySchedule(schedule, ImmutableList.of(C), 1));
   }
 
   @SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ public class CheapestInsertionHeuristicTest {
   public void modifiyCostsTest() {
 
     final ImmutableList<Double> result = modifyCosts(
-        ImmutableList.of(1d, 2d, 3d, 4d), 8d, 2);
+      ImmutableList.of(1d, 2d, 3d, 4d), 8d, 2);
     assertEquals(ImmutableList.of(1d, 2d, 8d, 4d), result);
   }
 
