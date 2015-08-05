@@ -90,8 +90,8 @@ public class AuctionTest {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     return ImmutableList.of(
       // new Object[] { RandomBidder.supplier() },
-      new Object[] { SolverBidder.supplier(objFunc,
-        RandomSolver.supplier()) });
+      new Object[] {SolverBidder.supplier(objFunc,
+        RandomSolver.supplier())});
   }
 
   /**
@@ -100,20 +100,20 @@ public class AuctionTest {
   @Before
   public void setUp() {
     ape1 = AddParcelEvent.create(Parcel
-      .builder(new Point(1, 1), new Point(1, 4))
-      .pickupTimeWindow(new TimeWindow(218300, 10 * 60000))
-      .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
-      .serviceDuration(5000)
-      .orderAnnounceTime(-1)
-      .buildDTO());
+        .builder(new Point(1, 1), new Point(1, 4))
+        .pickupTimeWindow(TimeWindow.create(218300, 10 * 60000))
+        .deliveryTimeWindow(TimeWindow.create(0, 20 * 60000))
+        .serviceDuration(5000)
+        .orderAnnounceTime(-1)
+        .buildDTO());
 
     ape2 = AddParcelEvent.create(Parcel
-      .builder(new Point(4, 1), new Point(4, 4))
-      .pickupTimeWindow(new TimeWindow(0, 10 * 60000))
-      .deliveryTimeWindow(new TimeWindow(0, 20 * 60000))
-      .serviceDuration(5000)
-      .orderAnnounceTime(-1)
-      .buildDTO());
+        .builder(new Point(4, 1), new Point(4, 4))
+        .pickupTimeWindow(TimeWindow.create(0, 10 * 60000))
+        .deliveryTimeWindow(TimeWindow.create(0, 20 * 60000))
+        .serviceDuration(5000)
+        .orderAnnounceTime(-1)
+        .buildDTO());
   }
 
   /**
@@ -123,17 +123,17 @@ public class AuctionTest {
   public void test() {
     final MASConfiguration configuration =
       MASConfiguration.pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class,
-          new VehicleHandler(FixedRoutePlanner.supplier(), bidderSupplier))
-        .addModel(AuctionCommModel.builder())
-        .addModel(CommTestModel.builder())
-        .build();
+          .addEventHandler(AddVehicleEvent.class,
+            new VehicleHandler(FixedRoutePlanner.supplier(), bidderSupplier))
+          .addModel(AuctionCommModel.builder())
+          .addModel(CommTestModel.builder())
+          .build();
 
     final Gendreau06Scenario scen = Gendreau06Parser.parser()
-      .allowDiversion()
-      .setNumVehicles(1)
-      .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
-      .parse().get(0);
+        .allowDiversion()
+        .setNumVehicles(1)
+        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
+        .parse().get(0);
 
     final Simulator sim = ExperimentTest.init(scen,
       configuration, 123, false);
@@ -155,7 +155,7 @@ public class AuctionTest {
     assertEquals(ape2.getParcelDTO(), dp2.getDto());
 
     final FixedRoutePlanner routePlanner = (FixedRoutePlanner) truck
-      .getRoutePlanner();
+        .getRoutePlanner();
 
     final Bidder bidder = (Bidder) truck.getCommunicator();
 
@@ -218,22 +218,22 @@ public class AuctionTest {
   public void swapParcelTest() {
     final MASConfiguration configuration =
       MASConfiguration
-        .pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class,
-          new VehicleHandler(RandomRoutePlanner.supplier(), bidderSupplier))
-        .addModel(AuctionCommModel.builder())
-        .addModel(CommTestModel.builder())
-        .addModel(SolverModel.builder())
-        .build();
+          .pdptwBuilder()
+          .addEventHandler(AddVehicleEvent.class,
+            new VehicleHandler(RandomRoutePlanner.supplier(), bidderSupplier))
+          .addModel(AuctionCommModel.builder())
+          .addModel(CommTestModel.builder())
+          .addModel(SolverModel.builder())
+          .build();
 
     // new TruckConfiguration(
     // RandomRoutePlanner.supplier(), bidderSupplier,
     // ImmutableList.of(AuctionCommModel.supplier(), CommTestModel.supplier()));
     final Gendreau06Scenario scen = Gendreau06Parser.parser()
-      .allowDiversion()
-      .setNumVehicles(2)
-      .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
-      .parse().get(0);
+        .allowDiversion()
+        .setNumVehicles(2)
+        .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
+        .parse().get(0);
 
     final Simulator sim = ExperimentTest.init(scen,
       configuration, 123, false);
@@ -259,7 +259,7 @@ public class AuctionTest {
 
     // SWAP a parcel to another truck
     final Parcel parcelToSwap = truck1.getCommunicator().getParcels()
-      .iterator().next();
+        .iterator().next();
     bidder1.releaseParcel(parcelToSwap);
     bidder2.receiveParcel(parcelToSwap);
 

@@ -57,7 +57,7 @@ public class CheapestInsertionHeuristicTest {
         .perform();
     for (int i = 0; i < er.getResults().size(); i++) {
       assertEquals(979.898336,
-        objFunc.computeCost(er.getResults().asList().get(i).stats),
+        objFunc.computeCost(er.getResults().asList().get(i).getStats()),
         0.0001);
     }
   }

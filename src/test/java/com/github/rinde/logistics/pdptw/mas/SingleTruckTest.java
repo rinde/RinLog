@@ -89,48 +89,47 @@ public class SingleTruckTest {
   @BeforeClass
   public static void setUp() {
     builder = Parcel
-      .builder(new Point(1, 1), new Point(3, 3))
-      .pickupTimeWindow(new TimeWindow(1, 60000))
-      .deliveryTimeWindow(new TimeWindow(1, 60000))
-      .neededCapacity(0)
-      .orderAnnounceTime(1L)
-      .pickupDuration(1000L)
-      .deliveryDuration(3000L);
+        .builder(new Point(1, 1), new Point(3, 3))
+        .pickupTimeWindow(TimeWindow.create(1, 60000))
+        .deliveryTimeWindow(TimeWindow.create(1, 60000))
+        .neededCapacity(0)
+        .orderAnnounceTime(1L)
+        .pickupDuration(1000L)
+        .deliveryDuration(3000L);
   }
 
   static Parcel.Builder setCommonProperties(Parcel.Builder b) {
     return b
-      .pickupTimeWindow(new TimeWindow(1, 60000))
-      .deliveryTimeWindow(new TimeWindow(1, 60000))
-      .neededCapacity(0)
-      .orderAnnounceTime(1L)
-      .pickupDuration(3000L)
-      .deliveryDuration(3000L);
+        .pickupTimeWindow(TimeWindow.create(1, 60000))
+        .deliveryTimeWindow(TimeWindow.create(1, 60000))
+        .neededCapacity(0)
+        .orderAnnounceTime(1L)
+        .pickupDuration(3000L)
+        .deliveryDuration(3000L);
   }
 
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
-    @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
+      @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
     final List<AddParcelEvent> events = newArrayList();
     for (final ParcelDTO p : parcels) {
       events.add(AddParcelEvent.create(p));
     }
-    final Gendreau06Scenario scen = GendreauTestUtil.createWithTrucks(events, trucks);
+    final Gendreau06Scenario scen =
+      GendreauTestUtil.createWithTrucks(events, trucks);
 
     if (rp == null) {
       rp = RandomRoutePlanner.supplier();
     }
 
     final MASConfiguration randomRandom = MASConfiguration.pdptwBuilder()
-      .addEventHandler(AddVehicleEvent.class,
-        new TestTruckHandler(
-          DebugRoutePlanner.supplier(rp),
-          TestBidder.supplier()
-        )
-      )
-      .addModel(AuctionCommModel.builder())
-      .addModel(SolverModel.builder())
-      .build();
+        .addEventHandler(AddVehicleEvent.class,
+          new TestTruckHandler(
+              DebugRoutePlanner.supplier(rp),
+              TestBidder.supplier()))
+        .addModel(AuctionCommModel.builder())
+        .addModel(SolverModel.builder())
+        .build();
 
     simulator = ExperimentTest.init(scen, randomRandom, 123, false);
 
@@ -176,11 +175,11 @@ public class SingleTruckTest {
     simulator.tick();
     assertEquals(1, roadModel.getObjectsOfType(Parcel.class).size());
     final Parcel parcel1 = roadModel.getObjectsOfType(Parcel.class).iterator()
-      .next();
+        .next();
     assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
     assertEquals(truck.getState(), truck.getGotoState());
     assertFalse(truck.getDTO().getStartPosition().equals(roadModel
-      .getPosition(truck)));
+        .getPosition(truck)));
     final Parcel cur2 = truck.getRoute().iterator().next();
     assertEquals(parcel1dto, cur2.getDto());
 
@@ -195,7 +194,8 @@ public class SingleTruckTest {
 
     // pickup
     while (truck.getState() == truck.getServiceState()) {
-      assertEquals(parcel1dto.getPickupLocation(), roadModel.getPosition(truck));
+      assertEquals(parcel1dto.getPickupLocation(),
+        roadModel.getPosition(truck));
       assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
@@ -215,7 +215,8 @@ public class SingleTruckTest {
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.getServiceState());
-    assertEquals(parcel1dto.getDeliveryLocation(), roadModel.getPosition(truck));
+    assertEquals(parcel1dto.getDeliveryLocation(),
+      roadModel.getPosition(truck));
     assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
 
     // deliver
@@ -230,8 +231,8 @@ public class SingleTruckTest {
     assertEquals(truck.getState(), truck.getWaitState());
 
     while (truck.getState() == truck.getWaitState()
-      && !roadModel.getPosition(truck)
-        .equals(truck.getDTO().getStartPosition())) {
+        && !roadModel.getPosition(truck)
+            .equals(truck.getDTO().getStartPosition())) {
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.getWaitState());
@@ -260,9 +261,8 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
       SolverRoutePlanner
-        .supplierWithoutCurrentRoutes(
-        MultiVehicleHeuristicSolver.supplier(50, 100)
-        ));
+          .supplierWithoutCurrentRoutes(
+            MultiVehicleHeuristicSolver.supplier(50, 100)));
 
     final List<Event> events = new ArrayList<>();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {
@@ -279,14 +279,14 @@ public class SingleTruckTest {
 
     ((TestBidder) truck.getCommunicator()).removeAll();
     final int before = ((DebugRoutePlanner) truck.getRoutePlanner())
-      .getUpdateCount();
+        .getUpdateCount();
 
     while (truck.getGotoState() == truck.getState()) {
       simulator.tick();
     }
     simulator.tick();
     final int after = ((DebugRoutePlanner) truck.getRoutePlanner())
-      .getUpdateCount();
+        .getUpdateCount();
     assertEquals(before + 1, after);
   }
 
@@ -297,11 +297,9 @@ public class SingleTruckTest {
   @Test
   public void intermediateChange2() {
     final ParcelDTO parcel1dto = setCommonProperties(
-      Parcel.builder(new Point(0, 0), new Point(5, 0))
-      ).buildDTO();
+      Parcel.builder(new Point(0, 0), new Point(5, 0))).buildDTO();
     final ParcelDTO parcel2dto = setCommonProperties(
-      Parcel.builder(new Point(0, 1), new Point(5, 1))
-      ).buildDTO();
+      Parcel.builder(new Point(0, 1), new Point(5, 1))).buildDTO();
     setUp(asList(parcel1dto, parcel2dto), 1, null);
     final DebugRoutePlanner drp = (DebugRoutePlanner) truck.getRoutePlanner();
     assertEquals(0, drp.getUpdateCount());
@@ -312,8 +310,7 @@ public class SingleTruckTest {
 
     // introduce new parcel
     final ParcelDTO parcel3dto = setCommonProperties(
-      Parcel.builder(new Point(0, 2), new Point(5, 2))
-      ).buildDTO();
+      Parcel.builder(new Point(0, 2), new Point(5, 2))).buildDTO();
     simulator.register(new Parcel(parcel3dto));
     // goto
     while (truck.getState().equals(truck.getGotoState())) {
@@ -322,8 +319,7 @@ public class SingleTruckTest {
     assertEquals(1, drp.getUpdateCount());
     // introduce new parcel
     final ParcelDTO parcel4dto = setCommonProperties(
-      Parcel.builder(new Point(0, 3), new Point(5, 3))
-      ).buildDTO();
+      Parcel.builder(new Point(0, 3), new Point(5, 3))).buildDTO();
     simulator.register(new Parcel(parcel4dto));
     // service
     while (truck.getState().equals(truck.getServiceState())) {
@@ -338,12 +334,13 @@ public class SingleTruckTest {
   static class TestTruckHandler extends VehicleHandler {
 
     TestTruckHandler(StochasticSupplier<? extends RoutePlanner> rp,
-      StochasticSupplier<? extends Communicator> c) {
+        StochasticSupplier<? extends Communicator> c) {
       super(rp, c);
     }
 
     @Override
-    protected Truck createTruck(VehicleDTO dto, RoutePlanner rp, Communicator c) {
+    protected Truck createTruck(VehicleDTO dto, RoutePlanner rp,
+        Communicator c) {
       return new TestTruck(dto, rp, c);
     }
   }
@@ -381,7 +378,7 @@ public class SingleTruckTest {
   }
 
   static class DebugRoutePlanner implements RoutePlanner, SimulatorUser,
-    SolverUser {
+      SolverUser {
     private final RoutePlanner delegate;
     private int updateCounter;
 
@@ -436,7 +433,7 @@ public class SingleTruckTest {
     }
 
     public static StochasticSupplier<RoutePlanner> supplier(
-      final StochasticSupplier<? extends RoutePlanner> rp) {
+        final StochasticSupplier<? extends RoutePlanner> rp) {
       return new StochasticSuppliers.AbstractStochasticSupplier<RoutePlanner>() {
         @Override
         public RoutePlanner get(long seed) {

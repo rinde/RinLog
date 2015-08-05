@@ -56,14 +56,15 @@ public class MultiVehicleHeuristicSolverTest {
   @Test
   public void testValidity() throws IOException {
     Experiment
-      .build(Gendreau06ObjectiveFunction.instance())
-      .addConfiguration(
-        // not good settings, but fast!
-        Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(
-          50, 100, false, true)))
-      .addScenario(
-        Gendreau06Parser.parse(new File(
-          "files/scenarios/gendreau06/req_rapide_1_240_24"))).perform();
+        .build(Gendreau06ObjectiveFunction.instance())
+        .addConfiguration(
+          // not good settings, but fast!
+          Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(
+            50, 100, false, true)))
+        .addScenario(
+          Gendreau06Parser.parse(new File(
+              "files/scenarios/gendreau06/req_rapide_1_240_24")))
+        .perform();
   }
 
   /**
@@ -75,55 +76,59 @@ public class MultiVehicleHeuristicSolverTest {
     final List<TimedEvent> parcels = newArrayList();
     parcels.add(AddParcelEvent.create(
       Parcel.builder(new Point(1, 1), new Point(2, 2))
-        .pickupTimeWindow(new TimeWindow(10, 100000))
-        .deliveryTimeWindow(new TimeWindow(0, 1000000))
-        .neededCapacity(0)
-        .orderAnnounceTime(10L)
-        .pickupDuration(300000L)
-        .deliveryDuration(300000L)
-        .buildDTO()));
+          .pickupTimeWindow(TimeWindow.create(10, 100000))
+          .deliveryTimeWindow(TimeWindow.create(0, 1000000))
+          .neededCapacity(0)
+          .orderAnnounceTime(10L)
+          .pickupDuration(300000L)
+          .deliveryDuration(300000L)
+          .buildDTO()));
     parcels.add(AddParcelEvent.create(
       Parcel.builder(new Point(3, 1), new Point(0.1, 3))
-        .pickupTimeWindow(new TimeWindow(10, 100))
-        .deliveryTimeWindow(new TimeWindow(0, 100))
-        .neededCapacity(0)
-        .orderAnnounceTime(10L)
-        .pickupDuration(300000L)
-        .deliveryDuration(300000L)
-        .buildDTO()));
+          .pickupTimeWindow(TimeWindow.create(10, 100))
+          .deliveryTimeWindow(TimeWindow.create(0, 100))
+          .neededCapacity(0)
+          .orderAnnounceTime(10L)
+          .pickupDuration(300000L)
+          .deliveryDuration(300000L)
+          .buildDTO()));
     parcels.add(AddParcelEvent.create(
       Parcel.builder(new Point(1, 4.5), new Point(2, 5))
-        .pickupTimeWindow(new TimeWindow(10, 100))
-        .deliveryTimeWindow(new TimeWindow(0, 100))
-        .neededCapacity(0)
-        .orderAnnounceTime(10L)
-        .pickupDuration(300000L)
-        .deliveryDuration(300000L)
-        .buildDTO()));
+          .pickupTimeWindow(TimeWindow.create(10, 100))
+          .deliveryTimeWindow(TimeWindow.create(0, 100))
+          .neededCapacity(0)
+          .orderAnnounceTime(10L)
+          .pickupDuration(300000L)
+          .deliveryDuration(300000L)
+          .buildDTO()));
     parcels.add(AddParcelEvent.create(
       Parcel.builder(new Point(1, 5), new Point(0, 2))
-        .pickupTimeWindow(new TimeWindow(10, 100))
-        .deliveryTimeWindow(new TimeWindow(0, 100))
-        .neededCapacity(0)
-        .orderAnnounceTime(10L)
-        .pickupDuration(300000L)
-        .deliveryDuration(300000L)
-        .buildDTO()));
+          .pickupTimeWindow(TimeWindow.create(10, 100))
+          .deliveryTimeWindow(TimeWindow.create(0, 100))
+          .neededCapacity(0)
+          .orderAnnounceTime(10L)
+          .pickupDuration(300000L)
+          .deliveryDuration(300000L)
+          .buildDTO()));
 
-    final Gendreau06Scenario scenario = GendreauTestUtil.createWithTrucks(parcels, 2);
+    final Gendreau06Scenario scenario =
+      GendreauTestUtil.createWithTrucks(parcels, 2);
     final DebugSolverCreator dsc = new DebugSolverCreator(
-      new MultiVehicleHeuristicSolver(new MersenneTwister(123), 50, 1000,
-        false, true), SI.MILLI(SI.SECOND));
+        new MultiVehicleHeuristicSolver(new MersenneTwister(123), 50, 1000,
+            false, true),
+        SI.MILLI(SI.SECOND));
     final Gendreau06ObjectiveFunction objFunc = Gendreau06ObjectiveFunction
-      .instance();
+        .instance();
     Experiment.build(objFunc).addScenario(scenario)
-      .addConfiguration(Central.solverConfiguration(dsc)).perform();
+        .addConfiguration(Central.solverConfiguration(dsc)).perform();
 
     for (int i = 0; i < dsc.solver.getInputs().size(); i++) {
       final double arrObjVal = ArraysSolvers
-        .computeTotalObjectiveValue(dsc.arraysSolver.getOutputs().get(i)) / 60000d;
+          .computeTotalObjectiveValue(dsc.arraysSolver.getOutputs().get(i))
+          / 60000d;
       final StatisticsDTO stats = Solvers.computeStats(dsc.solver.getInputs()
-        .get(i), dsc.solver.getOutputs().get(i));
+          .get(i),
+        dsc.solver.getOutputs().get(i));
       final double objVal = objFunc.computeCost(stats);
       assertEquals(arrObjVal, objVal, 0.01);
     }
