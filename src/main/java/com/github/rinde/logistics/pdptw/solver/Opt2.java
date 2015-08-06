@@ -68,10 +68,10 @@ public class Opt2 implements Solver {
   @Override
   public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state) {
     final ImmutableList<ImmutableList<Parcel>> schedule = delegate
-      .solve(state);
+        .solve(state);
     final ImmutableList.Builder<Integer> indexBuilder = ImmutableList.builder();
     for (final VehicleStateObject vso : state.getVehicles()) {
-      indexBuilder.add(vso.getDestination() == null ? 0 : 1);
+      indexBuilder.add(vso.getDestination().isPresent() ? 1 : 0);
     }
     if (depthFirstSearch) {
       return Swaps.dfsOpt2(schedule, indexBuilder.build(), state, evaluator,
@@ -90,7 +90,8 @@ public class Opt2 implements Solver {
    *         {@link Opt2}.
    */
   public static StochasticSupplier<Solver> breadthFirstSupplier(
-    final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
+      final StochasticSupplier<Solver> delegate,
+      final ObjectiveFunction objFunc) {
     return new Opt2Supplier(delegate, objFunc, false);
   }
 
@@ -105,7 +106,8 @@ public class Opt2 implements Solver {
    *         {@link Opt2}.
    */
   public static StochasticSupplier<Solver> depthFirstSupplier(
-    final StochasticSupplier<Solver> delegate, final ObjectiveFunction objFunc) {
+      final StochasticSupplier<Solver> delegate,
+      final ObjectiveFunction objFunc) {
     return new Opt2Supplier(delegate, objFunc, true);
   }
 
@@ -116,7 +118,7 @@ public class Opt2 implements Solver {
     private final boolean depthFirstSearch;
 
     Opt2Supplier(StochasticSupplier<Solver> del, ObjectiveFunction objFunc,
-      boolean dfs) {
+        boolean dfs) {
       delegate = del;
       objectiveFunction = objFunc;
       depthFirstSearch = dfs;
@@ -126,7 +128,7 @@ public class Opt2 implements Solver {
     public Solver get(long seed) {
       final RandomGenerator rand = new MersenneTwister(seed);
       return new Opt2(rand.nextLong(), delegate.get(rand.nextLong()),
-        objectiveFunction, depthFirstSearch);
+          objectiveFunction, depthFirstSearch);
     }
   }
 }

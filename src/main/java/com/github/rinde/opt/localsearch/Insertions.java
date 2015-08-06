@@ -54,11 +54,12 @@ public final class Insertions {
   public static <T> Iterator<ImmutableList<T>> insertionsIterator(
       ImmutableList<T> list, T item, int startIndex, int numOfInsertions) {
     checkArgument(startIndex >= 0 && startIndex <= list.size(),
-        "startIndex must be >= 0 and <= %s (list size), it is %s.",
-        list.size(), startIndex);
+      "startIndex must be >= 0 and <= %s (list size), it is %s.",
+      list.size(), startIndex);
     checkArgument(numOfInsertions > 0, "numOfInsertions must be positive.");
     return Iterators.transform(new InsertionIndexGenerator(numOfInsertions,
-        list.size(), startIndex), new IndexToInsertionTransform<T>(list, item));
+        list.size(), startIndex),
+      new IndexToInsertionTransform<T>(list, item));
   }
 
   /**
@@ -75,13 +76,13 @@ public final class Insertions {
   public static <T> ImmutableList<ImmutableList<T>> insertions(
       ImmutableList<T> list, T item, int startIndex, int numOfInsertions) {
     return ImmutableList.copyOf(insertionsIterator(list, item, startIndex,
-        numOfInsertions));
+      numOfInsertions));
   }
 
   /**
    * Calculates the number of <code>k</code> sized multisubsets that can be
-   * formed in a set of size <code>n</code>. See <a
-   * href="https://en.wikipedia.org/wiki/Combination#
+   * formed in a set of size <code>n</code>. See
+   * <a href="https://en.wikipedia.org/wiki/Combination#
    * Number_of_combinations_with_repetition">Wikipedia</a> for a description.
    *
    * @param n The size of the set to create subsets from.
@@ -105,18 +106,18 @@ public final class Insertions {
   public static <T> ImmutableList<T> insert(List<T> originalList,
       List<Integer> insertionIndices, T item) {
     checkArgument(!insertionIndices.isEmpty(),
-        "At least one insertion index must be defined.");
+      "At least one insertion index must be defined.");
     int prev = 0;
-    final ImmutableList.Builder<T> builder = ImmutableList.<T> builder();
+    final ImmutableList.Builder<T> builder = ImmutableList.<T>builder();
     for (int i = 0; i < insertionIndices.size(); i++) {
       final int cur = insertionIndices.get(i);
       checkArgument(
-          cur >= 0 && cur <= originalList.size(),
-          "The specified indices must be >= 0 and <= %s (list size), it is %s.",
-          originalList.size(), cur);
+        cur >= 0 && cur <= originalList.size(),
+        "The specified indices must be >= 0 and <= %s (list size), it is %s.",
+        originalList.size(), cur);
       checkArgument(cur >= prev,
-          "The specified indices must be in ascending order. Received %s.",
-          insertionIndices);
+        "The specified indices must be in ascending order. Received %s.",
+        insertionIndices);
       builder.addAll(originalList.subList(prev, cur));
       builder.add(item);
       prev = cur;
@@ -150,6 +151,9 @@ public final class Insertions {
     private int index = 0;
 
     InsertionIndexGenerator(int numOfInsertions, int listSize, int startIndex) {
+      checkArgument(startIndex <= listSize,
+        "startIndex (%s) must be <= listSize (%s).",
+        startIndex, listSize);
       insertionPositions = new int[numOfInsertions];
       for (int i = 0; i < insertionPositions.length; i++) {
         insertionPositions[i] = startIndex;

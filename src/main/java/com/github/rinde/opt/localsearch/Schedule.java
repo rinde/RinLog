@@ -57,7 +57,8 @@ final class Schedule<C, T> {
 
   static <C, T> Schedule<C, T> create(C context,
       ImmutableList<ImmutableList<T>> routes,
-      ImmutableList<Integer> startIndices, RouteEvaluator<C, T> routeEvaluator) {
+      ImmutableList<Integer> startIndices,
+      RouteEvaluator<C, T> routeEvaluator) {
     final ImmutableList.Builder<Double> costsBuilder = ImmutableList.builder();
     double sumCost = 0;
     for (int i = 0; i < routes.size(); i++) {

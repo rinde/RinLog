@@ -84,7 +84,7 @@ public final class Swaps {
       ImmutableList<Integer> startIndices, C context,
       RouteEvaluator<C, T> evaluator) {
     return opt2(schedule, startIndices, context, evaluator, false,
-        Optional.<RandomGenerator> absent());
+      Optional.<RandomGenerator>absent());
   }
 
   /**
@@ -114,7 +114,7 @@ public final class Swaps {
       ImmutableList<Integer> startIndices, C context,
       RouteEvaluator<C, T> evaluator, RandomGenerator rng) {
     return opt2(schedule, startIndices, context, evaluator, true,
-        Optional.of(rng));
+      Optional.of(rng));
   }
 
   static <C, T> ImmutableList<ImmutableList<T>> opt2(
@@ -126,12 +126,12 @@ public final class Swaps {
     checkArgument(schedule.size() == startIndices.size());
 
     final Schedule<C, T> baseSchedule = Schedule.create(context, schedule,
-        startIndices, evaluator);
+      startIndices, evaluator);
 
     final Map<ImmutableList<T>, Double> routeCostCache = newLinkedHashMap();
     for (int i = 0; i < baseSchedule.routes.size(); i++) {
       routeCostCache.put(baseSchedule.routes.get(i),
-          baseSchedule.objectiveValues.get(i));
+        baseSchedule.objectiveValues.get(i));
     }
 
     Schedule<C, T> bestSchedule = baseSchedule;
@@ -151,9 +151,9 @@ public final class Swaps {
       while (it.hasNext()) {
         final Swap<T> swapOperation = it.next();
         final Optional<Schedule<C, T>> newSchedule = Swaps.swap(curBest,
-            swapOperation,
-            bestSchedule.objectiveValue - curBest.objectiveValue,
-            routeCostCache);
+          swapOperation,
+          bestSchedule.objectiveValue - curBest.objectiveValue,
+          routeCostCache);
 
         if (newSchedule.isPresent()) {
           isImproving = true;
@@ -170,8 +170,9 @@ public final class Swaps {
   }
 
   static <C, T> Iterator<Swap<T>> swapIterator(Schedule<C, T> schedule) {
-    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder = ImmutableList
-        .builder();
+    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder =
+      ImmutableList
+          .builder();
     final Set<T> seen = newLinkedHashSet();
     for (int i = 0; i < schedule.routes.size(); i++) {
       final ImmutableList<T> row = schedule.routes.get(i);
@@ -179,7 +180,7 @@ public final class Swaps {
         final T t = row.get(j);
         if (j >= schedule.startIndices.get(i) && !seen.contains(t)) {
           iteratorBuilder.add(oneItemSwapIterator(schedule,
-              schedule.startIndices, t, i));
+            schedule.startIndices, t, i));
         }
         seen.add(t);
       }
@@ -190,9 +191,10 @@ public final class Swaps {
   static <C, T> Iterator<Swap<T>> oneItemSwapIterator(Schedule<C, T> schedule,
       ImmutableList<Integer> startIndices, T item, int fromRow) {
     final ImmutableList<Integer> indices = indices(
-        schedule.routes.get(fromRow), item);
-    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder = ImmutableList
-        .builder();
+      schedule.routes.get(fromRow), item);
+    final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder =
+      ImmutableList
+          .builder();
 
     Range<Integer> range;
     if (indices.size() == 1) {
@@ -221,7 +223,7 @@ public final class Swaps {
   static <C, T> Optional<Schedule<C, T>> swap(Schedule<C, T> s, Swap<T> swap,
       double threshold) {
     return swap(s, swap, threshold,
-        new LinkedHashMap<ImmutableList<T>, Double>());
+      new LinkedHashMap<ImmutableList<T>, Double>());
   }
 
   /**
@@ -249,10 +251,10 @@ public final class Swaps {
       double threshold, Map<ImmutableList<T>, Double> cache) {
 
     checkArgument(swap.fromRow >= 0 && swap.fromRow < s.routes.size(),
-        "fromRow must be >= 0 and < %s, it is %s.", s.routes.size(),
-        swap.fromRow);
+      "fromRow must be >= 0 and < %s, it is %s.", s.routes.size(),
+      swap.fromRow);
     checkArgument(swap.toRow >= 0 && swap.toRow < s.routes.size(),
-        "toRow must be >= 0 and < %s, it is %s.", s.routes.size(), swap.toRow);
+      "toRow must be >= 0 and < %s, it is %s.", s.routes.size(), swap.toRow);
 
     if (swap.fromRow == swap.toRow) {
       // 1. swap within same vehicle
@@ -260,7 +262,7 @@ public final class Swaps {
       // compute cost of new ordering
       final double originalCost = s.objectiveValues.get(swap.fromRow);
       final ImmutableList<T> newRoute = inListSwap(s.routes.get(swap.fromRow),
-          swap.toIndices, swap.item);
+        swap.toIndices, swap.item);
 
       final double newCost = computeCost(s, swap.fromRow, newRoute, cache);
       final double diff = newCost - originalCost;
@@ -268,14 +270,14 @@ public final class Swaps {
       if (diff < threshold) {
         // it improves
         final ImmutableList<ImmutableList<T>> newRoutes = replace(s.routes,
-            ImmutableList.of(swap.fromRow), ImmutableList.of(newRoute));
+          ImmutableList.of(swap.fromRow), ImmutableList.of(newRoute));
         final double newObjectiveValue = s.objectiveValue + diff;
         final ImmutableList<Double> newObjectiveValues = replace(
-            s.objectiveValues, ImmutableList.of(swap.fromRow),
-            ImmutableList.of(newCost));
+          s.objectiveValues, ImmutableList.of(swap.fromRow),
+          ImmutableList.of(newCost));
         return Optional
             .of(Schedule.create(s.context, newRoutes, s.startIndices,
-                newObjectiveValues, newObjectiveValue, s.evaluator));
+              newObjectiveValues, newObjectiveValue, s.evaluator));
       } else {
         return Optional.absent();
       }
@@ -285,17 +287,17 @@ public final class Swaps {
       // compute cost of removal from original vehicle
       final double originalCostA = s.objectiveValues.get(swap.fromRow);
       final ImmutableList<T> newRouteA = ImmutableList.copyOf(filter(
-          s.routes.get(swap.fromRow), not(equalTo(swap.item))));
+        s.routes.get(swap.fromRow), not(equalTo(swap.item))));
       final int itemCount = s.routes.get(swap.fromRow).size()
           - newRouteA.size();
       checkArgument(
-          itemCount > 0,
-          "The item (%s) is not in row %s, hence it cannot be swapped to another row.",
-          swap.item, swap.fromRow);
+        itemCount > 0,
+        "The item (%s) is not in row %s, hence it cannot be swapped to another row.",
+        swap.item, swap.fromRow);
       checkArgument(
-          itemCount == swap.toIndices.size(),
-          "The number of occurences in the fromRow (%s) should equal the number of insertion indices (%s).",
-          itemCount, swap.toIndices.size());
+        itemCount == swap.toIndices.size(),
+        "The number of occurences in the fromRow (%s) should equal the number of insertion indices (%s).",
+        itemCount, swap.toIndices.size());
 
       final double newCostA = computeCost(s, swap.fromRow, newRouteA, cache);
       final double diffA = newCostA - originalCostA;
@@ -303,7 +305,7 @@ public final class Swaps {
       // compute cost of insertion in new vehicle
       final double originalCostB = s.objectiveValues.get(swap.toRow);
       final ImmutableList<T> newRouteB = Insertions.insert(
-          s.routes.get(swap.toRow), swap.toIndices, swap.item);
+        s.routes.get(swap.toRow), swap.toIndices, swap.item);
 
       final double newCostB = computeCost(s, swap.toRow, newRouteB, cache);
       final double diffB = newCostB - originalCostB;
@@ -311,16 +313,16 @@ public final class Swaps {
       final double diff = diffA + diffB;
       if (diff < threshold) {
         final ImmutableList<Integer> rows = ImmutableList.of(swap.fromRow,
-            swap.toRow);
+          swap.toRow);
         final ImmutableList<ImmutableList<T>> newRoutes = replace(s.routes,
-            rows, ImmutableList.of(newRouteA, newRouteB));
+          rows, ImmutableList.of(newRouteA, newRouteB));
         final double newObjectiveValue = s.objectiveValue + diff;
         final ImmutableList<Double> newObjectiveValues = replace(
-            s.objectiveValues, rows, ImmutableList.of(newCostA, newCostB));
+          s.objectiveValues, rows, ImmutableList.of(newCostA, newCostB));
 
         return Optional
             .of(Schedule.create(s.context, newRoutes, s.startIndices,
-                newObjectiveValues, newObjectiveValue, s.evaluator));
+              newObjectiveValues, newObjectiveValue, s.evaluator));
       } else {
         return Optional.absent();
       }
@@ -357,14 +359,14 @@ public final class Swaps {
     final List<T> newList = newArrayList(originalList);
     final List<Integer> indices = removeAll(newList, item);
     checkArgument(
-        newList.size() == originalList.size() - insertionIndices.size(),
-        "The number of occurrences (%s) of item should equal the number of insertionIndices (%s), original list: %s, item %s, insertionIndices %s.",
-        indices.size(), insertionIndices.size(), originalList, item,
-        insertionIndices);
+      newList.size() == originalList.size() - insertionIndices.size(),
+      "The number of occurrences (%s) of item should equal the number of insertionIndices (%s), original list: %s, item %s, insertionIndices %s.",
+      indices.size(), insertionIndices.size(), originalList, item,
+      insertionIndices);
     checkArgument(
-        !indices.equals(insertionIndices),
-        "Attempt to move the item to exactly the same locations as the input. Indices in original list %s, insertion indices %s.",
-        indices, insertionIndices);
+      !indices.equals(insertionIndices),
+      "Attempt to move the item to exactly the same locations as the input. Indices in original list %s, insertion indices %s.",
+      indices, insertionIndices);
     return Insertions.insert(newList, insertionIndices, item);
   }
 
@@ -402,8 +404,8 @@ public final class Swaps {
   static <T> ImmutableList<T> replace(ImmutableList<T> list,
       ImmutableList<Integer> indices, ImmutableList<T> elements) {
     checkArgument(indices.size() == elements.size(),
-        "Number of indices (%s) must equal number of elements (%s).",
-        indices.size(), elements.size());
+      "Number of indices (%s) must equal number of elements (%s).",
+      indices.size(), elements.size());
     final List<T> newL = newArrayList(list);
     for (int i = 0; i < indices.size(); i++) {
       newL.set(indices.get(i), elements.get(i));
@@ -433,7 +435,7 @@ public final class Swaps {
   }
 
   static class IndexToSwapTransform<T> implements
-  Function<ImmutableList<Integer>, Swap<T>> {
+      Function<ImmutableList<Integer>, Swap<T>> {
     private final T item;
     private final int fromRow;
     private final int toRow;
