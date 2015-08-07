@@ -27,7 +27,9 @@ import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.experiment.Experiment;
 import com.github.rinde.rinsim.experiment.ExperimentResults;
+import com.github.rinde.rinsim.experiment.PostProcessors;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
+import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
 import com.google.common.collect.ImmutableList;
@@ -54,10 +56,12 @@ public class CheapestInsertionHeuristicTest {
               .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
         .repeat(3)
         .withThreads(3)
+        .usePostProcessor(PostProcessors.statisticsPostProcessor())
         .perform();
     for (int i = 0; i < er.getResults().size(); i++) {
       assertEquals(979.898336,
-        objFunc.computeCost(er.getResults().asList().get(i).getStats()),
+        objFunc.computeCost(
+          (StatisticsDTO) er.getResults().asList().get(i).getResultObject()),
         0.0001);
     }
   }
