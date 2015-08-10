@@ -1,5 +1,8 @@
 # Release notes
 
+## v2.0.0
+ * Updated code to be compatible with RinSim 4.0.0
+
 ## v1.0.0
  * New release to emphasize stability
 
