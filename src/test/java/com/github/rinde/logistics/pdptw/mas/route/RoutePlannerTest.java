@@ -48,7 +48,7 @@ import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.core.model.time.TimeLapseFactory;
-import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
@@ -111,7 +111,7 @@ public class RoutePlannerTest {
         .addModel(SolverModel.builder())
         .build();
 
-    simulator = ExperimentTest.init(scen, config, 123, false);
+    simulator = ExperimentTestUtil.init(scen, config, 123, false);
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
     if (routePlanner instanceof SolverRoutePlanner) {

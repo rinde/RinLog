@@ -51,7 +51,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.event.Event;
-import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
@@ -135,7 +135,7 @@ public class AuctionTest {
         .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
         .parse().get(0);
 
-    final Simulator sim = ExperimentTest.init(scen,
+    final Simulator sim = ExperimentTestUtil.init(scen,
       configuration, 123, false);
     sim.tick();
 
@@ -235,7 +235,7 @@ public class AuctionTest {
         .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
         .parse().get(0);
 
-    final Simulator sim = ExperimentTest.init(scen,
+    final Simulator sim = ExperimentTestUtil.init(scen,
       configuration, 123, false);
     sim.tick();
 

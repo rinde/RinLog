@@ -48,7 +48,7 @@ import com.github.rinde.rinsim.central.arrays.SingleVehicleSolverAdapter;
 import com.github.rinde.rinsim.central.arrays.SolutionObject;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
@@ -108,7 +108,7 @@ public class SingleVehicleSolverTest {
         .addModel(AuctionCommModel.builder())
         .addModel(SolverModel.builder())
         .build();
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
+    final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
 
@@ -153,7 +153,7 @@ public class SingleVehicleSolverTest {
         .addModel(AuctionCommModel.builder())
         .addModel(SolverModel.builder())
         .build();
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
+    final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
 
@@ -206,7 +206,7 @@ public class SingleVehicleSolverTest {
         .addModel(AuctionCommModel.builder())
         .addModel(SolverModel.builder())
         .build();
-    final StatisticsDTO stats = ExperimentTest.singleRun(testScen, tc, 123,
+    final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
 

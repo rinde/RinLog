@@ -41,7 +41,7 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
-import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
@@ -72,7 +72,7 @@ public class CommunicationIntegrationTest implements TickListener {
    */
   @Test
   public void test() {
-    problem = ExperimentTest.init(
+    problem = ExperimentTestUtil.init(
       Gendreau06Parser.parser()
         .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
         .parse().get(0)

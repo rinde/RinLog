@@ -56,7 +56,7 @@ import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
-import com.github.rinde.rinsim.experiment.ExperimentTest;
+import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.fsm.AbstractState;
 import com.github.rinde.rinsim.fsm.State;
@@ -131,7 +131,7 @@ public class SingleTruckTest {
         .addModel(SolverModel.builder())
         .build();
 
-    simulator = ExperimentTest.init(scen, randomRandom, 123, false);
+    simulator = ExperimentTestUtil.init(scen, randomRandom, 123, false);
 
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
