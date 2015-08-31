@@ -62,26 +62,27 @@ public class CheapestInsertionHeuristic implements Solver {
   }
 
   @Override
-  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state) {
+  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
+      throws InterruptedException {
     return decomposed(state);
   }
 
   static ImmutableList<ImmutableList<Parcel>> createSchedule(
-    GlobalStateObject state) {
+      GlobalStateObject state) {
     final ImmutableList.Builder<ImmutableList<Parcel>> b = ImmutableList
-      .builder();
+        .builder();
     for (final VehicleStateObject vso : state.getVehicles()) {
       if (vso.getRoute().isPresent()) {
         b.add(vso.getRoute().get());
       } else {
-        b.add(ImmutableList.<Parcel> of());
+        b.add(ImmutableList.<Parcel>of());
       }
     }
     return b.build();
   }
 
   ImmutableList<Double> decomposedCost(GlobalStateObject state,
-    ImmutableList<ImmutableList<Parcel>> schedule) {
+      ImmutableList<ImmutableList<Parcel>> schedule) {
     final ImmutableList.Builder<Double> builder = ImmutableList.builder();
     for (int i = 0; i < schedule.size(); i++) {
       builder.add(objectiveFunction.computeCost(Solvers.computeStats(
@@ -90,7 +91,8 @@ public class CheapestInsertionHeuristic implements Solver {
     return builder.build();
   }
 
-  ImmutableList<ImmutableList<Parcel>> decomposed(GlobalStateObject state) {
+  ImmutableList<ImmutableList<Parcel>> decomposed(GlobalStateObject state)
+      throws InterruptedException {
     ImmutableList<ImmutableList<Parcel>> schedule = createSchedule(state);
     ImmutableList<Double> costs = decomposedCost(state, schedule);
     final ImmutableSet<Parcel> newParcels = unassignedParcels(state);
@@ -103,15 +105,19 @@ public class CheapestInsertionHeuristic implements Solver {
 
       for (int i = 0; i < state.getVehicles().size(); i++) {
         final int startIndex = state.getVehicles().get(i).getDestination()
-          .isPresent() ? 1 : 0;
+            .isPresent() ? 1 : 0;
 
         final Iterator<ImmutableList<Parcel>> insertions = Insertions
-          .insertionsIterator(schedule.get(i), p, startIndex, 2);
+            .insertionsIterator(schedule.get(i), p, startIndex, 2);
 
         while (insertions.hasNext()) {
+          if (Thread.interrupted()) {
+            throw new InterruptedException();
+          }
+
           final ImmutableList<Parcel> r = insertions.next();
           final double absCost = objectiveFunction.computeCost(Solvers
-            .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
+              .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
 
           final double insertionCost = absCost - costs.get(i);
           if (insertionCost < cheapestInsertion) {
@@ -130,20 +136,20 @@ public class CheapestInsertionHeuristic implements Solver {
   }
 
   static ImmutableList<Double> modifyCosts(ImmutableList<Double> costs,
-    double newCost, int index) {
-    return ImmutableList.<Double> builder().addAll(costs.subList(0, index))
-      .add(newCost).addAll(costs.subList(index + 1, costs.size())).build();
+      double newCost, int index) {
+    return ImmutableList.<Double>builder().addAll(costs.subList(0, index))
+        .add(newCost).addAll(costs.subList(index + 1, costs.size())).build();
   }
 
   // replaces one route
   static <T> ImmutableList<ImmutableList<T>> modifySchedule(
-    ImmutableList<ImmutableList<T>> originalSchedule,
-    ImmutableList<T> vehicleSchedule, int vehicleIndex) {
+      ImmutableList<ImmutableList<T>> originalSchedule,
+      ImmutableList<T> vehicleSchedule, int vehicleIndex) {
     checkArgument(vehicleIndex >= 0 && vehicleIndex < originalSchedule.size(),
       "Vehicle index must be >= 0 && < %s, it is %s.",
       originalSchedule.size(), vehicleIndex);
     final ImmutableList.Builder<ImmutableList<T>> builder = ImmutableList
-      .builder();
+        .builder();
     builder.addAll(originalSchedule.subList(0, vehicleIndex));
     builder.add(vehicleSchedule);
     builder.addAll(originalSchedule.subList(vehicleIndex + 1,
@@ -152,11 +158,11 @@ public class CheapestInsertionHeuristic implements Solver {
   }
 
   static <T> ImmutableList<ImmutableList<T>> createEmptySchedule(
-    int numVehicles) {
+      int numVehicles) {
     final ImmutableList.Builder<ImmutableList<T>> builder = ImmutableList
-      .builder();
+        .builder();
     for (int i = 0; i < numVehicles; i++) {
-      builder.add(ImmutableList.<T> of());
+      builder.add(ImmutableList.<T>of());
     }
     return builder.build();
   }
@@ -168,7 +174,7 @@ public class CheapestInsertionHeuristic implements Solver {
    *         {@link CheapestInsertionHeuristic} instances.
    */
   public static StochasticSupplier<Solver> supplier(
-    final ObjectiveFunction objFunc) {
+      final ObjectiveFunction objFunc) {
     return new StochasticSuppliers.AbstractStochasticSupplier<Solver>() {
       private static final long serialVersionUID = 992219257352250656L;
 

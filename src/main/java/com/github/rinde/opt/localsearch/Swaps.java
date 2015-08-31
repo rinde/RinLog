@@ -78,11 +78,12 @@ public final class Swaps {
    *          route).
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
+   * @throws InterruptedException
    */
   public static <C, T> ImmutableList<ImmutableList<T>> bfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
       ImmutableList<Integer> startIndices, C context,
-      RouteEvaluator<C, T> evaluator) {
+      RouteEvaluator<C, T> evaluator) throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, false,
       Optional.<RandomGenerator>absent());
   }
@@ -108,11 +109,13 @@ public final class Swaps {
    *          route).
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
+   * @throws InterruptedException
    */
   public static <C, T> ImmutableList<ImmutableList<T>> dfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
       ImmutableList<Integer> startIndices, C context,
-      RouteEvaluator<C, T> evaluator, RandomGenerator rng) {
+      RouteEvaluator<C, T> evaluator, RandomGenerator rng)
+          throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, true,
       Optional.of(rng));
   }
@@ -121,7 +124,7 @@ public final class Swaps {
       ImmutableList<ImmutableList<T>> schedule,
       ImmutableList<Integer> startIndices, C context,
       RouteEvaluator<C, T> evaluator, boolean depthFirst,
-      Optional<RandomGenerator> rng) {
+      Optional<RandomGenerator> rng) throws InterruptedException {
 
     checkArgument(schedule.size() == startIndices.size());
 
@@ -149,6 +152,9 @@ public final class Swaps {
       }
 
       while (it.hasNext()) {
+        if (Thread.interrupted()) {
+          throw new InterruptedException();
+        }
         final Swap<T> swapOperation = it.next();
         final Optional<Schedule<C, T>> newSchedule = Swaps.swap(curBest,
           swapOperation,

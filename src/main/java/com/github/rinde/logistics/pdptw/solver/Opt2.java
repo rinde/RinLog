@@ -66,7 +66,8 @@ public class Opt2 implements Solver {
   }
 
   @Override
-  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state) {
+  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
+      throws InterruptedException {
     final ImmutableList<ImmutableList<Parcel>> schedule = delegate
         .solve(state);
     final ImmutableList.Builder<Integer> indexBuilder = ImmutableList.builder();
