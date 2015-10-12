@@ -55,10 +55,8 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
 
   @Override
   protected final void doUpdate(Collection<Parcel> onMap, long time) {
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     final Collection<Parcel> inCargo = Collections.checkedCollection(
-      (Collection) pdpModel.get().getContents(vehicle.get()),
-      Parcel.class);
+      pdpModel.get().getContents(vehicle.get()), Parcel.class);
     parcels.clear();
     parcels.addAll(onMap);
     parcels.addAll(onMap);
@@ -117,7 +115,7 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   class ClosestDistanceComparator implements Comparator<Parcel> {
     @Override
     public int compare(@Nullable Parcel arg0,
-      @Nullable Parcel arg1) {
+        @Nullable Parcel arg1) {
       final Point cur = roadModel.get().getPosition(vehicle.get());
       final Point p0 = getPos(checkNotNull(arg0), pdpModel.get());
       final Point p1 = getPos(checkNotNull(arg1), pdpModel.get());
