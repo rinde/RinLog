@@ -41,7 +41,8 @@ import com.google.common.collect.ImmutableList;
  * A {@link Bidder} that uses a {@link Solver} for computing the bid value.
  * @author Rinde van Lon
  */
-public class SolverBidder extends AbstractBidder implements SolverUser {
+public class SolverBidder extends AbstractBidder<DoubleBid>
+    implements SolverUser {
 
   private final ObjectiveFunction objectiveFunction;
   private final Solver solver;
@@ -61,12 +62,13 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
   }
 
   @Override
-  public double getBidFor(Parcel p, long time) {
-    LOGGER.info("{} getBidFor {}", this, p);
+  public void callForBids(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long time) {
+    LOGGER.info("{} callForBids {}", this, p);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
     final ImmutableList<Parcel> currentRoute = ImmutableList
-      .copyOf(((Truck) vehicle.get()).getRoute());
+        .copyOf(((Truck) vehicle.get()).getRoute());
     LOGGER.trace(" > currentRoute {}", currentRoute);
     final StateContext context = solverHandle.get().convert(
       SolveArgs.create().noCurrentRoutes().useParcels(parcels));
@@ -83,7 +85,7 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
 
     // check whether the RoutePlanner produces routes compatible with the solver
     final SolveArgs args = SolveArgs.create().useParcels(parcels)
-      .useCurrentRoutes(ImmutableList.of(currentRoute));
+        .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
       final GlobalStateObject gso = solverHandle.get().convert(args).state;
       SolverValidator.checkRoute(gso.getVehicles().get(0), 0);
@@ -95,7 +97,7 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
     final double newCost = objectiveFunction.computeCost(Solvers.computeStats(
       context.state, ImmutableList.of(ImmutableList.copyOf(newRoute))));
 
-    return newCost - baseline;
+    auctioneer.submit(DoubleBid.create(time, this, p, newCost - baseline));
   }
 
   @Override
@@ -110,8 +112,8 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
    * @return A supplier of {@link SolverBidder} instances.
    */
   public static StochasticSupplier<SolverBidder> supplier(
-    final ObjectiveFunction objFunc,
-    final StochasticSupplier<? extends Solver> solverSupplier) {
+      final ObjectiveFunction objFunc,
+      final StochasticSupplier<? extends Solver> solverSupplier) {
     return new AbstractStochasticSupplier<SolverBidder>() {
       private static final long serialVersionUID = -3290309520168516504L;
 
@@ -126,4 +128,5 @@ public class SolverBidder extends AbstractBidder implements SolverUser {
       }
     };
   }
+
 }

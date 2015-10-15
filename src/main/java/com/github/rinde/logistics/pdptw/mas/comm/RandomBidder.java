@@ -26,7 +26,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers;
  * A {@link Bidder} implementation that creates random bids.
  * @author Rinde van Lon
  */
-public class RandomBidder extends AbstractBidder {
+public class RandomBidder extends AbstractBidder<DoubleBid> {
 
   private final RandomGenerator rng;
 
@@ -39,8 +39,9 @@ public class RandomBidder extends AbstractBidder {
   }
 
   @Override
-  public double getBidFor(Parcel p, long time) {
-    return rng.nextDouble();
+  public void callForBids(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long time) {
+    auctioneer.submit(DoubleBid.create(time, this, p, rng.nextDouble()));
   }
 
   /**
@@ -57,4 +58,5 @@ public class RandomBidder extends AbstractBidder {
       }
     };
   }
+
 }

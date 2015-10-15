@@ -41,13 +41,13 @@ import com.google.common.base.Optional;
  * Basic implementation for {@link Bidder}.
  * @author Rinde van Lon
  */
-public abstract class AbstractBidder implements Bidder {
+public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
   /**
    * The logger.
    */
   protected static final Logger LOGGER = LoggerFactory
-    .getLogger(AbstractBidder.class);
+      .getLogger(AbstractBidder.class);
 
   /**
    * The set of parcels that are assigned to this bidder.
@@ -109,7 +109,7 @@ public abstract class AbstractBidder implements Bidder {
       "Can not claim parcel %s which is not in assigned parcels: %s.", p,
       assignedParcels);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     checkArgument(claimedParcels.isEmpty(),
       "claimed parcels must be empty, is %s.", claimedParcels);
     claimedParcels.add(p);
@@ -123,7 +123,7 @@ public abstract class AbstractBidder implements Bidder {
     checkArgument(claimedParcels.contains(p),
       "Can not unclaim %s because it is not claimed.", p);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     claimedParcels.remove(p);
   }
 
@@ -149,7 +149,7 @@ public abstract class AbstractBidder implements Bidder {
     LOGGER.info("{} receiveParcel {}", this, p);
     assignedParcels.add(p);
     eventDispatcher
-    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
@@ -158,7 +158,7 @@ public abstract class AbstractBidder implements Bidder {
     checkArgument(assignedParcels.contains(p));
     assignedParcels.remove(p);
     eventDispatcher
-    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
@@ -178,6 +178,6 @@ public abstract class AbstractBidder implements Bidder {
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-      .toString();
+        .toString();
   }
 }

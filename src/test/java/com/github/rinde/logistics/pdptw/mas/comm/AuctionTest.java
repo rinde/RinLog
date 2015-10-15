@@ -125,7 +125,10 @@ public class AuctionTest {
       MASConfiguration.pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
             new VehicleHandler(FixedRoutePlanner.supplier(), bidderSupplier))
-          .addModel(AuctionCommModel.builder())
+          .addModel(SolverModel.builder())
+          .addModel(
+            AuctionCommModel
+                .builder(AuctionStopConditions.<DoubleBid>allBidders()))
           .addModel(CommTestModel.builder())
           .build();
 
@@ -221,7 +224,8 @@ public class AuctionTest {
           .pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
             new VehicleHandler(RandomRoutePlanner.supplier(), bidderSupplier))
-          .addModel(AuctionCommModel.builder())
+          .addModel(AuctionCommModel
+              .builder(AuctionStopConditions.<DoubleBid>allBidders()))
           .addModel(CommTestModel.builder())
           .addModel(SolverModel.builder())
           .build();

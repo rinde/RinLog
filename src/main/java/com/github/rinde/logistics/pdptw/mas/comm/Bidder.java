@@ -21,7 +21,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
  * Implementations of this interface can participate in auctions.
  * @author Rinde van Lon
  */
-public interface Bidder extends Communicator {
+public interface Bidder<T extends Bid<T>> extends Communicator {
 
   /**
    * Should compute the 'bid value' for the specified {@link Parcel}. It can be
@@ -31,7 +31,9 @@ public interface Bidder extends Communicator {
    * @param time The current time.
    * @return The bid value, the lower the better (i.e. cheaper).
    */
-  double getBidFor(Parcel p, long time);
+  // double getBidFor(Parcel p, long time);
+
+  void callForBids(Auctioneer<T> auctioneer, Parcel p, long time);
 
   /**
    * When an auction has been won by this {@link Bidder}, the {@link Parcel} is
