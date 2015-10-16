@@ -41,7 +41,7 @@ import com.google.common.collect.SetMultimap;
  * @author Rinde van Lon
  */
 public class AuctionCommModel<T extends Bid<T>>
-    extends AbstractCommModel<Bidder>
+    extends AbstractCommModel<Bidder<T>>
     implements TickListener {
   private final RandomGenerator rng;
 
@@ -108,14 +108,14 @@ public class AuctionCommModel<T extends Bid<T>>
    * @return A new {@link Builder} instance.
    */
   public static <T extends Bid<T>> Builder<T> builder(
-      AuctionStopCondition<T> stopCondition) {
-    return Builder.create(stopCondition);
+      Class<T> type) {
+    return Builder.<T>create();
   }
 
   class ParcelAuctioneer implements Auctioneer<T> {
     final Parcel parcel;
     final Set<T> bids;
-    Optional<Bidder> winner;
+    Optional<Bidder<T>> winner;
     long auctionStartTime;
     int auctions;
 
@@ -128,7 +128,7 @@ public class AuctionCommModel<T extends Bid<T>>
     void initialAuction(long time) {
       auctionStartTime = time;
 
-      for (final Bidder b : communicators) {
+      for (final Bidder<T> b : communicators) {
         b.callForBids(this, parcel, time);
       }
     }
@@ -145,7 +145,7 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     @Override
-    public void auctionParcel(Bidder currentOwner, Parcel p, long time,
+    public void auctionParcel(Bidder<T> currentOwner, Parcel p, long time,
         T bidToBeat) {
       checkArgument(winner.get() == currentOwner);
       winner = Optional.absent();
@@ -153,7 +153,7 @@ public class AuctionCommModel<T extends Bid<T>>
       auctionStartTime = time;
       auctions++;
 
-      for (final Bidder b : communicators) {
+      for (final Bidder<T> b : communicators) {
         if (b != currentOwner) {
           b.callForBids(this, parcel, time);
         }
@@ -193,8 +193,9 @@ public class AuctionCommModel<T extends Bid<T>>
       return new AuctionCommModel<T>(r, getStopCondition());
     }
 
-    static <T extends Bid<T>> Builder<T> create(AuctionStopCondition<T> sc) {
-      return new AutoValue_AuctionCommModel_Builder<T>(sc);
+    static <T extends Bid<T>> Builder<T> create() {
+      return new AutoValue_AuctionCommModel_Builder<T>(
+          AuctionStopConditions.<T>allBidders());
     }
   }
 }

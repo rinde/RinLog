@@ -31,6 +31,9 @@ public abstract class DoubleBid implements Bid<DoubleBid> {
 
   DoubleBid() {}
 
+  @Override
+  public abstract Bidder<DoubleBid> getBidder();
+
   public abstract double getCost();
 
   @Override
@@ -38,8 +41,8 @@ public abstract class DoubleBid implements Bid<DoubleBid> {
     return Double.compare(getCost(), verifyNotNull(o).getCost());
   }
 
-  public static DoubleBid create(long time, Bidder bidder, Parcel parcel,
-      double cost) {
-    return new AutoValue_DoubleBid(time, bidder, parcel, cost);
+  public static DoubleBid create(long timeOfAuction, Bidder<DoubleBid> bidder,
+      Parcel parcel, double cost) {
+    return new AutoValue_DoubleBid(timeOfAuction, parcel, bidder, cost);
   }
 }

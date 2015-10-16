@@ -37,6 +37,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
+import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
 import com.github.rinde.logistics.pdptw.mas.comm.RandomBidder;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
 import com.github.rinde.rinsim.central.SolverModel;
@@ -105,7 +106,7 @@ public class SingleVehicleSolverTest {
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
         .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(SolverModel.builder())
         .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
@@ -150,7 +151,7 @@ public class SingleVehicleSolverTest {
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
         .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(SolverModel.builder())
         .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
@@ -203,7 +204,7 @@ public class SingleVehicleSolverTest {
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
         .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(SolverModel.builder())
         .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,

@@ -28,6 +28,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
+import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
 import com.github.rinde.logistics.pdptw.mas.comm.SolverBidder;
 import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
@@ -52,14 +53,14 @@ import com.google.common.collect.ImmutableList;
 public class DiversionTruckIntegrationTest {
 
   static final ObjectiveFunction GENDREAU_OBJ_FUNC = Gendreau06ObjectiveFunction
-    .instance();
+      .instance();
 
   final MASConfiguration config;
   final ObjectiveFunction objectiveFunction;
   final int numTrucks;
 
   public DiversionTruckIntegrationTest(MASConfiguration tc,
-    ObjectiveFunction objFunc, int numT) {
+      ObjectiveFunction objFunc, int numT) {
     config = tc;
     objectiveFunction = objFunc;
     numTrucks = numT;
@@ -68,19 +69,20 @@ public class DiversionTruckIntegrationTest {
   @Parameters
   public static Collection<Object[]> configs() {
 
-    final ImmutableList<StochasticSupplier<? extends RoutePlanner>> routePlanners = ImmutableList
-      .<StochasticSupplier<? extends RoutePlanner>> of(
-        GotoClosestRoutePlanner.supplier(),
-        RandomRoutePlanner.supplier(),
-        SolverRoutePlanner.supplier(RandomSolver.supplier())
-      );
+    final ImmutableList<StochasticSupplier<? extends RoutePlanner>> routePlanners =
+      ImmutableList
+          .<StochasticSupplier<? extends RoutePlanner>>of(
+            GotoClosestRoutePlanner.supplier(),
+            RandomRoutePlanner.supplier(),
+            SolverRoutePlanner.supplier(RandomSolver.supplier()));
 
-    final ImmutableList<StochasticSupplier<? extends Communicator>> communicators = ImmutableList
-      .<StochasticSupplier<? extends Communicator>> of(SolverBidder
-        .supplier(GENDREAU_OBJ_FUNC, RandomSolver.supplier()));
+    final ImmutableList<StochasticSupplier<? extends Communicator>> communicators =
+      ImmutableList
+          .<StochasticSupplier<? extends Communicator>>of(SolverBidder
+              .supplier(GENDREAU_OBJ_FUNC, RandomSolver.supplier()));
 
     final ImmutableList<Integer> numTrucks = ImmutableList
-      .of(1, 2, 3, 4, 5, 10, 15);
+        .of(1, 2, 3, 4, 5, 10, 15);
 
     final List<Object[]> configs = newArrayList();
     for (final StochasticSupplier<? extends RoutePlanner> rp : routePlanners) {
@@ -88,16 +90,16 @@ public class DiversionTruckIntegrationTest {
         for (final int i : numTrucks) {
           configs.add(new Object[] {
               MASConfiguration.pdptwBuilder()
-                .addEventHandler(AddVehicleEvent.class,
-                  new VehicleHandler(rp, cm))
-                .addModel(AuctionCommModel.builder())
-                .addModel(SolverModel.builder())
-                .build(),
+                  .addEventHandler(AddVehicleEvent.class,
+                    new VehicleHandler(rp, cm))
+                  .addModel(AuctionCommModel.builder(DoubleBid.class))
+                  .addModel(SolverModel.builder())
+                  .build(),
 
               // new TruckConfiguration(rp, cm,
               // ImmutableList.of(AuctionCommModel
               // .supplier())),
-              GENDREAU_OBJ_FUNC, i });
+              GENDREAU_OBJ_FUNC, i});
         }
       }
     }
@@ -107,27 +109,27 @@ public class DiversionTruckIntegrationTest {
   @Test
   public void integration() {
     final Gendreau06Scenario scen = Gendreau06Parser.parse(new File(
-      "files/scenarios/gendreau06/req_rapide_1_240_24"));
+        "files/scenarios/gendreau06/req_rapide_1_240_24"));
 
     final ImmutableList<AddParcelEvent> events = FluentIterable
-      .from(scen.getEvents())
-      .filter(AddParcelEvent.class)
-      .limit(100)
-      .toList();
+        .from(scen.getEvents())
+        .filter(AddParcelEvent.class)
+        .limit(100)
+        .toList();
 
     final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser
-      .parser()
-      .allowDiversion()
-      .setNumVehicles(numTrucks)
-      .addFile(events, "req_rapide_1_240_24")
-      .filter(GendreauProblemClass.SHORT_LOW_FREQ)
-      .parse();
+        .parser()
+        .allowDiversion()
+        .setNumVehicles(numTrucks)
+        .addFile(events, "req_rapide_1_240_24")
+        .filter(GendreauProblemClass.SHORT_LOW_FREQ)
+        .parse();
 
     final Experiment.Builder builder = Experiment.build(objectiveFunction)
-      .withRandomSeed(123)
-      .repeat(1)
-      .withThreads(1)
-      .addScenarios(onlineScenarios);
+        .withRandomSeed(123)
+        .repeat(1)
+        .withThreads(1)
+        .addScenarios(onlineScenarios);
 
     builder.addConfiguration(config);
     builder.perform();

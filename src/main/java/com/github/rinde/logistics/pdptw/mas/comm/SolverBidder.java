@@ -15,6 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Queue;
@@ -25,6 +26,7 @@ import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.SimSolver;
 import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
@@ -65,6 +67,11 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
   public void callForBids(Auctioneer<DoubleBid> auctioneer, Parcel p,
       long time) {
     LOGGER.info("{} callForBids {}", this, p);
+    checkState(solverHandle.isPresent(),
+      "A %s could not be obtained, probably missing a %s.",
+      Solver.class.getSimpleName(),
+      SolverModel.class.getSimpleName());
+
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
     final ImmutableList<Parcel> currentRoute = ImmutableList
@@ -128,5 +135,4 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
       }
     };
   }
-
 }

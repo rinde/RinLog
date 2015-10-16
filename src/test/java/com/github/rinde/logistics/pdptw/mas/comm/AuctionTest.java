@@ -126,9 +126,7 @@ public class AuctionTest {
           .addEventHandler(AddVehicleEvent.class,
             new VehicleHandler(FixedRoutePlanner.supplier(), bidderSupplier))
           .addModel(SolverModel.builder())
-          .addModel(
-            AuctionCommModel
-                .builder(AuctionStopConditions.<DoubleBid>allBidders()))
+          .addModel(AuctionCommModel.builder(DoubleBid.class))
           .addModel(CommTestModel.builder())
           .build();
 
@@ -224,8 +222,7 @@ public class AuctionTest {
           .pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
             new VehicleHandler(RandomRoutePlanner.supplier(), bidderSupplier))
-          .addModel(AuctionCommModel
-              .builder(AuctionStopConditions.<DoubleBid>allBidders()))
+          .addModel(AuctionCommModel.builder(DoubleBid.class))
           .addModel(CommTestModel.builder())
           .addModel(SolverModel.builder())
           .build();
@@ -254,8 +251,10 @@ public class AuctionTest {
     assertNotEquals(truck1, truck2);
     assertEquals(2, trucks.size());
 
-    final Bidder bidder1 = (Bidder) truck1.getCommunicator();
-    final Bidder bidder2 = (Bidder) truck2.getCommunicator();
+    final Bidder<DoubleBid> bidder1 =
+      (Bidder<DoubleBid>) truck1.getCommunicator();
+    final Bidder<DoubleBid> bidder2 =
+      (Bidder<DoubleBid>) truck2.getCommunicator();
     sim.tick();
 
     final Parcel newParcel = new Parcel(Parcel.builder(

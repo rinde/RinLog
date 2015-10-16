@@ -21,11 +21,11 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
  *
  * @author Rinde van Lon
  */
-public interface Bid<T> extends Comparable<T> {
+public interface Bid<T extends Bid<T>> extends Comparable<T> {
 
   long getTimeOfAuction();
 
-  Bidder getBidder();
+  Bidder<T> getBidder();
 
   Parcel getParcel();
 

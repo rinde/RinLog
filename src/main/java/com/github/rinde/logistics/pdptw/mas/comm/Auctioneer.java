@@ -23,7 +23,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
  */
 public interface Auctioneer<T extends Bid<T>> {
 
-  void auctionParcel(Bidder currentOwner, Parcel p, long time, T bidToBeat);
+  void auctionParcel(Bidder<T> currentOwner, Parcel p, long time, T bidToBeat);
 
   void submit(T bid);
 

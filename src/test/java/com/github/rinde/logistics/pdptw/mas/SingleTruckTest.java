@@ -36,6 +36,7 @@ import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
+import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
 import com.github.rinde.logistics.pdptw.mas.comm.TestBidder;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
@@ -127,7 +128,7 @@ public class SingleTruckTest {
           new TestTruckHandler(
               DebugRoutePlanner.supplier(rp),
               TestBidder.supplier()))
-        .addModel(AuctionCommModel.builder())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(SolverModel.builder())
         .build();
 

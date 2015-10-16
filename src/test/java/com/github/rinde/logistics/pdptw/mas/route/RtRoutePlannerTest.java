@@ -20,7 +20,8 @@ import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.mas.VehicleHandler;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import com.github.rinde.logistics.pdptw.mas.comm.SolverBidder;
+import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
+import com.github.rinde.logistics.pdptw.mas.comm.RtSolverBidder;
 import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
@@ -82,11 +83,10 @@ public class RtRoutePlannerTest {
         .addScenario(scenario)
         .addConfiguration(MASConfiguration.pdptwBuilder()
             .addModel(RtSolverModel.builder())
-            .addModel(AuctionCommModel.builder())
+            .addModel(AuctionCommModel.builder(DoubleBid.class))
             .addEventHandler(AddVehicleEvent.class,
               new VehicleHandler(RtSolverRoutePlanner.supplier(rtSolverSup),
-                  SolverBidder.supplier(objFunc,
-                    CheapestInsertionHeuristic.supplier(objFunc))))
+                  RtSolverBidder.supplier(objFunc, rtSolverSup)))
             .build())
         .perform();
 
