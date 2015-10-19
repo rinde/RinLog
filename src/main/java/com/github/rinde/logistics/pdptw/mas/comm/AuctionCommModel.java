@@ -29,6 +29,7 @@ import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.rand.RandomProvider;
+import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.google.auto.value.AutoValue;
@@ -47,9 +48,12 @@ public class AuctionCommModel<T extends Bid<T>>
 
   final SetMultimap<Parcel, ParcelAuctioneer> bidMap;
   final AuctionStopCondition<T> stopCondition;
+  final RealtimeClockController clock;
 
-  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc) {
+  AuctionCommModel(RandomGenerator r, RealtimeClockController c,
+      AuctionStopCondition<T> sc) {
     rng = r;
+    clock = c;
     stopCondition = sc;
     bidMap = LinkedHashMultimap.create();
   }
@@ -107,8 +111,7 @@ public class AuctionCommModel<T extends Bid<T>>
   /**
    * @return A new {@link Builder} instance.
    */
-  public static <T extends Bid<T>> Builder<T> builder(
-      Class<T> type) {
+  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
     return Builder.<T>create();
   }
 
@@ -137,10 +140,15 @@ public class AuctionCommModel<T extends Bid<T>>
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
+        LOGGER.trace("{} end of auction for {}", time, parcel);
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
+        LOGGER.trace("Winning bid : {}", winningBid);
         winner = Optional.of(winningBid.getBidder());
         winner.get().receiveParcel(winningBid.getParcel());
+        // this is called to prevent the clock from switching to simulated time
+        // because the winner also needs to do some computation itself.
+        clock.switchToRealTime();
       }
     }
 
@@ -162,6 +170,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     @Override
     public void submit(T bid) {
+      LOGGER.trace("Receive bid for {}, bid: {}.", parcel, bid);
       // if a winner is already present, the auction is over. if the auction
       // times do not match, it means a new auction is taking place while the
       // submitted bid is for a previously held auction.
@@ -181,16 +190,22 @@ public class AuctionCommModel<T extends Bid<T>>
       implements Serializable {
 
     Builder() {
-      setDependencies(RandomProvider.class);
+      setDependencies(RandomProvider.class, RealtimeClockController.class);
     }
 
     public abstract AuctionStopCondition<T> getStopCondition();
+
+    public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
+      return new AutoValue_AuctionCommModel_Builder<T>(stopCondition);
+    }
 
     @Override
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
       final RandomGenerator r = dependencyProvider.get(RandomProvider.class)
           .newInstance();
-      return new AuctionCommModel<T>(r, getStopCondition());
+      final RealtimeClockController clock =
+        dependencyProvider.get(RealtimeClockController.class);
+      return new AuctionCommModel<T>(r, clock, getStopCondition());
     }
 
     static <T extends Bid<T>> Builder<T> create() {

@@ -19,9 +19,11 @@
   </appender>
 	
 	<!-- suppress RinSim logs -->
-	<logger name="rinde.sim" level="WARN" />
-  	<logger name="rinde.logistics" level="TRACE" />
-  	<logger name="rinde.sim.pdptw.common" level="TRACE" />
+	<logger name="com.github.rinde.rinsim" level="WARN" />
+	<logger name="com.github.rinde.rinsim.core.model.time" level="TRACE" />
+	<logger name="com.github.rinde.rinsim.central" level="TRACE" />
+  	<logger name="com.github.rinde.logistics" level="TRACE" />
+  	<logger name="com.github.rinde.sim.pdptw.common" level="TRACE" />
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />

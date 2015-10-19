@@ -38,7 +38,8 @@ public final class AuctionStopConditions {
       @Override
       public boolean apply(Set bids, int potentialBidders,
           long auctionStartTime, long currentTime) {
-        checkArgument(bids.size() <= potentialBidders);
+        checkArgument(bids.size() <= potentialBidders,
+          "There are too many bids: %s.", bids);
         return bids.size() == potentialBidders;
       }
 

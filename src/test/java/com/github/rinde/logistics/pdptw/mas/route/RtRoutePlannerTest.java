@@ -41,6 +41,7 @@ import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.scenario.Scenario;
+import com.github.rinde.rinsim.scenario.StopConditions;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -52,17 +53,17 @@ import com.github.rinde.rinsim.util.TimeWindow;
  */
 public class RtRoutePlannerTest {
 
+  @SuppressWarnings("null")
+  Scenario scenario;
+
   @Before
   public void setUp() {
-    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
-    final StochasticSupplier<RealtimeSolver> rtSolverSup =
-      SolverToRealtimeAdapter.create(
-        SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
-
-    final Scenario scenario = Scenario.builder()
+    scenario = Scenario.builder()
         .addEvent(AddDepotEvent.create(-1, new Point(5, 5)))
-        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder().build()))
-        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder().build()))
+        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
+            .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
+        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
+            .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
         .addEvent(AddParcelEvent.create(
           Parcel.builder(new Point(0, 0), new Point(1, 0))
               .orderAnnounceTime(300)
@@ -70,17 +71,27 @@ public class RtRoutePlannerTest {
               .buildDTO()))
         .addEvent(AddParcelEvent.create(
           Parcel.builder(new Point(0, 0), new Point(1, 0))
-              .orderAnnounceTime(800)
-              .pickupTimeWindow(TimeWindow.create(800, 3000))
+              .orderAnnounceTime(1500)
+              .pickupTimeWindow(TimeWindow.create(1500, 30000))
               .buildDTO()))
         .addEvent(TimeOutEvent.create(1500))
         .addModel(PDPRoadModel.builder(RoadModelBuilders.plane()))
         .addModel(DefaultPDPModel.builder())
-        .addModel(TimeModel.builder().withRealTime())
+        .addModel(TimeModel.builder().withRealTime().withTickLength(100L))
+        .setStopCondition(StopConditions.limitedTime(60000))
         .build();
+  }
+
+  @Test
+  public void test() {
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
+    final StochasticSupplier<RealtimeSolver> rtSolverSup =
+      SolverToRealtimeAdapter.create(
+        SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
 
     Experiment.build(objFunc)
         .addScenario(scenario)
+        .withThreads(1)
         .addConfiguration(MASConfiguration.pdptwBuilder()
             .addModel(RtSolverModel.builder())
             .addModel(AuctionCommModel.builder(DoubleBid.class))
@@ -89,12 +100,6 @@ public class RtRoutePlannerTest {
                   RtSolverBidder.supplier(objFunc, rtSolverSup)))
             .build())
         .perform();
-
-  }
-
-  @Test
-  public void test() {
-
   }
 
 }
