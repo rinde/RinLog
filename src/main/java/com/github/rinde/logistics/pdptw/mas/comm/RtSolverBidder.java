@@ -18,7 +18,10 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
@@ -31,6 +34,8 @@ import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.time.TickListener;
+import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
@@ -38,6 +43,7 @@ import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Queues;
 
 /**
  *
@@ -45,21 +51,26 @@ import com.google.common.collect.ImmutableList;
  */
 public class RtSolverBidder
     extends AbstractBidder<DoubleBid>
-    implements RtSolverUser {
+    implements RtSolverUser, TickListener {
 
   private final RealtimeSolver solver;
   final ObjectiveFunction objectiveFunction;
   Optional<RtSimSolver> solverHandle;
+  final Queue<CallForBids> cfbQueue;
+  final AtomicBoolean isComputing;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
+    cfbQueue = Queues.synchronizedQueue(new LinkedList<CallForBids>());
+    isComputing = new AtomicBoolean(false);
   }
 
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
       final Parcel parcel, final long time) {
+    cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
 
     // avoid multiple bids at the same time
     checkState(solverHandle.isPresent(),
@@ -67,8 +78,20 @@ public class RtSolverBidder
       RealtimeSolver.class.getSimpleName(),
       RtSolverModel.class.getSimpleName());
 
+    next();
+  }
+
+  void next() {
+    if (!cfbQueue.isEmpty() && !isComputing.get()) {
+      computeBid(cfbQueue.poll());
+    }
+  }
+
+  void computeBid(final CallForBids cfb) {
+    LOGGER.trace("start computing bid {}", cfb);
+    isComputing.set(true);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
-    parcels.add(parcel);
+    parcels.add(cfb.getParcel());
     final ImmutableList<Parcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
 
@@ -77,7 +100,7 @@ public class RtSolverBidder
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
       state, ImmutableList.of(currentRoute)));
 
-    final Bidder<DoubleBid> bidder = this;
+    final RtSolverBidder bidder = this;
     final Listener listener = new Listener() {
       @Override
       public void handleEvent(Event e) {
@@ -86,17 +109,36 @@ public class RtSolverBidder
           solverHandle.get().getCurrentSchedule();
         final double cost =
           objectiveFunction.computeCost(Solvers.computeStats(state, schedule));
-        auctioneer
-            .submit(DoubleBid.create(time, bidder, parcel, cost - baseline));
+
+        LOGGER.trace("baseline {}, newcost {}", baseline, cost);
+
+        cfb.getAuctioneer().submit(DoubleBid.create(cfb.getTime(), bidder,
+          cfb.getParcel(), cost - baseline));
+        solverHandle.get().getEventAPI().removeListener(this,
+          EventType.NEW_SCHEDULE);
+
+        isComputing.set(false);
       }
     };
-
     solverHandle.get().getEventAPI().addListener(listener,
       EventType.NEW_SCHEDULE);
 
+    LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
+      parcels);
     solverHandle.get().solve(SolveArgs.create()
         .useCurrentRoutes(ImmutableList.of(currentRoute))
         .useParcels(parcels));
+  }
+
+  @Override
+  public void tick(TimeLapse timeLapse) {
+    next();
+  }
+
+  @Override
+  public void afterTick(TimeLapse timeLapse) {
+    next();
+
   }
 
   @Override
@@ -109,6 +151,21 @@ public class RtSolverBidder
       ObjectiveFunction objFunc,
       StochasticSupplier<? extends RealtimeSolver> solverSupplier) {
     return new AutoValue_RtSolverBidder_Sup(objFunc, solverSupplier);
+  }
+
+  @AutoValue
+  abstract static class CallForBids {
+
+    abstract Auctioneer<DoubleBid> getAuctioneer();
+
+    abstract Parcel getParcel();
+
+    abstract long getTime();
+
+    static CallForBids create(Auctioneer<DoubleBid> auctioneer, Parcel parcel,
+        long time) {
+      return new AutoValue_RtSolverBidder_CallForBids(auctioneer, parcel, time);
+    }
   }
 
   @AutoValue
@@ -129,4 +186,5 @@ public class RtSolverBidder
       return RtSolverBidder.class.getSimpleName() + ".supplier(..)";
     }
   }
+
 }

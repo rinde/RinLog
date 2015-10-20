@@ -41,9 +41,9 @@ import com.google.common.collect.ImmutableList;
 public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     implements RtSolverUser {
 
-  private Queue<? extends Parcel> route;
+  Queue<? extends Parcel> route;
   private final RealtimeSolver solver;
-  private Optional<RtSimSolver> simSolver;
+  Optional<RtSimSolver> simSolver;
 
   RtSolverRoutePlanner(RealtimeSolver s) {
     route = newLinkedList();
@@ -94,6 +94,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       @Override
       public void handleEvent(Event e) {
         route = newLinkedList(simSolver.get().getCurrentSchedule().get(0));
+        LOGGER.trace("Computed new route for {}: {}.", vehicle.get(), route);
       }
     }, EventType.NEW_SCHEDULE);
   }

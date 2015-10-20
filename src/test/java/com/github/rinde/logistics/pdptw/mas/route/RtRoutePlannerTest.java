@@ -15,11 +15,18 @@
  */
 package com.github.rinde.logistics.pdptw.mas.route;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map.Entry;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.mas.VehicleHandler;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
+import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel.AuctionEvent;
 import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
 import com.github.rinde.logistics.pdptw.mas.comm.RtSolverBidder;
 import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
@@ -27,13 +34,21 @@ import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
 import com.github.rinde.rinsim.central.rt.SleepySolver;
 import com.github.rinde.rinsim.central.rt.SolverToRealtimeAdapter;
+import com.github.rinde.rinsim.core.Simulator;
+import com.github.rinde.rinsim.core.model.DependencyProvider;
+import com.github.rinde.rinsim.core.model.Model.AbstractModelVoid;
+import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
+import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.experiment.Experiment;
+import com.github.rinde.rinsim.experiment.Experiment.SimArgs;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
+import com.github.rinde.rinsim.experiment.PostProcessor;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddDepotEvent;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
@@ -46,6 +61,9 @@ import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.TimeWindow;
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  *
@@ -67,10 +85,15 @@ public class RtRoutePlannerTest {
         .addEvent(AddParcelEvent.create(
           Parcel.builder(new Point(0, 0), new Point(1, 0))
               .orderAnnounceTime(300)
-              .pickupTimeWindow(TimeWindow.create(400, 3000))
+              .pickupTimeWindow(TimeWindow.create(300, 3000))
               .buildDTO()))
         .addEvent(AddParcelEvent.create(
           Parcel.builder(new Point(0, 0), new Point(1, 0))
+              .orderAnnounceTime(1500)
+              .pickupTimeWindow(TimeWindow.create(1500, 30000))
+              .buildDTO()))
+        .addEvent(AddParcelEvent.create(
+          Parcel.builder(new Point(1, 1), new Point(2, 2))
               .orderAnnounceTime(1500)
               .pickupTimeWindow(TimeWindow.create(1500, 30000))
               .buildDTO()))
@@ -95,11 +118,79 @@ public class RtRoutePlannerTest {
         .addConfiguration(MASConfiguration.pdptwBuilder()
             .addModel(RtSolverModel.builder())
             .addModel(AuctionCommModel.builder(DoubleBid.class))
+            .addModel(AuctionCommModelLogger.builder())
             .addEventHandler(AddVehicleEvent.class,
               new VehicleHandler(RtSolverRoutePlanner.supplier(rtSolverSup),
                   RtSolverBidder.supplier(objFunc, rtSolverSup)))
             .build())
+        .usePostProcessor(new PostProcessor<Object>() {
+          @Override
+          public Object collectResults(Simulator sim, SimArgs args) {
+            final AuctionCommModelLogger logger =
+              sim.getModelProvider().getModel(AuctionCommModelLogger.class);
+
+            System.out.println(logger.events);
+            assertThat(logger.events.keySet().size()).isEqualTo(3);
+            for (final Entry<Parcel, Collection<Enum<?>>> entry : logger.events
+                .asMap().entrySet()) {
+
+              assertThat(entry.getValue())
+                  .containsExactly(AuctionCommModel.EventType.START_AUCTION,
+                    AuctionCommModel.EventType.FINISH_AUCTION)
+                  .inOrder();
+
+            }
+
+            return new Object();
+          }
+
+          @Override
+          public FailureStrategy handleFailure(
+              Exception e, Simulator sim, SimArgs args) {
+            return FailureStrategy.ABORT_EXPERIMENT_RUN;
+          }
+        })
         .perform();
+  }
+
+  static class AuctionCommModelLogger extends AbstractModelVoid {
+    final ListMultimap<Parcel, Enum<?>> events;
+
+    AuctionCommModelLogger(AuctionCommModel model) {
+      events = ArrayListMultimap.create();
+
+      model.getEventAPI().addListener(new Listener() {
+        @Override
+        public void handleEvent(Event e) {
+          final AuctionEvent ae = (AuctionEvent) e;
+          events.put(ae.getParcel(), e.getEventType());
+        }
+      }, AuctionCommModel.EventType.values());
+    }
+
+    static Builder builder() {
+      return new AutoValue_RtRoutePlannerTest_AuctionCommModelLogger_Builder();
+    }
+
+    @AutoValue
+    static class Builder
+        extends AbstractModelBuilder<AuctionCommModelLogger, Void>
+        implements Serializable {
+
+      Builder() {
+        setDependencies(AuctionCommModel.class);
+      }
+
+      @Override
+      public AuctionCommModelLogger build(
+          DependencyProvider dependencyProvider) {
+
+        final AuctionCommModel model =
+          dependencyProvider.get(AuctionCommModel.class);
+
+        return new AuctionCommModelLogger(model);
+      }
+    }
   }
 
 }

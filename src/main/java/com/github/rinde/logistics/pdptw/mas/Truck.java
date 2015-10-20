@@ -42,7 +42,7 @@ import com.google.common.base.Optional;
  * @author Rinde van Lon
  */
 public class Truck extends RouteFollowingVehicle implements Listener,
-  SimulatorUser {
+    SimulatorUser {
 
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
@@ -81,7 +81,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
         updateRoute();
       }
     } else if (changed && isDiversionAllowed()
-      && !stateMachine.stateIs(serviceState)) {
+        && !stateMachine.stateIs(serviceState)) {
       updateAssignmentAndRoutePlanner();
       updateRoute();
     }
@@ -112,6 +112,15 @@ public class Truck extends RouteFollowingVehicle implements Listener,
     }
   }
 
+  // TODO route updating: lazy / proactive
+  // lazy: current implementation
+  // proactive: each time change event is dispatched
+
+  // TODO call updateRoute() when route has changed (this is asynchronous for
+  // RtRoutePlanners), so should perhaps also be done via an event
+  // OR: update route on every tick/event ? probably not a great idea in
+  // combination with diversion
+
   @Override
   public void handleEvent(Event e) {
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
@@ -124,14 +133,14 @@ public class Truck extends RouteFollowingVehicle implements Listener,
 
       // when diverting -> unclaim previous
       if ((event.trigger == DefaultEvent.REROUTE
-        || event.trigger == DefaultEvent.NOGO)
-        && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
-          .isPickedUp()) {
+          || event.trigger == DefaultEvent.NOGO)
+          && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
+              .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
       }
 
       if (event.trigger == DefaultEvent.GOTO
-        || event.trigger == DefaultEvent.REROUTE) {
+          || event.trigger == DefaultEvent.REROUTE) {
         final Parcel cur = getRoute().iterator().next();
         if (!getPDPModel().getParcelState(cur).isPickedUp()) {
           communicator.claim(cur);
@@ -142,8 +151,8 @@ public class Truck extends RouteFollowingVehicle implements Listener,
       }
 
       if ((event.newState == waitState
-        || (isDiversionAllowed() && event.newState != serviceState))
-        && changed) {
+          || (isDiversionAllowed() && event.newState != serviceState))
+          && changed) {
         updateAssignmentAndRoutePlanner();
         updateRoute();
       }
@@ -177,9 +186,9 @@ public class Truck extends RouteFollowingVehicle implements Listener,
   @Override
   public String toString() {
     return toStringHelper(this)
-      .addValue(Integer.toHexString(hashCode()))
-      .add("rp", routePlanner)
-      .add("c", communicator)
-      .toString();
+        .addValue(Integer.toHexString(hashCode()))
+        .add("rp", routePlanner)
+        .add("c", communicator)
+        .toString();
   }
 }

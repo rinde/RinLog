@@ -32,6 +32,9 @@ import com.github.rinde.rinsim.core.model.rand.RandomProvider;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
+import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.EventAPI;
+import com.github.rinde.rinsim.event.EventDispatcher;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.LinkedHashMultimap;
@@ -50,12 +53,50 @@ public class AuctionCommModel<T extends Bid<T>>
   final AuctionStopCondition<T> stopCondition;
   final RealtimeClockController clock;
 
+  final EventDispatcher eventDispatcher;
+
+  public enum EventType {
+    START_AUCTION, FINISH_AUCTION, START_RE_AUCTION
+  }
+
+  public static class AuctionEvent extends Event {
+
+    private final Parcel parcel;
+    private final Auctioneer auctioneer;
+
+    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a) {
+      super(type);
+      parcel = p;
+      auctioneer = a;
+    }
+
+    /**
+     * @return the parcel
+     */
+    public Parcel getParcel() {
+      return parcel;
+    }
+
+    /**
+     * @return the auctioneer
+     */
+    public Auctioneer getAuctioneer() {
+      return auctioneer;
+    }
+  }
+
   AuctionCommModel(RandomGenerator r, RealtimeClockController c,
       AuctionStopCondition<T> sc) {
     rng = r;
     clock = c;
     stopCondition = sc;
     bidMap = LinkedHashMultimap.create();
+
+    eventDispatcher = new EventDispatcher(EventType.values());
+  }
+
+  public EventAPI getEventAPI() {
+    return eventDispatcher.getPublicEventAPI();
   }
 
   @Override
@@ -129,6 +170,9 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     void initialAuction(long time) {
+      LOGGER.trace("*** Start auction at {} for {}. ***", time, parcel);
+      eventDispatcher.dispatchEvent(
+        new AuctionEvent(EventType.START_AUCTION, parcel, this));
       auctionStartTime = time;
 
       for (final Bidder<T> b : communicators) {
@@ -140,7 +184,7 @@ public class AuctionCommModel<T extends Bid<T>>
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
-        LOGGER.trace("{} end of auction for {}", time, parcel);
+        LOGGER.trace(">>>> {} end of auction for {} <<<<", time, parcel);
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
         LOGGER.trace("Winning bid : {}", winningBid);
@@ -149,6 +193,9 @@ public class AuctionCommModel<T extends Bid<T>>
         // this is called to prevent the clock from switching to simulated time
         // because the winner also needs to do some computation itself.
         clock.switchToRealTime();
+
+        eventDispatcher.dispatchEvent(
+          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this));
       }
     }
 
@@ -171,6 +218,7 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public void submit(T bid) {
       LOGGER.trace("Receive bid for {}, bid: {}.", parcel, bid);
+      checkArgument(bid.getParcel().equals(parcel));
       // if a winner is already present, the auction is over. if the auction
       // times do not match, it means a new auction is taking place while the
       // submitted bid is for a previously held auction.
@@ -178,6 +226,16 @@ public class AuctionCommModel<T extends Bid<T>>
         bids.add(bid);
       }
     }
+
+  }
+
+  @Override
+  public <U> U get(Class<U> clazz) {
+    if (clazz.isAssignableFrom(AuctionCommModel.class)) {
+      return clazz.cast(this);
+    }
+    throw new IllegalArgumentException(
+        AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
   }
 
   /**
@@ -191,6 +249,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     Builder() {
       setDependencies(RandomProvider.class, RealtimeClockController.class);
+      setProvidingTypes(AuctionCommModel.class);
     }
 
     public abstract AuctionStopCondition<T> getStopCondition();
