@@ -20,11 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.mas.VehicleHandler;
+import com.github.rinde.logistics.pdptw.mas.Truck;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel.AuctionEvent;
 import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
@@ -41,6 +43,7 @@ import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
+import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.event.Event;
@@ -55,6 +58,7 @@ import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
+import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.scenario.Scenario;
 import com.github.rinde.rinsim.scenario.StopConditions;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
@@ -120,8 +124,13 @@ public class RtRoutePlannerTest {
             .addModel(AuctionCommModel.builder(DoubleBid.class))
             .addModel(AuctionCommModelLogger.builder())
             .addEventHandler(AddVehicleEvent.class,
-              new VehicleHandler(RtSolverRoutePlanner.supplier(rtSolverSup),
-                  RtSolverBidder.supplier(objFunc, rtSolverSup)))
+              TruckFactory.builder()
+                  .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
+                  .setCommunicator(
+                    RtSolverBidder.supplier(objFunc, rtSolverSup))
+                  .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
+                  .setLazyComputation(false)
+                  .build())
             .build())
         .usePostProcessor(new PostProcessor<Object>() {
           @Override
@@ -139,6 +148,15 @@ public class RtRoutePlannerTest {
                     AuctionCommModel.EventType.FINISH_AUCTION)
                   .inOrder();
 
+            }
+
+            final RoadModel rm =
+              sim.getModelProvider().getModel(RoadModel.class);
+
+            final Set<Truck> trucks = rm.getObjectsOfType(Truck.class);
+
+            for (final Truck t : trucks) {
+              System.out.println(t.getRoute());
             }
 
             return new Object();

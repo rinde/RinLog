@@ -30,6 +30,9 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.EventAPI;
+import com.github.rinde.rinsim.event.EventDispatcher;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -44,7 +47,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * Logger.
    */
   protected static final Logger LOGGER = LoggerFactory
-    .getLogger(AbstractRoutePlanner.class);
+      .getLogger(AbstractRoutePlanner.class);
 
   /**
    * Reference to the {@link RoadModel}.
@@ -67,6 +70,8 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    */
   protected boolean updated;
 
+  protected final EventDispatcher eventDispatcher;
+
   private final List<Parcel> history;
   private boolean initialized;
 
@@ -78,6 +83,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     roadModel = Optional.absent();
     pdpModel = Optional.absent();
     vehicle = Optional.absent();
+    eventDispatcher = new EventDispatcher(RoutePlannerEventType.CHANGE);
   }
 
   @Override
@@ -130,6 +136,11 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
     return Optional.of(history.get(history.size() - 1));
   }
 
+  protected void dispatchChangeEvent() {
+    eventDispatcher.dispatchEvent(
+      new Event(RoutePlannerEventType.CHANGE, this));
+  }
+
   @Override
   public List<Parcel> getHistory() {
     return unmodifiableList(history);
@@ -138,7 +149,9 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   /**
    * Should implement functionality of {@link #update(Collection, long)}
    * according to the interface. It can be assumed that the method is allowed to
-   * be called (i.e. the route planner is initialized).
+   * be called (i.e. the route planner is initialized). A
+   * {@link RoutePlanner.RoutePlannerEventType#CHANGE} event should be
+   * dispatched as soon as updating of the route is done.
    * @param onMap A collection of parcels which currently reside on the map.
    * @param time The current simulation time, this may be relevant for some
    *          route planners that want to take time windows into account.
@@ -185,8 +198,14 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
+  public final EventAPI getEventAPI() {
+    return eventDispatcher.getPublicEventAPI();
+  }
+
+  @Override
   public String toString() {
-    return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-      .toString();
+    return toStringHelper(this)
+        .addValue(Integer.toHexString(hashCode()))
+        .toString();
   }
 }

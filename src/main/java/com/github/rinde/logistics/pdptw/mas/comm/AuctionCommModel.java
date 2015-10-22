@@ -29,7 +29,6 @@ import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.rand.RandomProvider;
-import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
@@ -51,7 +50,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
   final SetMultimap<Parcel, ParcelAuctioneer> bidMap;
   final AuctionStopCondition<T> stopCondition;
-  final RealtimeClockController clock;
 
   final EventDispatcher eventDispatcher;
 
@@ -85,10 +83,8 @@ public class AuctionCommModel<T extends Bid<T>>
     }
   }
 
-  AuctionCommModel(RandomGenerator r, RealtimeClockController c,
-      AuctionStopCondition<T> sc) {
+  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc) {
     rng = r;
-    clock = c;
     stopCondition = sc;
     bidMap = LinkedHashMultimap.create();
 
@@ -192,7 +188,7 @@ public class AuctionCommModel<T extends Bid<T>>
         winner.get().receiveParcel(winningBid.getParcel());
         // this is called to prevent the clock from switching to simulated time
         // because the winner also needs to do some computation itself.
-        clock.switchToRealTime();
+        // clock.switchToRealTime();
 
         eventDispatcher.dispatchEvent(
           new AuctionEvent(EventType.FINISH_AUCTION, parcel, this));
@@ -248,7 +244,7 @@ public class AuctionCommModel<T extends Bid<T>>
       implements Serializable {
 
     Builder() {
-      setDependencies(RandomProvider.class, RealtimeClockController.class);
+      setDependencies(RandomProvider.class);
       setProvidingTypes(AuctionCommModel.class);
     }
 
@@ -262,9 +258,9 @@ public class AuctionCommModel<T extends Bid<T>>
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
       final RandomGenerator r = dependencyProvider.get(RandomProvider.class)
           .newInstance();
-      final RealtimeClockController clock =
-        dependencyProvider.get(RealtimeClockController.class);
-      return new AuctionCommModel<T>(r, clock, getStopCondition());
+      // final RealtimeClockController clock =
+      // dependencyProvider.get(RealtimeClockController.class);
+      return new AuctionCommModel<T>(r, getStopCondition());
     }
 
     static <T extends Bid<T>> Builder<T> create() {

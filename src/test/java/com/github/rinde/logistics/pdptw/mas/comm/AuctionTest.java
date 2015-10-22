@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.truth.Truth.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
@@ -37,7 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
-import com.github.rinde.logistics.pdptw.mas.VehicleHandler;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.CommTestModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
@@ -124,7 +125,10 @@ public class AuctionTest {
     final MASConfiguration configuration =
       MASConfiguration.pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
-            new VehicleHandler(FixedRoutePlanner.supplier(), bidderSupplier))
+            TruckFactory.builder()
+                .setRoutePlanner(FixedRoutePlanner.supplier())
+                .setCommunicator(bidderSupplier)
+                .build())
           .addModel(SolverModel.builder())
           .addModel(AuctionCommModel.builder(DoubleBid.class))
           .addModel(CommTestModel.builder())
@@ -167,10 +171,11 @@ public class AuctionTest {
 
     // set initial destination
     routePlanner.current = Optional.fromNullable(dp1);
+    routePlanner.dispatchChangeEvent();
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
-    assertThat(truck.getRoute().iterator().next(), is(dp1));
+    assertThat(truck.getRoute().iterator().next()).isEqualTo(dp1);
     assertThat(rm.getDestination(truck), is(dp1.getDto().getPickupLocation()));
     assertThat(rm.getPosition(truck),
       is(not(truck.getDTO().getStartPosition())));
@@ -183,6 +188,7 @@ public class AuctionTest {
 
     // change destination
     routePlanner.current = Optional.fromNullable(dp2);
+    routePlanner.dispatchChangeEvent();
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
@@ -198,6 +204,7 @@ public class AuctionTest {
 
     // change destination again, now back to first
     routePlanner.current = Optional.fromNullable(dp1);
+    routePlanner.dispatchChangeEvent();
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
     sim.tick();
 
@@ -210,6 +217,7 @@ public class AuctionTest {
       sim.tick();
     }
     routePlanner.current = Optional.fromNullable(dp2);
+    routePlanner.dispatchChangeEvent();
     while (rm.containsObject(dp2) && !rm.equalPosition(truck, dp2)) {
       sim.tick();
     }
@@ -221,7 +229,10 @@ public class AuctionTest {
       MASConfiguration
           .pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
-            new VehicleHandler(RandomRoutePlanner.supplier(), bidderSupplier))
+            TruckFactory.builder()
+                .setRoutePlanner(RandomRoutePlanner.supplier())
+                .setCommunicator(bidderSupplier)
+                .build())
           .addModel(AuctionCommModel.builder(DoubleBid.class))
           .addModel(CommTestModel.builder())
           .addModel(SolverModel.builder())
@@ -349,6 +360,11 @@ public class AuctionTest {
     @Override
     protected void nextImpl(long time) {
       current = Optional.absent();
+    }
+
+    @Override
+    protected void dispatchChangeEvent() {
+      super.dispatchChangeEvent();
     }
 
     static StochasticSupplier<FixedRoutePlanner> supplier() {

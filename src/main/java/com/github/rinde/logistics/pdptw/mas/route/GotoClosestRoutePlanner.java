@@ -65,10 +65,14 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   private void updateCurrent() {
+    final Optional<Parcel> prev = current;
     if (parcels.isEmpty()) {
       current = Optional.absent();
     } else {
       current = Optional.of(Collections.min(parcels, comp));
+    }
+    if (!prev.equals(current)) {
+      dispatchChangeEvent();
     }
   }
 

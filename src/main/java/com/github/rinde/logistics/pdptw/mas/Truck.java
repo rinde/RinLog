@@ -19,9 +19,13 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.LinkedList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
+import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner.RoutePlannerEventType;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
@@ -41,12 +45,15 @@ import com.google.common.base.Optional;
  * {@link Communicator}.
  * @author Rinde van Lon
  */
-public class Truck extends RouteFollowingVehicle implements Listener,
-    SimulatorUser {
+public class Truck
+    extends RouteFollowingVehicle
+    implements Listener, SimulatorUser {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(Truck.class);
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
   private boolean changed;
+  private final boolean lazyRouteComputing;
 
   /**
    * Create a new Truck using the specified {@link RoutePlanner} and
@@ -55,13 +62,25 @@ public class Truck extends RouteFollowingVehicle implements Listener,
    * @param rp The route planner used.
    * @param c The communicator used.
    */
-  public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
-    super(pDto, true);
+  public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
+      RouteAdjuster ra, boolean lazyRouteComp) {
+    super(pDto, true, ra);
     routePlanner = rp;
     communicator = c;
     communicator.addUpdateListener(this);
+    routePlanner.getEventAPI().addListener(new Listener() {
+      @SuppressWarnings("synthetic-access")
+      @Override
+      public void handleEvent(Event e) {
+        LOGGER.trace("routeplanner is done, update route");
+        updateRoute();
+      }
+    }, RoutePlannerEventType.CHANGE);
     stateMachine.getEventAPI().addListener(this,
       StateMachineEvent.STATE_TRANSITION);
+    lazyRouteComputing = lazyRouteComp;
+    LOGGER.trace("Truck constructor, {}, {}, {}, {}.", rp, c, ra,
+      lazyRouteComp);
   }
 
   @Override
@@ -76,14 +95,12 @@ public class Truck extends RouteFollowingVehicle implements Listener,
     if (stateMachine.stateIs(waitState)) {
       if (changed) {
         updateAssignmentAndRoutePlanner();
-        updateRoute();
       } else if (getRoute().isEmpty() && routePlanner.current().isPresent()) {
         updateRoute();
       }
     } else if (changed && isDiversionAllowed()
         && !stateMachine.stateIs(serviceState)) {
       updateAssignmentAndRoutePlanner();
-      updateRoute();
     }
   }
 
@@ -112,19 +129,14 @@ public class Truck extends RouteFollowingVehicle implements Listener,
     }
   }
 
-  // TODO route updating: lazy / proactive
-  // lazy: current implementation
-  // proactive: each time change event is dispatched
-
-  // TODO call updateRoute() when route has changed (this is asynchronous for
-  // RtRoutePlanners), so should perhaps also be done via an event
-  // OR: update route on every tick/event ? probably not a great idea in
-  // combination with diversion
-
   @Override
   public void handleEvent(Event e) {
+    LOGGER.trace("{} - Event: {}", this, e);
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
       changed = true;
+      if (!lazyRouteComputing) {
+        updateAssignmentAndRoutePlanner();
+      }
     } else {
       // we know this is safe since it can only be one type of event
       @SuppressWarnings("unchecked")
@@ -143,6 +155,7 @@ public class Truck extends RouteFollowingVehicle implements Listener,
           || event.trigger == DefaultEvent.REROUTE) {
         final Parcel cur = getRoute().iterator().next();
         if (!getPDPModel().getParcelState(cur).isPickedUp()) {
+          LOGGER.trace("{} claim:{}", this, cur);
           communicator.claim(cur);
         }
       } else if (event.trigger == DefaultEvent.DONE) {
@@ -154,7 +167,6 @@ public class Truck extends RouteFollowingVehicle implements Listener,
           || (isDiversionAllowed() && event.newState != serviceState))
           && changed) {
         updateAssignmentAndRoutePlanner();
-        updateRoute();
       }
     }
   }

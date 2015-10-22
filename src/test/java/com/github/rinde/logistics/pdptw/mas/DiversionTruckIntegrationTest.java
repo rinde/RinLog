@@ -91,7 +91,10 @@ public class DiversionTruckIntegrationTest {
           configs.add(new Object[] {
               MASConfiguration.pdptwBuilder()
                   .addEventHandler(AddVehicleEvent.class,
-                    new VehicleHandler(rp, cm))
+                    TruckFactory.builder()
+                        .setRoutePlanner(rp)
+                        .setCommunicator(cm)
+                        .build())
                   .addModel(AuctionCommModel.builder(DoubleBid.class))
                   .addModel(SolverModel.builder())
                   .build(),

@@ -81,7 +81,6 @@ public class SolverRoutePlanner
         && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
-
       LOGGER.info("vehicle {}", pdpModel.get().getVehicleState(vehicle.get()));
       if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
         LOGGER.info("parcel {} {}",
@@ -94,7 +93,6 @@ public class SolverRoutePlanner
       }
 
       final SolveArgs args = SolveArgs.create().useParcels(onMap);
-
       if (reuseCurRoutes) {
         args.useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
         try {
@@ -111,6 +109,7 @@ public class SolverRoutePlanner
       route = solverHandle.get().solve(args).get(0);
     }
     LOGGER.info("{}", pdpModel.get().getVehicleState(vehicle.get()));
+    dispatchChangeEvent();
   }
 
   @Override

@@ -55,6 +55,7 @@ import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
+import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.TimedEvent;
 import com.github.rinde.rinsim.scenario.TimedEventHandler;
@@ -275,7 +276,7 @@ public class SingleVehicleSolverTest {
       simulator.register(new Truck(event.getVehicleDTO(),
           new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd, timeUnit),
               true),
-          c));
+          c, RouteFollowingVehicle.nopAdjuster(), true));
     }
   }
 

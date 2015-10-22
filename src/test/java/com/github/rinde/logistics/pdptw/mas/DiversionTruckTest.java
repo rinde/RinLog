@@ -41,7 +41,7 @@ import com.github.rinde.rinsim.core.model.pdp.TimeWindowPolicy.TimeWindowPolicie
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.event.Event;
-import com.github.rinde.rinsim.fsm.State;
+import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
@@ -115,6 +115,7 @@ public class DiversionTruckTest {
     sim.register(p5);
 
     routePlanner = mock(RoutePlanner.class);
+    when(routePlanner.getEventAPI()).thenReturn(mock(EventAPI.class));
     communicator = mock(Communicator.class);
     final VehicleDTO dto = VehicleDTO.builder()
         .startPosition(new Point(0, 0))
@@ -123,7 +124,8 @@ public class DiversionTruckTest {
         .availabilityTimeWindow(TimeWindow.always())
         .build();
 
-    truck = new TestTruck(dto, routePlanner, communicator);
+    truck = new TestTruck(dto, routePlanner, communicator,
+        RouteFollowingVehicle.nopAdjuster(), true);
     sim.register(truck);
     routePlannerGotoNowhere();
     assertEquals(truck.waitState(), truck.getState());
@@ -394,6 +396,7 @@ public class DiversionTruckTest {
     when(routePlanner.currentRoute()).thenReturn(
       Optional.of(ImmutableList.<Parcel>of()));
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
+    truck.updateRoute();
   }
 
   private void routePlannerGoto(Parcel dp) {
@@ -401,6 +404,7 @@ public class DiversionTruckTest {
     when(routePlanner.currentRoute()).thenReturn(
       Optional.of(ImmutableList.of(dp)));
     truck.handleEvent(new Event(CommunicatorEventType.CHANGE, this));
+    truck.updateRoute();
   }
 
   private void gotoWaitAtServiceStateP3() {
@@ -425,29 +429,4 @@ public class DiversionTruckTest {
     assertEquals(truck.serviceState(), truck.getState());
   }
 
-  class TestTruck extends Truck {
-    public TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
-      super(pDto, rp, c);
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> getState() {
-      return stateMachine.getCurrentState();
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> waitState() {
-      return waitState;
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> gotoState() {
-      return gotoState;
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> waitForServiceState() {
-      return waitForServiceState;
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> serviceState() {
-      return serviceState;
-    }
-  }
 }

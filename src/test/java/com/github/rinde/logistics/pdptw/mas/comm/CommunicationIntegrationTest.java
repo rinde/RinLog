@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.rinde.logistics.pdptw.mas.VehicleHandler;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory;
 import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.rinsim.central.RandomSolver;
@@ -93,15 +93,20 @@ public class CommunicationIntegrationTest implements TickListener {
     return asList(new Object[][] {
         {MASConfiguration.pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              new VehicleHandler(RandomRoutePlanner.supplier(),
-                  RandomBidder.supplier()))
+              TruckFactory.builder()
+                  .setRoutePlanner(RandomRoutePlanner.supplier())
+                  .setCommunicator(RandomBidder.supplier())
+                  .build())
             .addModel(AuctionCommModel.builder(DoubleBid.class))
             .addModel(CommTestModel.builder())
             .build()},
         {MASConfiguration.pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              new VehicleHandler(RandomRoutePlanner.supplier(),
-                  SolverBidder.supplier(objFunc, RandomSolver.supplier())))
+              TruckFactory.builder()
+                  .setRoutePlanner(RandomRoutePlanner.supplier())
+                  .setCommunicator(
+                    SolverBidder.supplier(objFunc, RandomSolver.supplier()))
+                  .build())
             .addModel(AuctionCommModel.builder(DoubleBid.class))
             .addModel(CommTestModel.builder())
             .addModel(SolverModel.builder())
@@ -109,8 +114,10 @@ public class CommunicationIntegrationTest implements TickListener {
         {MASConfiguration
             .pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              new VehicleHandler(GotoClosestRoutePlanner.supplier(),
-                  BlackboardUser.supplier()))
+              TruckFactory.builder()
+                  .setRoutePlanner(GotoClosestRoutePlanner.supplier())
+                  .setCommunicator(BlackboardUser.supplier())
+                  .build())
             .addModel(BlackboardCommModel.builder())
             .addModel(CommTestModel.builder())
             .build()},

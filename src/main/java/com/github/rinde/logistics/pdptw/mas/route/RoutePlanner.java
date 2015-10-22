@@ -22,6 +22,7 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.event.EventAPI;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -55,10 +56,11 @@ import com.google.common.collect.ImmutableList;
  * <li>{@link #update(Collection, long)}</li>
  * <li>{@link #next(long)}</li>
  * </ul>
- * Each time one of these is called the route <i>may</i> change. When
- * {@link #next(long)} is called, the value of {@link #current()} is saved into
- * its history (accessible via {@link #getHistory()}) and accessible via
- * {@link #prev()}.
+ * Each time one of these is called the route <i>may</i> change. If the route
+ * does change, a {@link RoutePlannerEventType#CHANGE} event should be
+ * dispatched. When {@link #next(long)} is called, the value of
+ * {@link #current()} is saved into its history (accessible via
+ * {@link #getHistory()}) and accessible via {@link #prev()}.
  *
  * @author Rinde van Lon
  */
@@ -144,4 +146,10 @@ public interface RoutePlanner {
    *         otherwise.
    */
   boolean hasNext();
+
+  EventAPI getEventAPI();
+
+  enum RoutePlannerEventType {
+    CHANGE;
+  }
 }

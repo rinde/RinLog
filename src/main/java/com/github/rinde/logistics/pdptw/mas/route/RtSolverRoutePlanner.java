@@ -90,11 +90,13 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
   @Override
   public void setSolverProvider(RtSimSolverBuilder builder) {
     simSolver = Optional.of(builder.setVehicles(vehicle.asSet()).build(solver));
+    final RtSolverRoutePlanner rp = this;
     simSolver.get().getEventAPI().addListener(new Listener() {
       @Override
       public void handleEvent(Event e) {
         route = newLinkedList(simSolver.get().getCurrentSchedule().get(0));
         LOGGER.trace("Computed new route for {}: {}.", vehicle.get(), route);
+        rp.dispatchChangeEvent();
       }
     }, EventType.NEW_SCHEDULE);
   }

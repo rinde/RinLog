@@ -34,8 +34,8 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.github.rinde.logistics.pdptw.mas.TestTruck.TestTruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
-import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
 import com.github.rinde.logistics.pdptw.mas.comm.TestBidder;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
@@ -53,20 +53,16 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.ParcelDTO;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
-import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
-import com.github.rinde.rinsim.fsm.AbstractState;
-import com.github.rinde.rinsim.fsm.State;
-import com.github.rinde.rinsim.fsm.StateMachine;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
-import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -125,9 +121,10 @@ public class SingleTruckTest {
 
     final MASConfiguration randomRandom = MASConfiguration.pdptwBuilder()
         .addEventHandler(AddVehicleEvent.class,
-          new TestTruckHandler(
-              DebugRoutePlanner.supplier(rp),
-              TestBidder.supplier()))
+          TestTruckFactory.testBuilder()
+              .setRoutePlanner(DebugRoutePlanner.supplier(rp))
+              .setCommunicator(TestBidder.supplier())
+              .build())
         .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(SolverModel.builder())
         .build();
@@ -153,6 +150,7 @@ public class SingleTruckTest {
     assertEquals(1000, simulator.getCurrentTime());
   }
 
+  @SuppressWarnings("null")
   @After
   public void tearDown() {
     // to avoid accidental reuse of objects
@@ -168,60 +166,60 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto), 1, null);
 
-    assertEquals(truck.getStateMachine().getCurrentState(),
-      truck.getWaitState());
-    assertEquals(truck.getDTO().getStartPosition(),
+    assertThat(truck.getState()).isEqualTo(truck.waitState());
+    assertThat(truck.getDTO().getStartPosition()).isEqualTo(
       roadModel.getPosition(truck));
 
     simulator.tick();
-    assertEquals(1, roadModel.getObjectsOfType(Parcel.class).size());
+    assertThat(roadModel.getObjectsOfType(Parcel.class)).hasSize(1);
     final Parcel parcel1 = roadModel.getObjectsOfType(Parcel.class).iterator()
         .next();
+    assertThat(parcel1.getDto()).isEqualTo(parcel1dto);
     assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
-    assertEquals(truck.getState(), truck.getGotoState());
+    assertEquals(truck.getState(), truck.gotoState());
     assertFalse(truck.getDTO().getStartPosition().equals(roadModel
         .getPosition(truck)));
     final Parcel cur2 = truck.getRoute().iterator().next();
     assertEquals(parcel1dto, cur2.getDto());
 
+    assertThat(truck.getRoute()).containsExactly(parcel1);
+
     // move to pickup
-    while (truck.getState() == truck.getGotoState()) {
+    while (truck.getState() == truck.gotoState()) {
       assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
       simulator.tick();
     }
-    assertEquals(truck.getState(), truck.getServiceState());
+    assertEquals(truck.getState(), truck.serviceState());
     assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
     assertEquals(parcel1dto.getPickupLocation(), roadModel.getPosition(truck));
 
     // pickup
-    while (truck.getState() == truck.getServiceState()) {
+    while (truck.getState() == truck.serviceState()) {
       assertEquals(parcel1dto.getPickupLocation(),
         roadModel.getPosition(truck));
-      assertEquals(ParcelState.PICKING_UP, pdpModel.getParcelState(parcel1));
+      assertThat(pdpModel.getParcelState(parcel1))
+          .isEqualTo(ParcelState.PICKING_UP);
       simulator.tick();
     }
-    assertEquals(truck.getWaitState(), truck.getState());
-    assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
-    assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
-      pdpModel.getContents(truck));
-
-    simulator.tick();
-    assertEquals(truck.getGotoState(), truck.getState());
+    assertThat(pdpModel.getParcelState(parcel1))
+        .isEqualTo(ParcelState.IN_CARGO);
+    assertThat(pdpModel.getContents(truck)).containsExactly(parcel1);
+    assertThat(truck.getState()).isEqualTo(truck.gotoState());
 
     // move to delivery
-    while (truck.getState() == truck.getGotoState()) {
+    while (truck.getState() == truck.gotoState()) {
       assertEquals(ParcelState.IN_CARGO, pdpModel.getParcelState(parcel1));
       assertEquals(new LinkedHashSet<Parcel>(asList(parcel1)),
         pdpModel.getContents(truck));
       simulator.tick();
     }
-    assertEquals(truck.getState(), truck.getServiceState());
+    assertEquals(truck.getState(), truck.serviceState());
     assertEquals(parcel1dto.getDeliveryLocation(),
       roadModel.getPosition(truck));
     assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
 
     // deliver
-    while (truck.getState() == truck.getServiceState()) {
+    while (truck.getState() == truck.serviceState()) {
       assertEquals(parcel1dto.getDeliveryLocation(),
         roadModel.getPosition(truck));
       assertEquals(ParcelState.DELIVERING, pdpModel.getParcelState(parcel1));
@@ -229,14 +227,14 @@ public class SingleTruckTest {
     }
     assertEquals(ParcelState.DELIVERED, pdpModel.getParcelState(parcel1));
     assertTrue(pdpModel.getContents(truck).isEmpty());
-    assertEquals(truck.getState(), truck.getWaitState());
+    assertEquals(truck.getState(), truck.waitState());
 
-    while (truck.getState() == truck.getWaitState()
+    while (truck.getState() == truck.waitState()
         && !roadModel.getPosition(truck)
             .equals(truck.getDTO().getStartPosition())) {
       simulator.tick();
     }
-    assertEquals(truck.getState(), truck.getWaitState());
+    assertEquals(truck.getState(), truck.waitState());
     assertEquals(truck.getDTO().getStartPosition(),
       roadModel.getPosition(truck));
   }
@@ -273,16 +271,16 @@ public class SingleTruckTest {
       }
     }, StateMachineEvent.STATE_TRANSITION);
 
-    assertEquals(truck.getWaitState(), truck.getState());
+    assertEquals(truck.waitState(), truck.getState());
 
     simulator.tick();
-    assertEquals(truck.getGotoState(), truck.getState());
+    assertEquals(truck.gotoState(), truck.getState());
 
     ((TestBidder) truck.getCommunicator()).removeAll();
     final int before = ((DebugRoutePlanner) truck.getRoutePlanner())
         .getUpdateCount();
 
-    while (truck.getGotoState() == truck.getState()) {
+    while (truck.gotoState() == truck.getState()) {
       simulator.tick();
     }
     simulator.tick();
@@ -307,14 +305,14 @@ public class SingleTruckTest {
     simulator.tick();
 
     assertEquals(1, drp.getUpdateCount());
-    assertThat(truck.getState()).isEqualTo(truck.getGotoState());
+    assertThat(truck.getState()).isEqualTo(truck.gotoState());
 
     // introduce new parcel
     final ParcelDTO parcel3dto = setCommonProperties(
       Parcel.builder(new Point(0, 2), new Point(5, 2))).buildDTO();
     simulator.register(new Parcel(parcel3dto));
     // goto
-    while (truck.getState().equals(truck.getGotoState())) {
+    while (truck.getState().equals(truck.gotoState())) {
       simulator.tick();
     }
     assertEquals(1, drp.getUpdateCount());
@@ -323,59 +321,13 @@ public class SingleTruckTest {
       Parcel.builder(new Point(0, 3), new Point(5, 3))).buildDTO();
     simulator.register(new Parcel(parcel4dto));
     // service
-    while (truck.getState().equals(truck.getServiceState())) {
+    while (truck.getState().equals(truck.serviceState())) {
       assertEquals(1, drp.getUpdateCount());
       simulator.tick();
     }
 
     assertEquals(2,
       ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
-  }
-
-  static class TestTruckHandler extends VehicleHandler {
-
-    TestTruckHandler(StochasticSupplier<? extends RoutePlanner> rp,
-        StochasticSupplier<? extends Communicator> c) {
-      super(rp, c);
-    }
-
-    @Override
-    protected Truck createTruck(VehicleDTO dto, RoutePlanner rp,
-        Communicator c) {
-      return new TestTruck(dto, rp, c);
-    }
-  }
-
-  static class TestTruck extends Truck {
-
-    TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c) {
-      super(pDto, rp, c);
-    }
-
-    public StateMachine<StateEvent, RouteFollowingVehicle> getStateMachine() {
-      return stateMachine;
-    }
-
-    public State<StateEvent, RouteFollowingVehicle> getState() {
-      return getStateMachine().getCurrentState();
-    }
-
-    public AbstractState<StateEvent, RouteFollowingVehicle> getWaitState() {
-      return waitState;
-    }
-
-    public AbstractState<StateEvent, RouteFollowingVehicle> getGotoState() {
-      return gotoState;
-    }
-
-    public AbstractState<StateEvent, RouteFollowingVehicle> getServiceState() {
-      return serviceState;
-    }
-
-    @Override
-    public Collection<Parcel> getRoute() {
-      return super.getRoute();
-    }
   }
 
   static class DebugRoutePlanner implements RoutePlanner, SimulatorUser,
@@ -455,6 +407,11 @@ public class SingleTruckTest {
       if (delegate instanceof SolverUser) {
         ((SolverUser) delegate).setSolverProvider(b);
       }
+    }
+
+    @Override
+    public EventAPI getEventAPI() {
+      return delegate.getEventAPI();
     }
   }
 }
