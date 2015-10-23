@@ -35,6 +35,8 @@ public interface Bidder<T extends Bid<T>> extends Communicator {
 
   void callForBids(Auctioneer<T> auctioneer, Parcel p, long time);
 
+  void endOfAuction(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
+
   /**
    * When an auction has been won by this {@link Bidder}, the {@link Parcel} is
    * received via this method.

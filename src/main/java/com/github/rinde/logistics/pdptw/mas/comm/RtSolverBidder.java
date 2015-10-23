@@ -21,7 +21,6 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
@@ -57,14 +56,12 @@ public class RtSolverBidder
   final ObjectiveFunction objectiveFunction;
   Optional<RtSimSolver> solverHandle;
   final Queue<CallForBids> cfbQueue;
-  final AtomicBoolean isComputing;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
     cfbQueue = Queues.synchronizedQueue(new LinkedList<CallForBids>());
-    isComputing = new AtomicBoolean(false);
   }
 
   @Override
@@ -81,15 +78,30 @@ public class RtSolverBidder
     next();
   }
 
+  @Override
+  public void endOfAuction(Auctioneer<DoubleBid> auctioneer, Parcel parcel,
+      long time) {
+    final CallForBids endedAuction =
+      CallForBids.create(auctioneer, parcel, time);
+
+    if (solverHandle.get().isComputing()) {
+      // if current computation is about this auction -> cancel it
+      if (endedAuction.equals(cfbQueue.peek())) {
+        solverHandle.get().cancel();
+      }
+      cfbQueue.remove(endedAuction);
+      next();
+    }
+  }
+
   void next() {
-    if (!cfbQueue.isEmpty() && !isComputing.get()) {
-      computeBid(cfbQueue.poll());
+    if (!cfbQueue.isEmpty() && !solverHandle.get().isComputing()) {
+      computeBid(cfbQueue.peek());
     }
   }
 
   void computeBid(final CallForBids cfb) {
     LOGGER.trace("start computing bid {}", cfb);
-    isComputing.set(true);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
     final ImmutableList<Parcel> currentRoute = ImmutableList
@@ -117,7 +129,7 @@ public class RtSolverBidder
         solverHandle.get().getEventAPI().removeListener(this,
           EventType.NEW_SCHEDULE);
 
-        isComputing.set(false);
+        cfbQueue.poll();
       }
     };
     solverHandle.get().getEventAPI().addListener(listener,

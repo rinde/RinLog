@@ -108,6 +108,10 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
   }
 
   @Override
+  public void endOfAuction(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long time) {}
+
+  @Override
   public void setSolverProvider(SimSolverBuilder builder) {
     solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
   }

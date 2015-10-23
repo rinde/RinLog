@@ -53,6 +53,56 @@ public class AuctionCommModel<T extends Bid<T>>
 
   final EventDispatcher eventDispatcher;
 
+  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc) {
+    rng = r;
+    stopCondition = sc;
+    bidMap = LinkedHashMultimap.create();
+
+    eventDispatcher = new EventDispatcher(EventType.values());
+  }
+
+  public EventAPI getEventAPI() {
+    return eventDispatcher.getPublicEventAPI();
+  }
+
+  @Override
+  protected void receiveParcel(Parcel p, long time) {
+    checkState(!communicators.isEmpty(), "there are no bidders..");
+
+    final ParcelAuctioneer auctioneer = new ParcelAuctioneer(p);
+    bidMap.put(p, auctioneer);
+    auctioneer.initialAuction(time);
+    auctioneer.update(time);
+  }
+
+  @Override
+  public void tick(TimeLapse timeLapse) {
+
+  }
+
+  @Override
+  public void afterTick(TimeLapse timeLapse) {
+    for (final ParcelAuctioneer pa : bidMap.values()) {
+      pa.update(timeLapse.getStartTime());
+    }
+  }
+
+  @Override
+  public <U> U get(Class<U> clazz) {
+    if (clazz.isAssignableFrom(AuctionCommModel.class)) {
+      return clazz.cast(this);
+    }
+    throw new IllegalArgumentException(
+        AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
+  }
+
+  /**
+   * @return A new {@link Builder} instance.
+   */
+  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
+    return Builder.<T>create();
+  }
+
   public enum EventType {
     START_AUCTION, FINISH_AUCTION, START_RE_AUCTION
   }
@@ -83,75 +133,6 @@ public class AuctionCommModel<T extends Bid<T>>
     }
   }
 
-  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc) {
-    rng = r;
-    stopCondition = sc;
-    bidMap = LinkedHashMultimap.create();
-
-    eventDispatcher = new EventDispatcher(EventType.values());
-  }
-
-  public EventAPI getEventAPI() {
-    return eventDispatcher.getPublicEventAPI();
-  }
-
-  @Override
-  protected void receiveParcel(Parcel p, long time) {
-    checkState(!communicators.isEmpty(), "there are no bidders..");
-
-    final ParcelAuctioneer auctioneer = new ParcelAuctioneer(p);
-    bidMap.put(p, auctioneer);
-    auctioneer.initialAuction(time);
-    auctioneer.update(time);
-
-    // final Iterator<Bidder> it = communicators.iterator();
-    //
-    // final List<Bidder> bestBidders = newArrayList();
-    // bestBidders.add(it.next());
-    //
-    // // if there are no other bidders, there is no need to organize an
-    // // auction at all (mainly used in test cases)
-    // if (it.hasNext()) {
-    // double bestValue = bestBidders.get(0).getBidFor(p, time);
-    // while (it.hasNext()) {
-    // final Bidder cur = it.next();
-    // final double curValue = cur.getBidFor(p, time);
-    // if (curValue < bestValue) {
-    // bestValue = curValue;
-    // bestBidders.clear();
-    // bestBidders.add(cur);
-    // } else if (Math.abs(curValue - bestValue) < TOLERANCE) {
-    // bestBidders.add(cur);
-    // }
-    // }
-    // }
-    //
-    // if (bestBidders.size() > 1) {
-    // bestBidders.get(rng.nextInt(bestBidders.size())).receiveParcel(p);
-    // } else {
-    // bestBidders.get(0).receiveParcel(p);
-    // }
-  }
-
-  @Override
-  public void tick(TimeLapse timeLapse) {
-
-  }
-
-  @Override
-  public void afterTick(TimeLapse timeLapse) {
-    for (final ParcelAuctioneer pa : bidMap.values()) {
-      pa.update(timeLapse.getStartTime());
-    }
-  }
-
-  /**
-   * @return A new {@link Builder} instance.
-   */
-  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
-    return Builder.<T>create();
-  }
-
   class ParcelAuctioneer implements Auctioneer<T> {
     final Parcel parcel;
     final Set<T> bids;
@@ -180,6 +161,11 @@ public class AuctionCommModel<T extends Bid<T>>
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
+
+        for (final Bidder<T> bidder : communicators) {
+          bidder.endOfAuction(this, parcel, auctionStartTime);
+        }
+
         LOGGER.trace(">>>> {} end of auction for {} <<<<", time, parcel);
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
@@ -223,15 +209,6 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
-  }
-
-  @Override
-  public <U> U get(Class<U> clazz) {
-    if (clazz.isAssignableFrom(AuctionCommModel.class)) {
-      return clazz.cast(this);
-    }
-    throw new IllegalArgumentException(
-        AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
   }
 
   /**

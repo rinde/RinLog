@@ -44,6 +44,10 @@ public class RandomBidder extends AbstractBidder<DoubleBid> {
     auctioneer.submit(DoubleBid.create(time, this, p, rng.nextDouble()));
   }
 
+  @Override
+  public void endOfAuction(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long time) {}
+
   /**
    * @return A {@link StochasticSupplier} that supplies {@link RandomBidder}
    *         instances.
@@ -58,5 +62,4 @@ public class RandomBidder extends AbstractBidder<DoubleBid> {
       }
     };
   }
-
 }
