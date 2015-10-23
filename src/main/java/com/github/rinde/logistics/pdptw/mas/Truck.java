@@ -160,7 +160,11 @@ public class Truck
         }
       } else if (event.trigger == DefaultEvent.DONE) {
         communicator.done();
-        routePlanner.next(getCurrentTime().getTime());
+        if (changed) {
+          updateAssignmentAndRoutePlanner();
+        } else {
+          routePlanner.next(getCurrentTime().getTime());
+        }
       }
 
       if ((event.newState == waitState
