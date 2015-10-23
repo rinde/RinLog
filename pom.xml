@@ -51,11 +51,25 @@
 		<rinsim.version>4.1.0-SNAPSHOT</rinsim.version>
 		<sonar.language>java</sonar.language>
 		<reference.version>1.0.0</reference.version>
+		<gc.args>-Xloggc:gc.log -XX:+PrintGCApplicationStoppedTime</gc.args>
 	</properties>
 
 	<build>
 		<pluginManagement>
 			<plugins>
+
+				<!-- unit tests -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.18.1</version>
+					<configuration>
+						<argLine>${gc.args}</argLine>
+						<systemPropertyVariables>
+							<jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+						</systemPropertyVariables>
+					</configuration>
+				</plugin>
 
 				<!-- suppresses an annoying warning (maven-enforce-plugin blabla) -->
 				<plugin>
@@ -96,25 +110,25 @@
 									</action>
 								</pluginExecution>
 								<pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>
-                                            org.apache.maven.plugins
-                                        </groupId>
-                                        <artifactId>
-                                            maven-compiler-plugin
-                                        </artifactId>
-                                        <versionRange>
-                                            [3.1,)
-                                        </versionRange>
-                                        <goals>
-                                            <goal>compile</goal>
-                                            <goal>testCompile</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore></ignore>
-                                    </action>
-                                </pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-compiler-plugin
+										</artifactId>
+										<versionRange>
+											[3.1,)
+										</versionRange>
+										<goals>
+											<goal>compile</goal>
+											<goal>testCompile</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
 							</pluginExecutions>
 						</lifecycleMappingMetadata>
 					</configuration>
@@ -167,30 +181,12 @@
 
 		<plugins>
 			<!-- Checks API for backwards compatibility -->
- 		<!--	<plugin>
-				<groupId>com.googlecode.japi-checker</groupId>
-				<artifactId>japi-checker-maven-plugin</artifactId>
-				<version>0.1.4</version>
-				 <configuration>
-					<reference>
-						<groupId>com.github.rinde</groupId>
-						<artifactId>${project.artifactId}</artifactId>
-						<version>${reference.version}</version>
-					</reference>
-					<rules>
-						<rule>com.googlecode.japi.checker.rules.AllRules</rule>
-					</rules>
-				</configuration>
-				<executions>
-					<execution>
-						<id>check-bc</id>		
-						<phase>verify</phase> 	
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin> -->
+			<!-- <plugin> <groupId>com.googlecode.japi-checker</groupId> <artifactId>japi-checker-maven-plugin</artifactId> 
+				<version>0.1.4</version> <configuration> <reference> <groupId>com.github.rinde</groupId> 
+				<artifactId>${project.artifactId}</artifactId> <version>${reference.version}</version> 
+				</reference> <rules> <rule>com.googlecode.japi.checker.rules.AllRules</rule> 
+				</rules> </configuration> <executions> <execution> <id>check-bc</id> <phase>verify</phase> 
+				<goals> <goal>check</goal> </goals> </execution> </executions> </plugin> -->
 			<!-- Release plugin -->
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
@@ -248,15 +244,15 @@
 					<source>1.7</source>
 					<target>1.7</target>
 					<compilerId>javac-with-errorprone</compilerId>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
+					<forceJavacCompilerUse>true</forceJavacCompilerUse>
 				</configuration>
 				<dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.plexus</groupId>
-                        <artifactId>plexus-compiler-javac-errorprone</artifactId>
-                        <version>2.5</version>
-                    </dependency>
-                </dependencies>
+					<dependency>
+						<groupId>org.codehaus.plexus</groupId>
+						<artifactId>plexus-compiler-javac-errorprone</artifactId>
+						<version>2.5</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<!-- creates a test-jar which can then be reused in other projects' tests -->
