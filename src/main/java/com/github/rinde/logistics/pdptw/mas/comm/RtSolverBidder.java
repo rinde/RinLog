@@ -36,6 +36,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -56,6 +57,7 @@ public class RtSolverBidder
   final ObjectiveFunction objectiveFunction;
   Optional<RtSimSolver> solverHandle;
   final Queue<CallForBids> cfbQueue;
+  Listener currentListener;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
     objectiveFunction = objFunc;
@@ -67,6 +69,7 @@ public class RtSolverBidder
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
       final Parcel parcel, final long time) {
+    LOGGER.trace("callForBids {} {} {}", auctioneer, parcel, time);
     cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
 
     // avoid multiple bids at the same time
@@ -87,7 +90,12 @@ public class RtSolverBidder
     if (solverHandle.get().isComputing()) {
       // if current computation is about this auction -> cancel it
       if (endedAuction.equals(cfbQueue.peek())) {
+        LOGGER.trace("cancel computation");
         solverHandle.get().cancel();
+        final EventAPI ev = solverHandle.get().getEventAPI();
+        if (ev.containsListener(currentListener, EventType.NEW_SCHEDULE)) {
+          ev.removeListener(currentListener, EventType.NEW_SCHEDULE);
+        }
       }
       cfbQueue.remove(endedAuction);
       next();
@@ -96,7 +104,7 @@ public class RtSolverBidder
 
   void next() {
     if (!cfbQueue.isEmpty() && !solverHandle.get().isComputing()) {
-      computeBid(cfbQueue.peek());
+      computeBid(cfbQueue.poll());
     }
   }
 
@@ -113,9 +121,15 @@ public class RtSolverBidder
       state, ImmutableList.of(currentRoute)));
 
     final RtSolverBidder bidder = this;
-    final Listener listener = new Listener() {
+    currentListener = new Listener() {
+      boolean exec = false;
+
       @Override
       public void handleEvent(Event e) {
+        if (exec) {
+          return;
+        }
+        exec = true;
         // submit bid using baseline
         final ImmutableList<ImmutableList<Parcel>> schedule =
           solverHandle.get().getCurrentSchedule();
@@ -128,11 +142,9 @@ public class RtSolverBidder
           cfb.getParcel(), cost - baseline));
         solverHandle.get().getEventAPI().removeListener(this,
           EventType.NEW_SCHEDULE);
-
-        cfbQueue.poll();
       }
     };
-    solverHandle.get().getEventAPI().addListener(listener,
+    solverHandle.get().getEventAPI().addListener(currentListener,
       EventType.NEW_SCHEDULE);
 
     LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
@@ -143,6 +155,17 @@ public class RtSolverBidder
   }
 
   @Override
+  public void receiveParcel(Parcel p) {
+
+    super.receiveParcel(p);
+
+    // if reauction
+
+    // find most expensive parcel, start reauction
+
+  }
+
+  @Override
   public void tick(TimeLapse timeLapse) {
     next();
   }
@@ -150,7 +173,6 @@ public class RtSolverBidder
   @Override
   public void afterTick(TimeLapse timeLapse) {
     next();
-
   }
 
   @Override
@@ -198,5 +220,4 @@ public class RtSolverBidder
       return RtSolverBidder.class.getSimpleName() + ".supplier(..)";
     }
   }
-
 }
