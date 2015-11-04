@@ -213,7 +213,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
         eventDispatcher.dispatchEvent(ev);
         if (callback.isPresent()) {
-          System.out.println("END OF REAUCTION");
           callback.get().handleEvent(ev);
           callback = Optional.absent();
         }

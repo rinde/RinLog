@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
-import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel.ParcelAuctioneer;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
@@ -197,7 +196,6 @@ public class RtSolverBidder
     if (!reauctioning.get()
         && (stats.pickupTardiness > 0 || stats.deliveryTardiness > 0)) {
 
-      System.out.println("######### REAUCTION? #############");
       // find all swappable parcels, a parcel can be swapped if it is not yet in
       // cargo (it must occur twice in route for that)
       // TODO filter out parcels that will be visited within several seconds
@@ -236,7 +234,6 @@ public class RtSolverBidder
       // this parcel from the route will yield the greatest cost reduction.
       if (toSwap != null) {
         reauctioning.set(true);
-        System.out.println("LETS GO");
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
         // parcelAuctioneers
         // .entrySet()) {
@@ -248,9 +245,6 @@ public class RtSolverBidder
 
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
 
-        System.out.println(((ParcelAuctioneer) auct).winner);
-        System.out.println(((ParcelAuctioneer) auct).initiator);
-        System.out.println(((ParcelAuctioneer) auct).parcel);
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
           toSwap, baseline - lowestCost);
         auct.auctionParcel(this, state.getTime(), initialBid,
