@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -93,11 +93,11 @@ public interface Communicator {
    * assignment is not guaranteed to be exclusive.
    * @return All parcels which this communicator may handle.
    */
-  Collection<Parcel> getParcels();
+  Set<Parcel> getParcels();
 
   /**
    * @return Parcels which are claimed by this communicator and are not yet
    *         'done', see {@link #done()}.
    */
-  Collection<Parcel> getClaimedParcels();
+  Set<Parcel> getClaimedParcels();
 }

@@ -42,7 +42,7 @@ public interface Bidder<T extends Bid<T>> extends Communicator {
    * received via this method.
    * @param p The {@link Parcel} that is won.
    */
-  void receiveParcel(Parcel p);
+  void receiveParcel(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
 
   void releaseParcel(Parcel p);
 

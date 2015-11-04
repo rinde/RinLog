@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -54,7 +55,7 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected final void doUpdate(Collection<Parcel> onMap, long time) {
+  protected final void doUpdate(Set<Parcel> onMap, long time) {
     final Collection<Parcel> inCargo = Collections.checkedCollection(
       pdpModel.get().getContents(vehicle.get()), Parcel.class);
     parcels.clear();

@@ -70,6 +70,8 @@ public class TestTruck extends Truck {
   @AutoValue
   abstract static class TestTruckFactory extends TruckFactory {
 
+    private static final long serialVersionUID = 7021922386391250575L;
+
     @Override
     public void handleTimedEvent(AddVehicleEvent event,
         SimulatorAPI simulator) {

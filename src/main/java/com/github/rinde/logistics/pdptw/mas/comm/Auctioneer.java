@@ -15,16 +15,21 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
-import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.event.Listener;
 
 /**
  *
+ *
  * @author Rinde van Lon
  */
+// Auctioneer ---- Parcel (one-to-one)
 public interface Auctioneer<T extends Bid<T>> {
 
-  void auctionParcel(Bidder<T> currentOwner, Parcel p, long time, T bidToBeat);
+  void auctionParcel(Bidder<T> currentOwner, long time, T bidToBeat,
+      Listener callback);
 
   void submit(T bid);
+
+  Bidder<T> getWinner();
 
 }

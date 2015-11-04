@@ -17,10 +17,10 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
 
-import java.util.Collection;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -107,7 +107,7 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
       "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
       "Can not claim parcel %s which is not in assigned parcels: %s.", p,
-      assignedParcels);
+      assignedParcels, vehicle.get());
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
         || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     checkArgument(claimedParcels.isEmpty(),
@@ -135,17 +135,18 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
   }
 
   @Override
-  public final Collection<Parcel> getParcels() {
+  public final Set<Parcel> getParcels() {
     return unmodifiableSet(assignedParcels);
   }
 
   @Override
-  public final Collection<Parcel> getClaimedParcels() {
+  public final Set<Parcel> getClaimedParcels() {
     return unmodifiableSet(claimedParcels);
   }
 
   @Override
-  public void receiveParcel(Parcel p) {
+  public void receiveParcel(Auctioneer<T> auctioneer, Parcel p,
+      long auctionStartTime) {
     LOGGER.info("{} receiveParcel {}", this, p);
     assignedParcels.add(p);
     eventDispatcher
@@ -154,9 +155,12 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
   @Override
   public void releaseParcel(Parcel p) {
+    checkArgument(!pdpModel.get().getParcelState(p).isPickedUp()
+        && !pdpModel.get().getParcelState(p).isTransitionState());
     LOGGER.info("{} releaseParcel {}", this, p);
     checkArgument(assignedParcels.contains(p));
     assignedParcels.remove(p);
+    checkState(!assignedParcels.contains(p));
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }

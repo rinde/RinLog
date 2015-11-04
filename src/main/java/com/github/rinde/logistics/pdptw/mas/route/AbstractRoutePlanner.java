@@ -22,6 +22,7 @@ import static java.util.Collections.unmodifiableList;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +99,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   @Override
-  public final void update(Collection<Parcel> onMap, long time) {
+  public final void update(Set<Parcel> onMap, long time) {
     checkIsInitialized();
     LOGGER.info("update {} {} size {}", vehicle.get(), time, onMap.size());
     updated = true;
@@ -147,16 +148,16 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   }
 
   /**
-   * Should implement functionality of {@link #update(Collection, long)}
-   * according to the interface. It can be assumed that the method is allowed to
-   * be called (i.e. the route planner is initialized). A
+   * Should implement functionality of {@link #update(Set, long)} according to
+   * the interface. It can be assumed that the method is allowed to be called
+   * (i.e. the route planner is initialized). A
    * {@link RoutePlanner.RoutePlannerEventType#CHANGE} event should be
    * dispatched as soon as updating of the route is done.
    * @param onMap A collection of parcels which currently reside on the map.
    * @param time The current simulation time, this may be relevant for some
    *          route planners that want to take time windows into account.
    */
-  protected abstract void doUpdate(Collection<Parcel> onMap, long time);
+  protected abstract void doUpdate(Set<Parcel> onMap, long time);
 
   /**
    * Should implement functionality of {@link #next(long)} according to the

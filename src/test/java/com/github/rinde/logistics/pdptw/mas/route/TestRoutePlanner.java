@@ -17,7 +17,6 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.collect.Lists.newLinkedList;
 
-import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 
@@ -49,7 +48,7 @@ public class TestRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected void doUpdate(Collection<Parcel> onMap, long time) {
+  protected void doUpdate(Set<Parcel> onMap, long time) {
     final Set<Parcel> inCargo = pdpModel.get().getContents(vehicle.get());
     route.clear();
     route.addAll(onMap);

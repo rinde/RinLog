@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
 
-import java.util.Collection;
 import java.util.Set;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
@@ -95,7 +94,7 @@ public class BlackboardUser implements Communicator {
    */
   public void update() {
     eventDispatcher
-    .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
@@ -104,19 +103,19 @@ public class BlackboardUser implements Communicator {
   }
 
   @Override
-  public Collection<Parcel> getParcels() {
+  public Set<Parcel> getParcels() {
     return Sets.union(bcModel.get().getUnclaimedParcels(), claimedParcels);
   }
 
   @Override
-  public Collection<Parcel> getClaimedParcels() {
+  public Set<Parcel> getClaimedParcels() {
     return unmodifiableSet(claimedParcels);
   }
 
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-      .toString();
+        .toString();
   }
 
   // not needed

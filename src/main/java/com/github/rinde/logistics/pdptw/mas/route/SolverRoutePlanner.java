@@ -19,6 +19,7 @@ import static com.google.common.collect.Lists.newLinkedList;
 
 import java.util.Collection;
 import java.util.Queue;
+import java.util.Set;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.SimSolver;
@@ -76,7 +77,7 @@ public class SolverRoutePlanner
   }
 
   @Override
-  protected void doUpdate(Collection<Parcel> onMap, long time) {
+  protected void doUpdate(Set<Parcel> onMap, long time) {
     if (onMap.isEmpty()
         && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
@@ -87,9 +88,9 @@ public class SolverRoutePlanner
           pdpModel.get().getVehicleActionInfo(vehicle.get())
               .getParcel(),
 
-        pdpModel.get().getParcelState(
-          pdpModel.get().getVehicleActionInfo(vehicle.get())
-              .getParcel()));
+          pdpModel.get().getParcelState(
+            pdpModel.get().getVehicleActionInfo(vehicle.get())
+                .getParcel()));
       }
 
       final SolveArgs args = SolveArgs.create().useParcels(onMap);

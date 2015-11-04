@@ -17,6 +17,7 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -89,7 +90,7 @@ public interface RoutePlanner {
    * @param time The current simulation time, this may be relevant for some
    *          route planners that want to take time windows into account.
    */
-  void update(Collection<Parcel> onMap, long time);
+  void update(Set<Parcel> onMap, long time);
 
   /**
    * Should return the current parcel (the parcel that should be visited next).

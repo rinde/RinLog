@@ -15,14 +15,25 @@
  */
 package com.github.rinde.logistics.pdptw.mas.comm;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
+import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel.ParcelAuctioneer;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
@@ -39,10 +50,13 @@ import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
+import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Queues;
 
 /**
@@ -58,12 +72,17 @@ public class RtSolverBidder
   Optional<RtSimSolver> solverHandle;
   final Queue<CallForBids> cfbQueue;
   Listener currentListener;
+  Map<Parcel, Auctioneer<DoubleBid>> parcelAuctioneers;
+
+  AtomicBoolean reauctioning;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
     cfbQueue = Queues.synchronizedQueue(new LinkedList<CallForBids>());
+    parcelAuctioneers = new LinkedHashMap<>();
+    reauctioning = new AtomicBoolean();
   }
 
   @Override
@@ -71,6 +90,7 @@ public class RtSolverBidder
       final Parcel parcel, final long time) {
     LOGGER.trace("callForBids {} {} {}", auctioneer, parcel, time);
     cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
+    parcelAuctioneers.put(parcel, auctioneer);
 
     // avoid multiple bids at the same time
     checkState(solverHandle.isPresent(),
@@ -154,15 +174,111 @@ public class RtSolverBidder
         .useParcels(parcels));
   }
 
+  @SuppressWarnings("unused")
   @Override
-  public void receiveParcel(Parcel p) {
+  public void receiveParcel(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long auctionStartTime) {
 
-    super.receiveParcel(p);
+    LOGGER.trace("{} RECEIVE PARCEL {} {} {}", this, auctioneer, p,
+      auctionStartTime);
 
-    // if reauction
+    super.receiveParcel(auctioneer, p, auctionStartTime);
+    checkArgument(auctioneer.getWinner().equals(this));
 
-    // find most expensive parcel, start reauction
+    final ImmutableList<Parcel> currentRoute = ImmutableList
+        .copyOf(((Truck) vehicle.get()).getRoute());
+    final GlobalStateObject state = solverHandle.get().getCurrentState(
+      SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
+    final StatisticsDTO stats =
+      Solvers.computeStats(state, ImmutableList.of(currentRoute));
 
+    // if there is any tardiness in the current route, lets try to reacution one
+    // parcel
+    if (!reauctioning.get()
+        && (stats.pickupTardiness > 0 || stats.deliveryTardiness > 0)) {
+
+      System.out.println("######### REAUCTION? #############");
+      // find all swappable parcels, a parcel can be swapped if it is not yet in
+      // cargo (it must occur twice in route for that)
+      // TODO filter out parcels that will be visited within several seconds
+      // (length of auction)
+      final Multiset<Parcel> routeMultiset =
+        LinkedHashMultiset.create(currentRoute);
+      final Set<Parcel> swappableParcels = new LinkedHashSet<>();
+      for (final Parcel ap : assignedParcels) {
+        if (!pdpModel.get().getParcelState(ap).isPickedUp()
+            && !pdpModel.get().getParcelState(ap).isTransitionState()) {
+          swappableParcels.add(ap);
+        }
+      }
+
+      final double baseline = objectiveFunction.computeCost(stats);
+      double lowestCost = baseline;
+      @Nullable
+      Parcel toSwap = null;
+
+      LOGGER.trace("Compute cost of swapping");
+      for (final Parcel sp : swappableParcels) {
+        LOGGER.trace("try to swap {}", sp);
+        final List<Parcel> newRoute = new ArrayList<>();
+        newRoute.addAll(currentRoute);
+        newRoute.removeAll(Collections.singleton(sp));
+        final double cost = objectiveFunction.computeCost(
+          Solvers.computeStats(state,
+            ImmutableList.of(ImmutableList.copyOf(newRoute))));
+        if (cost < lowestCost) {
+          lowestCost = cost;
+          toSwap = sp;
+        }
+      }
+
+      // we have found the most expensive parcel in the route, that is, removing
+      // this parcel from the route will yield the greatest cost reduction.
+      if (toSwap != null) {
+        reauctioning.set(true);
+        System.out.println("LETS GO");
+        // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
+        // parcelAuctioneers
+        // .entrySet()) {
+        //
+        // System.out.println(entry.toString());
+        // }
+
+        // try to reauction
+
+        final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
+
+        System.out.println(((ParcelAuctioneer) auct).winner);
+        System.out.println(((ParcelAuctioneer) auct).initiator);
+        System.out.println(((ParcelAuctioneer) auct).parcel);
+        final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
+          toSwap, baseline - lowestCost);
+        auct.auctionParcel(this, state.getTime(), initialBid,
+          new Listener() {
+            @Override
+            public void handleEvent(Event e) {
+              reauctioning.set(false);
+            }
+          });
+      }
+    }
+  }
+
+  @Override
+  public void releaseParcel(Parcel p) {
+    LOGGER.trace("{} RELEASE PARCEL {}", this, p);
+    // remove the parcel from the route immediately to avoid going there
+    final List<Parcel> currentRoute =
+      new ArrayList<>(((Truck) vehicle.get()).getRoute());
+    if (currentRoute.contains(p)) {
+      LOGGER.trace(" > remove parcel from route: {}", currentRoute);
+      currentRoute.removeAll(Collections.singleton(p));
+      ((Truck) vehicle.get()).setRoute(currentRoute);
+
+      checkState(!((Truck) vehicle.get()).getRoute().contains(p));
+
+    }
+    super.releaseParcel(p);
   }
 
   @Override

@@ -17,9 +17,11 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.collect.Lists.newLinkedList;
 
-import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Queue;
+import java.util.Set;
 
+import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver;
@@ -52,11 +54,36 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
   }
 
   @Override
-  protected void doUpdate(Collection<Parcel> onMap, long time) {
+  protected void doUpdate(Set<Parcel> onMap, long time) {
     if (onMap.isEmpty()
         && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
+      final Set<Parcel> toRemove = new LinkedHashSet<Parcel>();
+      for (final Parcel p : route) {
+        if (!onMap.contains(p)
+            && !pdpModel.get().getParcelState(p).isPickedUp()
+            && !pdpModel.get().getParcelState(p).isTransitionState()) {
+          toRemove.add(p);
+        }
+      }
+      LOGGER.trace("route {}", route);
+      route.removeAll(toRemove);
+      LOGGER.trace("to remove: {}", toRemove);
+
+      final GlobalStateObject gso =
+        simSolver.get().getCurrentState(SolveArgs.create()
+            .useParcels(onMap)
+            .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
+
+      final Optional<Parcel> dest = gso.getVehicles().get(0).getDestination();
+      LOGGER.trace("destination {}", dest);
+      if (dest.isPresent()) {
+        LOGGER.trace("parcel state {}",
+          pdpModel.get().getParcelState(dest.get()));
+
+      }
+
       simSolver.get()
           .solve(SolveArgs.create()
               .useParcels(onMap)

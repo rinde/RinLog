@@ -54,8 +54,10 @@ import com.google.common.collect.Lists;
  */
 public class NegotiatingBidder extends SolverBidder {
 
-  private static final Comparator<TruckDist> TRUCK_DIST_COMPARATOR = TruckDistComparator.INSTANCE;
-  private static final Function<TruckDist, Truck> TRUCK_DIST_TO_TRUCK = ToTruckFunc.INSTANCE;
+  private static final Comparator<TruckDist> TRUCK_DIST_COMPARATOR =
+    TruckDistComparator.INSTANCE;
+  private static final Function<TruckDist, Truck> TRUCK_DIST_TO_TRUCK =
+    ToTruckFunc.INSTANCE;
 
   /**
    * This heuristic determines the property on which the selection of
@@ -90,7 +92,7 @@ public class NegotiatingBidder extends SolverBidder {
    * @param h The heuristic to use for selecting negotiators.
    */
   protected NegotiatingBidder(ObjectiveFunction objFunc, Solver s1, Solver s2,
-    int numOfNegotiators, SelectNegotiatorsHeuristic h) {
+      int numOfNegotiators, SelectNegotiatorsHeuristic h) {
     super(objFunc, s1);
     negotiationSolver = s2;
     checkArgument(numOfNegotiators >= 2);
@@ -102,7 +104,8 @@ public class NegotiatingBidder extends SolverBidder {
   private List<Truck> findTrucks() {
     final Point reference = convertToPos((Truck) vehicle.get());
     final List<TruckDist> pos = newArrayList(Collections2.transform(roadModel
-      .get().getObjectsOfType(Truck.class), new ToTruckDistFunc(reference)));
+        .get().getObjectsOfType(Truck.class),
+      new ToTruckDistFunc(reference)));
 
     checkState(
       pos.size() >= negotiators,
@@ -124,7 +127,7 @@ public class NegotiatingBidder extends SolverBidder {
   Point convertToPos(Truck t) {
     Point p;
     if (t.getRoute().isEmpty()
-      || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
+        || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
       p = roadModel.get().getPosition(t);
     } else {
       final Parcel firstDestination = t.getRoute().iterator().next();
@@ -138,7 +141,8 @@ public class NegotiatingBidder extends SolverBidder {
   }
 
   @Override
-  public void receiveParcel(Parcel p) {
+  public void receiveParcel(Auctioneer<DoubleBid> auctioneer, Parcel p,
+      long auctionStartTime) {
     final List<Truck> trucks = findTrucks();
     final Set<Parcel> ps = newLinkedHashSet();
     ps.add(p);
@@ -155,18 +159,19 @@ public class NegotiatingBidder extends SolverBidder {
       }
     }
 
-    final ImmutableList.Builder<ImmutableList<Parcel>> currentRoutes = ImmutableList
-      .<ImmutableList<Parcel>> builder();
+    final ImmutableList.Builder<ImmutableList<Parcel>> currentRoutes =
+      ImmutableList
+          .<ImmutableList<Parcel>>builder();
     for (final Truck t : trucks) {
       currentRoutes.add(ImmutableList.copyOf(t.getRoute()));
     }
 
     final SimSolver sol = simSolvBuilder.get()
-      .setVehicles(trucks)
-      .build(negotiationSolver);
+        .setVehicles(trucks)
+        .build(negotiationSolver);
     final List<Queue<Parcel>> routes = sol.solve(SolveArgs.create()
-      .useCurrentRoutes(currentRoutes.build())
-      .useParcels(availableParcels));
+        .useCurrentRoutes(currentRoutes.build())
+        .useParcels(availableParcels));
 
     final List<Parcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
@@ -174,13 +179,13 @@ public class NegotiatingBidder extends SolverBidder {
       ((SolverRoutePlanner) trucks.get(i).getRoutePlanner()).changeRoute(route);
       trucks.get(i).setRoute(route);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-        .clear();
+          .clear();
 
       final Set<Parcel> newAssignedParcels = newLinkedHashSet(route);
       newAssignedParcels.retainAll(ps);
       list.addAll(newAssignedParcels);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-        .addAll(newAssignedParcels);
+          .addAll(newAssignedParcels);
 
       final List<Parcel> l = newArrayList(route);
       checkArgument(!newAssignedParcels.retainAll(route), "", l,
@@ -209,24 +214,24 @@ public class NegotiatingBidder extends SolverBidder {
    * @return The new supplier.
    */
   public static StochasticSupplier<NegotiatingBidder> supplier(
-    final ObjectiveFunction objFunc,
-    final StochasticSupplier<? extends Solver> bidderSolverSupplier,
-    final StochasticSupplier<? extends Solver> negoSolverSupplier,
-    final int numOfNegotiators,
-    final SelectNegotiatorsHeuristic heuristic) {
+      final ObjectiveFunction objFunc,
+      final StochasticSupplier<? extends Solver> bidderSolverSupplier,
+      final StochasticSupplier<? extends Solver> negoSolverSupplier,
+      final int numOfNegotiators,
+      final SelectNegotiatorsHeuristic heuristic) {
     return new AbstractStochasticSupplier<NegotiatingBidder>() {
       private static final long serialVersionUID = 8739438748665308053L;
 
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),
-          negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
+            negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
       }
 
       @Override
       public String toString() {
         return Joiner.on('-').join(
-          Arrays.<Object> asList(super.toString(),
+          Arrays.<Object>asList(super.toString(),
             bidderSolverSupplier.toString(), negoSolverSupplier.toString(),
             numOfNegotiators, heuristic.toString().replaceAll("_", "-")));
       }

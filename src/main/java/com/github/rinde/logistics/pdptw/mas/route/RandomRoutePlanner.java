@@ -18,7 +18,6 @@ package com.github.rinde.logistics.pdptw.mas.route;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.newArrayList;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -55,7 +54,7 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
   }
 
   @Override
-  protected final void doUpdate(Collection<Parcel> onMap, long time) {
+  protected final void doUpdate(Set<Parcel> onMap, long time) {
     final Set<Parcel> inCargo = pdpModel.get().getContents(vehicle.get());
     assignedParcels.clear();
     for (final Parcel dp : onMap) {

@@ -275,7 +275,7 @@ public class AuctionTest {
     final Parcel parcelToSwap = truck1.getCommunicator().getParcels()
         .iterator().next();
     bidder1.releaseParcel(parcelToSwap);
-    bidder2.receiveParcel(parcelToSwap);
+    bidder2.receiveParcel(null, parcelToSwap, 0);
 
     sim.tick();
     while (!pm.getParcelState(parcelToSwap).isPickedUp()) {
@@ -307,7 +307,7 @@ public class AuctionTest {
     final PDPModel pm = mock(PDPModel.class);
     rb.init(mock(PDPRoadModel.class), pm, mock(Vehicle.class));
     when(pm.getParcelState(dp)).thenReturn(ParcelState.AVAILABLE);
-    rb.receiveParcel(dp);
+    rb.receiveParcel(null, dp, 0);
     rb.claim(dp);
     boolean fail = false;
     try {
@@ -333,7 +333,7 @@ public class AuctionTest {
   public void unclaimFail2() {
     final RandomBidder rb = new RandomBidder(123);
     final Parcel dp = new Parcel(ape1.getParcelDTO());
-    rb.receiveParcel(dp);
+    rb.receiveParcel(null, dp, 0);
     rb.unclaim(dp);
   }
 
@@ -355,7 +355,7 @@ public class AuctionTest {
     }
 
     @Override
-    protected void doUpdate(Collection<Parcel> onMap, long time) {}
+    protected void doUpdate(Set<Parcel> onMap, long time) {}
 
     @Override
     protected void nextImpl(long time) {

@@ -24,9 +24,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -346,7 +346,7 @@ public class SingleTruckTest {
     }
 
     @Override
-    public void update(Collection<Parcel> onMap, long time) {
+    public void update(Set<Parcel> onMap, long time) {
       delegate.update(onMap, time);
       updateCounter++;
     }

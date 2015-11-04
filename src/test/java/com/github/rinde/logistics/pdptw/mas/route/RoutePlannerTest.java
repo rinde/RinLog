@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -153,9 +154,8 @@ public class RoutePlannerTest {
       assertFalse(((AbstractRoutePlanner) routePlanner).isUpdated());
     }
 
-    final Collection<Parcel> onMap = roadModel
-        .getObjectsOfType(Parcel.class);
-    final Collection<Parcel> inCargo = pdpModel.getContents(truck);
+    final Set<Parcel> onMap = roadModel.getObjectsOfType(Parcel.class);
+    final Set<Parcel> inCargo = pdpModel.getContents(truck);
     final List<Parcel> visited = newLinkedList();
     routePlanner.update(onMap, 0);
 
@@ -198,12 +198,12 @@ public class RoutePlannerTest {
   public void testMultiUpdate() {
     routePlanner.init(roadModel, pdpModel, truck);
 
-    final Collection<Parcel> empty = ImmutableSet.of();
-    final Collection<Parcel> singleCargo = ImmutableSet
+    final Set<Parcel> empty = ImmutableSet.of();
+    final Set<Parcel> singleCargo = ImmutableSet
         .of(pdpModel.getContents(truck).iterator().next());
     final Parcel mapParcel = roadModel
         .getObjectsOfType(Parcel.class).iterator().next();
-    final Collection<Parcel> singleOnMap = ImmutableSet.of(mapParcel);
+    final Set<Parcel> singleOnMap = ImmutableSet.of(mapParcel);
 
     routePlanner.update(empty, 0);
     assertFalse(routePlanner.prev().isPresent());
@@ -269,7 +269,7 @@ public class RoutePlannerTest {
 
     routePlanner.init(roadModel, pdpModel, emptyTruck);
 
-    final Collection<Parcel> s1 = ImmutableSet.of();
+    final Set<Parcel> s1 = ImmutableSet.of();
     routePlanner.update(s1, 0);
     assertFalse(routePlanner.current().isPresent());
     assertFalse(routePlanner.currentRoute().isPresent());
@@ -277,8 +277,7 @@ public class RoutePlannerTest {
     assertTrue(routePlanner.getHistory().isEmpty());
     assertFalse(routePlanner.prev().isPresent());
 
-    final Collection<Parcel> onMap = roadModel
-        .getObjectsOfType(Parcel.class);
+    final Set<Parcel> onMap = roadModel.getObjectsOfType(Parcel.class);
     routePlanner.update(onMap, 0);
     assertTrue(routePlanner.current().isPresent());
     assertTrue(routePlanner.currentRoute().isPresent());

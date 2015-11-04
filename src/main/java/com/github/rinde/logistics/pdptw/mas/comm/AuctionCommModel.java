@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.Serializable;
@@ -23,18 +24,24 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.rand.RandomProvider;
+import com.github.rinde.rinsim.core.model.time.Clock;
+import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.EventDispatcher;
+import com.github.rinde.rinsim.event.Listener;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
@@ -52,13 +59,20 @@ public class AuctionCommModel<T extends Bid<T>>
   final AuctionStopCondition<T> stopCondition;
 
   final EventDispatcher eventDispatcher;
+  @Nullable
+  final RealtimeClockController clock;
 
-  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc) {
+  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc, Clock c) {
     rng = r;
     stopCondition = sc;
     bidMap = LinkedHashMultimap.create();
 
     eventDispatcher = new EventDispatcher(EventType.values());
+    if (c instanceof RealtimeClockController) {
+      clock = (RealtimeClockController) c;
+    } else {
+      clock = null;
+    }
   }
 
   public EventAPI getEventAPI() {
@@ -108,14 +122,25 @@ public class AuctionCommModel<T extends Bid<T>>
   }
 
   public static class AuctionEvent extends Event {
-
     private final Parcel parcel;
     private final Auctioneer auctioneer;
+    private final long time;
 
-    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a) {
+    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t) {
       super(type);
       parcel = p;
       auctioneer = a;
+      time = t;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(AuctionEvent.class)
+          .add("type", getEventType())
+          .add("parcel", parcel)
+          .add("auctioneer", auctioneer)
+          .add("time", time)
+          .toString();
     }
 
     /**
@@ -131,26 +156,36 @@ public class AuctionCommModel<T extends Bid<T>>
     public Auctioneer getAuctioneer() {
       return auctioneer;
     }
+
+    public long getTime() {
+      return time;
+    }
   }
 
   class ParcelAuctioneer implements Auctioneer<T> {
     final Parcel parcel;
     final Set<T> bids;
     Optional<Bidder<T>> winner;
+    Optional<Bidder<T>> initiator;
     long auctionStartTime;
     int auctions;
+
+    Optional<Listener> callback;
 
     ParcelAuctioneer(Parcel p) {
       parcel = p;
       bids = new LinkedHashSet<>();
       winner = Optional.absent();
+      initiator = Optional.absent();
+      callback = Optional.absent();
     }
 
     void initialAuction(long time) {
       LOGGER.trace("*** Start auction at {} for {}. ***", time, parcel);
       eventDispatcher.dispatchEvent(
-        new AuctionEvent(EventType.START_AUCTION, parcel, this));
+        new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
       auctionStartTime = time;
+      auctions++;
 
       for (final Bidder<T> b : communicators) {
         b.callForBids(this, parcel, time);
@@ -170,22 +205,65 @@ public class AuctionCommModel<T extends Bid<T>>
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
         LOGGER.trace("Winning bid : {}", winningBid);
-        winner = Optional.of(winningBid.getBidder());
-        winner.get().receiveParcel(winningBid.getParcel());
-        // this is called to prevent the clock from switching to simulated time
-        // because the winner also needs to do some computation itself.
-        // clock.switchToRealTime();
 
-        eventDispatcher.dispatchEvent(
-          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this));
+        winner = Optional.of(winningBid.getBidder());
+
+        final AuctionEvent ev =
+          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time);
+
+        eventDispatcher.dispatchEvent(ev);
+        if (callback.isPresent()) {
+          System.out.println("END OF REAUCTION");
+          callback.get().handleEvent(ev);
+          callback = Optional.absent();
+        }
+
+        if (initiator.isPresent()
+            && winningBid.getBidder().equals(initiator.get())) {
+          // nothing changes
+          initiator = Optional.absent();
+        } else {
+          if (initiator.isPresent()) {
+            initiator.get().releaseParcel(parcel);
+            initiator = Optional.absent();
+          }
+          winner.get().receiveParcel(this, parcel, auctionStartTime);
+        }
+        if (clock != null) {
+          // this is called to prevent the clock from switching to simulated
+          // time because the winner also needs to do some computation itself.
+          clock.switchToRealTime();
+        }
       }
     }
 
     @Override
-    public void auctionParcel(Bidder<T> currentOwner, Parcel p, long time,
-        T bidToBeat) {
-      checkArgument(winner.get() == currentOwner);
+    public void auctionParcel(Bidder<T> currentOwner, long time,
+        T bidToBeat, Listener cb) {
+      LOGGER.trace("*** Start RE-auction at {} for {}. Prev auctions: {} ***",
+        time, parcel, auctions);
+
+      checkNotNull(currentOwner);
+      checkArgument(time >= 0L);
+      checkNotNull(bidToBeat);
+      checkNotNull(cb);
+      checkState(winner.isPresent());
+      checkState(!callback.isPresent());
+      checkArgument(bidToBeat.getParcel().equals(parcel));
+      checkArgument(bidToBeat.getBidder().equals(currentOwner));
+      checkArgument(winner.get().equals(currentOwner),
+        "A reauction can only be initiated by the previous winner (%s), "
+            + "found %s. Parcel: %s.",
+        winner.get(), currentOwner, parcel);
+
+      eventDispatcher.dispatchEvent(
+        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this, time));
+
+      callback = Optional.of(cb);
       winner = Optional.absent();
+      bids.clear();
+      bids.add(bidToBeat);
+      initiator = Optional.of(currentOwner);
 
       auctionStartTime = time;
       auctions++;
@@ -209,6 +287,12 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
+    @Override
+    public Bidder<T> getWinner() {
+      checkState(winner.isPresent());
+      return winner.get();
+    }
+
   }
 
   /**
@@ -221,7 +305,7 @@ public class AuctionCommModel<T extends Bid<T>>
       implements Serializable {
 
     Builder() {
-      setDependencies(RandomProvider.class);
+      setDependencies(RandomProvider.class, Clock.class);
       setProvidingTypes(AuctionCommModel.class);
     }
 
@@ -235,9 +319,8 @@ public class AuctionCommModel<T extends Bid<T>>
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
       final RandomGenerator r = dependencyProvider.get(RandomProvider.class)
           .newInstance();
-      // final RealtimeClockController clock =
-      // dependencyProvider.get(RealtimeClockController.class);
-      return new AuctionCommModel<T>(r, getStopCondition());
+      final Clock clock = dependencyProvider.get(Clock.class);
+      return new AuctionCommModel<T>(r, getStopCondition(), clock);
     }
 
     static <T extends Bid<T>> Builder<T> create() {
