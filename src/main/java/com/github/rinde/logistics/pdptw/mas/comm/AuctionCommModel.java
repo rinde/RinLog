@@ -194,6 +194,12 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     void update(long time) {
+
+      if (!winner.isPresent() && time > auctionStartTime + 10000) {
+        throw new IllegalStateException("Auction takes too long, num bids: " +
+            bids.size());
+      }
+
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
