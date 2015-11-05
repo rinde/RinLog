@@ -68,7 +68,7 @@ public class TestTruck extends Truck {
   }
 
   @AutoValue
-  abstract static class TestTruckFactory extends TruckFactory {
+  abstract static class TestTruckFactory implements TruckFactory {
 
     private static final long serialVersionUID = 7021922386391250575L;
 

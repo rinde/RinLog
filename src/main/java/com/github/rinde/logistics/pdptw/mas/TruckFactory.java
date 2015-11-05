@@ -35,42 +35,48 @@ import com.google.auto.value.AutoValue;
  * @author Rinde van Lon
  *
  */
-@AutoValue
-public abstract class TruckFactory
-    implements TimedEventHandler<AddVehicleEvent>, Serializable {
-
-  private static final long serialVersionUID = -1583810279540916295L;
-
-  TruckFactory() {}
+public interface TruckFactory
+    extends TimedEventHandler<AddVehicleEvent>, Serializable {
 
   /**
    * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
    * <i>every</i> {@link Truck}.
    */
-  abstract StochasticSupplier<? extends RoutePlanner> getRoutePlanner();
+  StochasticSupplier<? extends RoutePlanner> getRoutePlanner();
 
   /**
    * Supplier for {@link Communicator} instances, it supplies a new instance for
    * <i>every</i> {@link Truck}.
    */
-  abstract StochasticSupplier<? extends Communicator> getCommunicator();
+  StochasticSupplier<? extends Communicator> getCommunicator();
 
-  abstract RouteAdjuster getRouteAdjuster();
+  RouteAdjuster getRouteAdjuster();
 
-  abstract boolean getLazyComputation();
+  boolean getLazyComputation();
 
-  @Override
-  public void handleTimedEvent(AddVehicleEvent event, SimulatorAPI simulator) {
-    final RoutePlanner rp = getRoutePlanner().get(simulator.getRandomGenerator()
-        .nextLong());
-    final Communicator c = getCommunicator().get(simulator.getRandomGenerator()
-        .nextLong());
-    simulator.register(new Truck(event.getVehicleDTO(), rp, c,
-        getRouteAdjuster(), getLazyComputation()));
-  }
+  @AutoValue
+  public abstract static class DefaultTruckFactory implements TruckFactory {
 
-  public static Builder builder() {
-    return new Builder();
+    private static final long serialVersionUID = -5872180422731872369L;
+
+    DefaultTruckFactory() {}
+
+    @Override
+    public void handleTimedEvent(AddVehicleEvent event,
+        SimulatorAPI simulator) {
+      final RoutePlanner rp =
+        getRoutePlanner().get(simulator.getRandomGenerator()
+            .nextLong());
+      final Communicator c =
+        getCommunicator().get(simulator.getRandomGenerator()
+            .nextLong());
+      simulator.register(new Truck(event.getVehicleDTO(), rp, c,
+          getRouteAdjuster(), getLazyComputation()));
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
   }
 
   public static class Builder {
@@ -113,8 +119,8 @@ public abstract class TruckFactory
     public TruckFactory build() {
       checkArgument(routePlanner != null, "A route planner must be specified.");
       checkArgument(communicator != null, "A communicator must be specified.");
-      return new AutoValue_TruckFactory(routePlanner, communicator,
-          routeAdjuster, lazyComputation);
+      return new AutoValue_TruckFactory_DefaultTruckFactory(routePlanner,
+          communicator, routeAdjuster, lazyComputation);
     }
   }
 }

@@ -38,7 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
-import com.github.rinde.logistics.pdptw.mas.TruckFactory;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory.DefaultTruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.CommunicationIntegrationTest.CommTestModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
 import com.github.rinde.logistics.pdptw.mas.route.AbstractRoutePlanner;
@@ -125,7 +125,7 @@ public class AuctionTest {
     final MASConfiguration configuration =
       MASConfiguration.pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
-            TruckFactory.builder()
+            DefaultTruckFactory.builder()
                 .setRoutePlanner(FixedRoutePlanner.supplier())
                 .setCommunicator(bidderSupplier)
                 .build())
@@ -229,7 +229,7 @@ public class AuctionTest {
       MASConfiguration
           .pdptwBuilder()
           .addEventHandler(AddVehicleEvent.class,
-            TruckFactory.builder()
+            DefaultTruckFactory.builder()
                 .setRoutePlanner(RandomRoutePlanner.supplier())
                 .setCommunicator(bidderSupplier)
                 .build())

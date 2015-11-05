@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
-import com.github.rinde.logistics.pdptw.mas.TruckFactory;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory.DefaultTruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel.AuctionEvent;
 import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
@@ -124,7 +124,7 @@ public class RtRoutePlannerTest {
             .addModel(AuctionCommModel.builder(DoubleBid.class))
             .addModel(AuctionCommModelLogger.builder())
             .addEventHandler(AddVehicleEvent.class,
-              TruckFactory.builder()
+              DefaultTruckFactory.builder()
                   .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
                   .setCommunicator(
                     RtSolverBidder.supplier(objFunc, rtSolverSup))

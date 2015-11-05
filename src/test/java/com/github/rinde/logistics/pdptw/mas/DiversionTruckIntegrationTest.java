@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.github.rinde.logistics.pdptw.mas.TruckFactory.DefaultTruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.AuctionCommModel;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.DoubleBid;
@@ -91,7 +92,7 @@ public class DiversionTruckIntegrationTest {
           configs.add(new Object[] {
               MASConfiguration.pdptwBuilder()
                   .addEventHandler(AddVehicleEvent.class,
-                    TruckFactory.builder()
+                    DefaultTruckFactory.builder()
                         .setRoutePlanner(rp)
                         .setCommunicator(cm)
                         .build())

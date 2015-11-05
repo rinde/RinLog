@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.rinde.logistics.pdptw.mas.TruckFactory;
+import com.github.rinde.logistics.pdptw.mas.TruckFactory.DefaultTruckFactory;
 import com.github.rinde.logistics.pdptw.mas.route.GotoClosestRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.rinsim.central.RandomSolver;
@@ -93,7 +93,7 @@ public class CommunicationIntegrationTest implements TickListener {
     return asList(new Object[][] {
         {MASConfiguration.pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              TruckFactory.builder()
+              DefaultTruckFactory.builder()
                   .setRoutePlanner(RandomRoutePlanner.supplier())
                   .setCommunicator(RandomBidder.supplier())
                   .build())
@@ -102,7 +102,7 @@ public class CommunicationIntegrationTest implements TickListener {
             .build()},
         {MASConfiguration.pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              TruckFactory.builder()
+              DefaultTruckFactory.builder()
                   .setRoutePlanner(RandomRoutePlanner.supplier())
                   .setCommunicator(
                     SolverBidder.supplier(objFunc, RandomSolver.supplier()))
@@ -114,7 +114,7 @@ public class CommunicationIntegrationTest implements TickListener {
         {MASConfiguration
             .pdptwBuilder()
             .addEventHandler(AddVehicleEvent.class,
-              TruckFactory.builder()
+              DefaultTruckFactory.builder()
                   .setRoutePlanner(GotoClosestRoutePlanner.supplier())
                   .setCommunicator(BlackboardUser.supplier())
                   .build())
