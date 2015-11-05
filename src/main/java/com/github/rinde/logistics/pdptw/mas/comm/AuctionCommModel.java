@@ -195,11 +195,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
     void update(long time) {
 
-      if (!winner.isPresent() && time > auctionStartTime + 10000) {
-        throw new IllegalStateException("Auction takes too long, num bids: " +
-            bids.size());
-      }
-
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
@@ -208,7 +203,9 @@ public class AuctionCommModel<T extends Bid<T>>
           bidder.endOfAuction(this, parcel, auctionStartTime);
         }
 
-        LOGGER.trace(">>>> {} end of auction for {} <<<<", time, parcel);
+        LOGGER.trace(
+          ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
+          time, parcel, bids.size(), time - auctionStartTime);
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
         LOGGER.trace("Winning bid : {}", winningBid);
@@ -290,6 +287,9 @@ public class AuctionCommModel<T extends Bid<T>>
       // submitted bid is for a previously held auction.
       if (!winner.isPresent() && bid.getTimeOfAuction() == auctionStartTime) {
         bids.add(bid);
+      } else {
+        LOGGER.warn("Ignoring bid {}, winner {}, auctionStartTime {}", bid,
+          winner, auctionStartTime);
       }
     }
 

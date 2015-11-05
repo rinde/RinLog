@@ -17,14 +17,16 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.List;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  *
  * @author Rinde van Lon
  */
 public final class AuctionStopConditions {
-
   private AuctionStopConditions() {}
 
   @SuppressWarnings("unchecked")
@@ -32,9 +34,63 @@ public final class AuctionStopConditions {
     return AllBidders.INSTANCE;
   }
 
+  public static <T extends Bid<T>> AuctionStopCondition<T> maxAuctionDuration(
+      long maxDuration) {
+    return new MaxAuctionDuration<>(maxDuration);
+  }
+
+  @SafeVarargs
+  public static <T extends Bid<T>> AuctionStopCondition<T> or(
+      AuctionStopCondition<T>... auctionStopConditions) {
+    return new Or<>(auctionStopConditions);
+  }
+
+  static class Or<T extends Bid<T>>
+      implements AuctionStopCondition<T> {
+
+    List<AuctionStopCondition<T>> conditions;
+
+    @SafeVarargs
+    Or(AuctionStopCondition<T>... conds) {
+      conditions = ImmutableList.copyOf(conds);
+    }
+
+    @Override
+    public boolean apply(Set<T> bids, int potentialBidders,
+        long auctionStartTime, long currentTime) {
+      for (final AuctionStopCondition<T> cond : conditions) {
+        if (cond.apply(bids, potentialBidders, auctionStartTime, currentTime)) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  static class MaxAuctionDuration<T extends Bid<T>>
+      implements AuctionStopCondition<T> {
+
+    final long maxAuctionDuration;
+
+    MaxAuctionDuration(long maxDuration) {
+      maxAuctionDuration = maxDuration;
+    }
+
+    @Override
+    public boolean apply(Set<T> bids, int potentialBidders,
+        long auctionStartTime, long currentTime) {
+      return currentTime - auctionStartTime > maxAuctionDuration;
+    }
+
+    @Override
+    public String toString() {
+      return AuctionStopConditions.class.getSimpleName()
+          + ".maxAuctionDuration(" + maxAuctionDuration + ")";
+    }
+  }
+
   enum AllBidders implements AuctionStopCondition {
     INSTANCE {
-
       @Override
       public boolean apply(Set bids, int potentialBidders,
           long auctionStartTime, long currentTime) {
@@ -42,7 +98,6 @@ public final class AuctionStopConditions {
           "There are too many bids: %s.", bids);
         return bids.size() == potentialBidders;
       }
-
     }
   }
 }
