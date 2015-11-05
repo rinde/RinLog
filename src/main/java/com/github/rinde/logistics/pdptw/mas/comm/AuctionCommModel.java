@@ -196,6 +196,9 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     void update(long time) {
+      if (!winner.isPresent()) {
+        checkRealtime();
+      }
 
       if (!winner.isPresent() && stopCondition.apply(
         Collections.unmodifiableSet(bids), communicators.size(),
@@ -204,7 +207,6 @@ public class AuctionCommModel<T extends Bid<T>>
         LOGGER.trace(
           ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
           time, parcel, bids.size(), time - auctionStartTime);
-        checkRealtime();
 
         for (final Bidder<T> bidder : communicators) {
           bidder.endOfAuction(this, parcel, auctionStartTime);
