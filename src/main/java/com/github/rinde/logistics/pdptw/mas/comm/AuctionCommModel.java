@@ -251,6 +251,8 @@ public class AuctionCommModel<T extends Bid<T>>
         checkState(clock.getClockMode() == ClockMode.REAL_TIME,
           "Clock must be in real-time mode, but is in %s mode.",
           clock.getClockMode());
+        // make sure we stay in rt
+        clock.switchToRealTime();
       }
     }
 
