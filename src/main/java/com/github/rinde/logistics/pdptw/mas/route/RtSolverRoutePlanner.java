@@ -84,10 +84,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
       }
 
-      simSolver.get()
-          .solve(SolveArgs.create()
-              .useParcels(onMap)
-              .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
+      simSolver.get().solve(gso);
     }
   }
 

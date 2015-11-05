@@ -135,7 +135,9 @@ public class RtSolverBidder
         .copyOf(((Truck) vehicle.get()).getRoute());
 
     final GlobalStateObject state = solverHandle.get().getCurrentState(
-      SolveArgs.create().noCurrentRoutes().useParcels(parcels));
+      SolveArgs.create()
+          .useCurrentRoutes(ImmutableList.of(currentRoute))
+          .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
       state, ImmutableList.of(currentRoute)));
 
@@ -168,9 +170,7 @@ public class RtSolverBidder
 
     LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
       parcels);
-    solverHandle.get().solve(SolveArgs.create()
-        .useCurrentRoutes(ImmutableList.of(currentRoute))
-        .useParcels(parcels));
+    solverHandle.get().solve(state);
   }
 
   @SuppressWarnings("unused")
