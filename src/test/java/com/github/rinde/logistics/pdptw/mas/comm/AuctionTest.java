@@ -292,9 +292,20 @@ public class AuctionTest {
   /**
    * Illegal claim.
    */
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void claimFail1() {
-    new RandomBidder(123).claim(new Parcel(ape1.getParcelDTO()));
+    final RandomBidder rb = new RandomBidder(123);
+    rb.init(mock(PDPRoadModel.class), mock(PDPModel.class),
+      mock(Vehicle.class));
+
+    boolean fail = false;
+    try {
+      rb.claim(new Parcel(ape1.getParcelDTO()));
+    } catch (final IllegalArgumentException e) {
+      assertThat(e.getMessage()).contains("not in assigned parcels");
+      fail = true;
+    }
+    assertThat(fail).isTrue();
   }
 
   /**
