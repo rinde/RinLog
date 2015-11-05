@@ -123,14 +123,18 @@ public class AuctionCommModel<T extends Bid<T>>
 
   public static class AuctionEvent extends Event {
     private final Parcel parcel;
-    private final Auctioneer auctioneer;
     private final long time;
+    private final Optional<Bidder<?>> winner;
 
     protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t) {
       super(type);
       parcel = p;
-      auctioneer = a;
       time = t;
+      if (type == EventType.FINISH_AUCTION) {
+        winner = Optional.<Bidder<?>>of(a.getWinner());
+      } else {
+        winner = Optional.absent();
+      }
     }
 
     @Override
@@ -138,7 +142,7 @@ public class AuctionCommModel<T extends Bid<T>>
       return MoreObjects.toStringHelper(AuctionEvent.class)
           .add("type", getEventType())
           .add("parcel", parcel)
-          .add("auctioneer", auctioneer)
+          .add("winner", winner)
           .add("time", time)
           .toString();
     }
@@ -150,11 +154,8 @@ public class AuctionCommModel<T extends Bid<T>>
       return parcel;
     }
 
-    /**
-     * @return the auctioneer
-     */
-    public Auctioneer getAuctioneer() {
-      return auctioneer;
+    public Optional<Bidder<?>> getWinner() {
+      return winner;
     }
 
     public long getTime() {

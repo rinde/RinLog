@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2015 Rinde van Lon, iMinds-DistriNet, KU Leuven
+ * Copyright (C) 2013-2015 Rinde van Lon, iMinds DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,8 +93,7 @@ public class AuctionPanel
                 ae.getEventType().toString(),
                 FORMATTER.print(new Period(0, ae.getTime())),
                 e.getEventType() == EventType.FINISH_AUCTION
-                    ? ae.getAuctioneer().getWinner().toString() : "",
-                ae.getAuctioneer().toString()
+                    ? ae.getWinner().get().toString() : ""
             });
           }
         });
@@ -119,10 +118,6 @@ public class AuctionPanel
     final TreeColumn tc3 = new TreeColumn(tree.get(), 0);
     tc3.setText("Winner");
     tc3.setWidth(200);
-    final TreeColumn tc2 = new TreeColumn(tree.get(), 0);
-    tc2.setText("Auctioneer");
-    tc2.setWidth(200);
-
   }
 
   @Override
