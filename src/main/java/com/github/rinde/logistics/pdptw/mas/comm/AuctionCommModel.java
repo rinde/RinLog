@@ -34,6 +34,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.rand.RandomProvider;
 import com.github.rinde.rinsim.core.model.time.Clock;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
+import com.github.rinde.rinsim.core.model.time.RealtimeClockController.ClockMode;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
@@ -183,6 +184,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     void initialAuction(long time) {
       LOGGER.trace("*** Start auction at {} for {}. ***", time, parcel);
+      checkRealtime();
       eventDispatcher.dispatchEvent(
         new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
       auctionStartTime = time;
@@ -199,13 +201,15 @@ public class AuctionCommModel<T extends Bid<T>>
         Collections.unmodifiableSet(bids), communicators.size(),
         auctionStartTime, time)) {
 
+        LOGGER.trace(
+          ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
+          time, parcel, bids.size(), time - auctionStartTime);
+        checkRealtime();
+
         for (final Bidder<T> bidder : communicators) {
           bidder.endOfAuction(this, parcel, auctionStartTime);
         }
 
-        LOGGER.trace(
-          ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
-          time, parcel, bids.size(), time - auctionStartTime);
         // end of auction, choose winner
         final T winningBid = Collections.min(bids);
         LOGGER.trace("Winning bid : {}", winningBid);
@@ -240,11 +244,20 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
+    void checkRealtime() {
+      if (clock != null) {
+        checkState(clock.getClockMode() == ClockMode.REAL_TIME,
+          "Clock must be in real-time mode, but is in %s mode.",
+          clock.getClockMode());
+      }
+    }
+
     @Override
     public void auctionParcel(Bidder<T> currentOwner, long time,
         T bidToBeat, Listener cb) {
       LOGGER.trace("*** Start RE-auction at {} for {}. Prev auctions: {} ***",
         time, parcel, auctions);
+      checkRealtime();
 
       checkNotNull(currentOwner);
       checkArgument(time >= 0L);
