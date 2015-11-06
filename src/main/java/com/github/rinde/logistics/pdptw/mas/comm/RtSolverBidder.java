@@ -161,8 +161,11 @@ public class RtSolverBidder
 
         cfb.getAuctioneer().submit(DoubleBid.create(cfb.getTime(), bidder,
           cfb.getParcel(), cost - baseline));
-        solverHandle.get().getEventAPI().removeListener(this,
-          EventType.NEW_SCHEDULE);
+
+        final EventAPI ev = solverHandle.get().getEventAPI();
+        if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
+          ev.removeListener(this, EventType.NEW_SCHEDULE);
+        }
       }
     };
     solverHandle.get().getEventAPI().addListener(currentListener,
