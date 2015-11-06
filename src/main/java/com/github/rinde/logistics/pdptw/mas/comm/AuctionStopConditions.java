@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -31,7 +32,7 @@ public final class AuctionStopConditions {
 
   @SuppressWarnings("unchecked")
   public static <T extends Bid<T>> AuctionStopCondition<T> allBidders() {
-    return AllBidders.INSTANCE;
+    return Conditions.ALL_BIDDERS;
   }
 
   public static <T extends Bid<T>> AuctionStopCondition<T> maxAuctionDuration(
@@ -39,10 +40,21 @@ public final class AuctionStopConditions {
     return new MaxAuctionDuration<>(maxDuration);
   }
 
+  public static <T extends Bid<T>> AuctionStopCondition<T> atLeastNumBids(
+      int numberOfBids) {
+    return new AtLeastNumBidders<>(numberOfBids);
+  }
+
   @SafeVarargs
   public static <T extends Bid<T>> AuctionStopCondition<T> or(
       AuctionStopCondition<T>... auctionStopConditions) {
     return new Or<>(auctionStopConditions);
+  }
+
+  @SafeVarargs
+  public static <T extends Bid<T>> AuctionStopCondition<T> and(
+      AuctionStopCondition<T>... auctionStopConditions) {
+    return new And<>(auctionStopConditions);
   }
 
   static class Or<T extends Bid<T>>
@@ -64,6 +76,44 @@ public final class AuctionStopConditions {
         }
       }
       return false;
+    }
+
+    @Override
+    public String toString() {
+      return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
+          .append(".or(")
+          .append(Joiner.on(",").join(conditions).toString())
+          .append(")").toString();
+    }
+  }
+
+  static class And<T extends Bid<T>>
+      implements AuctionStopCondition<T> {
+    List<AuctionStopCondition<T>> conditions;
+
+    @SafeVarargs
+    And(AuctionStopCondition<T>... conds) {
+      conditions = ImmutableList.copyOf(conds);
+    }
+
+    @Override
+    public boolean apply(Set<T> bids, int potentialBidders,
+        long auctionStartTime, long currentTime) {
+      for (final AuctionStopCondition<T> cond : conditions) {
+        if (!cond.apply(bids, potentialBidders, auctionStartTime,
+          currentTime)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
+          .append(".and(")
+          .append(Joiner.on(",").join(conditions).toString())
+          .append(")").toString();
     }
   }
 
@@ -89,14 +139,41 @@ public final class AuctionStopConditions {
     }
   }
 
-  enum AllBidders implements AuctionStopCondition {
-    INSTANCE {
+  static class AtLeastNumBidders<T extends Bid<T>>
+      implements AuctionStopCondition<T> {
+    final int numBidders;
+
+    AtLeastNumBidders(int num) {
+      checkArgument(num > 0);
+      numBidders = num;
+    }
+
+    @Override
+    public boolean apply(Set<T> bids, int potentialBidders,
+        long auctionStartTime, long currentTime) {
+      return bids.size() >= numBidders;
+    }
+
+    @Override
+    public String toString() {
+      return AuctionStopConditions.class.getSimpleName() + ".atLeastNumBids("
+          + numBidders + ")";
+    }
+  }
+
+  enum Conditions implements AuctionStopCondition {
+    ALL_BIDDERS {
       @Override
       public boolean apply(Set bids, int potentialBidders,
           long auctionStartTime, long currentTime) {
         checkArgument(bids.size() <= potentialBidders,
           "There are too many bids: %s.", bids);
         return bids.size() == potentialBidders;
+      }
+
+      @Override
+      public String toString() {
+        return AuctionStopConditions.class.getSimpleName() + ".allBidders()";
       }
     }
   }

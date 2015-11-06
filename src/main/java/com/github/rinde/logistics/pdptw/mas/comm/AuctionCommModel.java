@@ -208,6 +208,8 @@ public class AuctionCommModel<T extends Bid<T>>
           LOGGER.trace(
             ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
             time, parcel, bids.size(), time - auctionStartTime);
+          checkState(!bids.isEmpty(),
+            "No bids received (yet), cannot end auction.");
 
           for (final Bidder<T> bidder : communicators) {
             bidder.endOfAuction(this, parcel, auctionStartTime);
