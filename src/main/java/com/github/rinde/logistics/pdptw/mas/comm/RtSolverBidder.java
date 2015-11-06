@@ -142,6 +142,7 @@ public class RtSolverBidder
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
       state, ImmutableList.of(currentRoute)));
 
+    final EventAPI ev = solverHandle.get().getEventAPI();
     final RtSolverBidder bidder = this;
     currentListener = new Listener() {
       boolean exec = false;
@@ -154,6 +155,9 @@ public class RtSolverBidder
           LOGGER.warn("handleEvent called with incorrect arguments, executed "
               + "before: {} same state: {}",
             exec, event.getState().equals(state));
+          if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
+            ev.removeListener(this, EventType.NEW_SCHEDULE);
+          }
           return;
         }
         exec = true;
@@ -168,7 +172,6 @@ public class RtSolverBidder
         cfb.getAuctioneer().submit(DoubleBid.create(cfb.getTime(), bidder,
           cfb.getParcel(), cost - baseline));
 
-        final EventAPI ev = solverHandle.get().getEventAPI();
         if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
           ev.removeListener(this, EventType.NEW_SCHEDULE);
         }
