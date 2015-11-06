@@ -39,6 +39,7 @@ import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver.EventType;
+import com.github.rinde.rinsim.central.rt.RtSimSolver.NewScheduleEvent;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
@@ -147,7 +148,12 @@ public class RtSolverBidder
 
       @Override
       public void handleEvent(Event e) {
-        if (exec) {
+        final NewScheduleEvent event = (NewScheduleEvent) e;
+
+        if (exec || !event.getState().equals(state)) {
+          LOGGER.warn("handleEvent called with incorrect arguments, executed "
+              + "before: {} same state: {}",
+            exec, event.getState().equals(state));
           return;
         }
         exec = true;
