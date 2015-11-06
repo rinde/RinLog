@@ -176,7 +176,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     ParcelAuctioneer(Parcel p) {
       parcel = p;
-      bids = new LinkedHashSet<>();
+      bids = Collections.synchronizedSet(new LinkedHashSet<T>());
       winner = Optional.absent();
       initiator = Optional.absent();
       callback = Optional.absent();
@@ -200,48 +200,50 @@ public class AuctionCommModel<T extends Bid<T>>
         checkRealtime();
       }
 
-      if (!winner.isPresent() && stopCondition.apply(
-        Collections.unmodifiableSet(bids), communicators.size(),
-        auctionStartTime, time)) {
+      synchronized (bids) {
+        if (!winner.isPresent() && stopCondition.apply(
+          Collections.unmodifiableSet(bids), communicators.size(),
+          auctionStartTime, time)) {
 
-        LOGGER.trace(
-          ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
-          time, parcel, bids.size(), time - auctionStartTime);
+          LOGGER.trace(
+            ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
+            time, parcel, bids.size(), time - auctionStartTime);
 
-        for (final Bidder<T> bidder : communicators) {
-          bidder.endOfAuction(this, parcel, auctionStartTime);
-        }
-
-        // end of auction, choose winner
-        final T winningBid = Collections.min(bids);
-        LOGGER.trace("Winning bid : {}", winningBid);
-
-        winner = Optional.of(winningBid.getBidder());
-
-        final AuctionEvent ev =
-          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time);
-
-        eventDispatcher.dispatchEvent(ev);
-        if (callback.isPresent()) {
-          callback.get().handleEvent(ev);
-          callback = Optional.absent();
-        }
-
-        if (initiator.isPresent()
-            && winningBid.getBidder().equals(initiator.get())) {
-          // nothing changes
-          initiator = Optional.absent();
-        } else {
-          if (initiator.isPresent()) {
-            initiator.get().releaseParcel(parcel);
-            initiator = Optional.absent();
+          for (final Bidder<T> bidder : communicators) {
+            bidder.endOfAuction(this, parcel, auctionStartTime);
           }
-          winner.get().receiveParcel(this, parcel, auctionStartTime);
-        }
-        if (clock != null) {
-          // this is called to prevent the clock from switching to simulated
-          // time because the winner also needs to do some computation itself.
-          clock.switchToRealTime();
+
+          // end of auction, choose winner
+          final T winningBid = Collections.min(bids);
+          LOGGER.trace("Winning bid : {}", winningBid);
+
+          winner = Optional.of(winningBid.getBidder());
+
+          final AuctionEvent ev =
+            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time);
+
+          eventDispatcher.dispatchEvent(ev);
+          if (callback.isPresent()) {
+            callback.get().handleEvent(ev);
+            callback = Optional.absent();
+          }
+
+          if (initiator.isPresent()
+              && winningBid.getBidder().equals(initiator.get())) {
+            // nothing changes
+            initiator = Optional.absent();
+          } else {
+            if (initiator.isPresent()) {
+              initiator.get().releaseParcel(parcel);
+              initiator = Optional.absent();
+            }
+            winner.get().receiveParcel(this, parcel, auctionStartTime);
+          }
+          if (clock != null) {
+            // this is called to prevent the clock from switching to simulated
+            // time because the winner also needs to do some computation itself.
+            clock.switchToRealTime();
+          }
         }
       }
     }
