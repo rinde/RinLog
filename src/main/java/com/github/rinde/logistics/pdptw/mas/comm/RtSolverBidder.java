@@ -152,7 +152,7 @@ public class RtSolverBidder
         final NewScheduleEvent event = (NewScheduleEvent) e;
 
         if (exec || !event.getState().equals(state)) {
-          LOGGER.warn("handleEvent called with incorrect arguments, executed "
+          LOGGER.trace("handleEvent called with incorrect arguments, executed "
               + "before: {} same state: {}",
             exec, event.getState().equals(state));
           if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
