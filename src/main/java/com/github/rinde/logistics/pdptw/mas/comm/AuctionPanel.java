@@ -93,7 +93,8 @@ public class AuctionPanel
                 ae.getEventType().toString(),
                 FORMATTER.print(new Period(0, ae.getTime())),
                 e.getEventType() == EventType.FINISH_AUCTION
-                    ? ae.getWinner().get().toString() : ""
+                    ? ae.getWinner().get().toString() + " " + ae.getNumBids()
+                    : ""
             });
           }
         });

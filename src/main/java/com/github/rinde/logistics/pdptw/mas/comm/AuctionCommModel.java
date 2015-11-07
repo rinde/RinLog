@@ -126,11 +126,18 @@ public class AuctionCommModel<T extends Bid<T>>
     private final Parcel parcel;
     private final long time;
     private final Optional<Bidder<?>> winner;
+    private final int receivedBids;
 
     protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t) {
+      this(type, p, a, t, -1);
+    }
+
+    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t,
+        int numBids) {
       super(type);
       parcel = p;
       time = t;
+      receivedBids = numBids;
       if (type == EventType.FINISH_AUCTION) {
         winner = Optional.<Bidder<?>>of(a.getWinner());
       } else {
@@ -153,6 +160,10 @@ public class AuctionCommModel<T extends Bid<T>>
      */
     public Parcel getParcel() {
       return parcel;
+    }
+
+    public int getNumBids() {
+      return receivedBids;
     }
 
     public Optional<Bidder<?>> getWinner() {
@@ -222,7 +233,8 @@ public class AuctionCommModel<T extends Bid<T>>
           winner = Optional.of(winningBid.getBidder());
 
           final AuctionEvent ev =
-            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time);
+            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
+                bids.size());
 
           eventDispatcher.dispatchEvent(ev);
           if (callback.isPresent()) {
@@ -244,6 +256,7 @@ public class AuctionCommModel<T extends Bid<T>>
           if (clock != null) {
             // this is called to prevent the clock from switching to simulated
             // time because the winner also needs to do some computation itself.
+            LOGGER.trace("switchToRealTime");
             clock.switchToRealTime();
           }
         }
@@ -256,6 +269,7 @@ public class AuctionCommModel<T extends Bid<T>>
           "Clock must be in real-time mode, but is in %s mode.",
           clock.getClockMode());
         // make sure we stay in rt
+        LOGGER.trace("switchToRealTime");
         clock.switchToRealTime();
       }
     }
