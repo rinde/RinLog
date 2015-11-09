@@ -75,6 +75,7 @@ public class RtSolverBidder
   Map<Parcel, Auctioneer<DoubleBid>> parcelAuctioneers;
 
   AtomicBoolean reauctioning;
+  AtomicBoolean computing;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
     objectiveFunction = objFunc;
@@ -83,6 +84,7 @@ public class RtSolverBidder
     cfbQueue = Queues.synchronizedQueue(new LinkedList<CallForBids>());
     parcelAuctioneers = new LinkedHashMap<>();
     reauctioning = new AtomicBoolean();
+    computing = new AtomicBoolean();
   }
 
   @Override
@@ -107,28 +109,34 @@ public class RtSolverBidder
     final CallForBids endedAuction =
       CallForBids.create(auctioneer, parcel, time);
 
-    if (solverHandle.get().isComputing()) {
-      // if current computation is about this auction -> cancel it
-      if (endedAuction.equals(cfbQueue.peek())) {
-        LOGGER.trace("cancel computation");
-        solverHandle.get().cancel();
-        final EventAPI ev = solverHandle.get().getEventAPI();
-        if (ev.containsListener(currentListener, EventType.NEW_SCHEDULE)) {
-          ev.removeListener(currentListener, EventType.NEW_SCHEDULE);
+    synchronized (computing) {
+      if (computing.get()) {
+        // if current computation is about this auction -> cancel it
+        if (endedAuction.equals(cfbQueue.peek())) {
+          LOGGER.trace("cancel computation");
+          computing.set(false);
+          solverHandle.get().cancel();
+          final EventAPI ev = solverHandle.get().getEventAPI();
+          if (ev.containsListener(currentListener, EventType.NEW_SCHEDULE)) {
+            ev.removeListener(currentListener, EventType.NEW_SCHEDULE);
+          }
         }
+        cfbQueue.remove(endedAuction);
+        next();
       }
-      cfbQueue.remove(endedAuction);
-      next();
     }
   }
 
   void next() {
-    if (!cfbQueue.isEmpty() && !solverHandle.get().isComputing()) {
-      computeBid(cfbQueue.poll());
+    synchronized (computing) {
+      if (!cfbQueue.isEmpty() && !computing.get()) {
+        computeBid(cfbQueue.poll());
+      }
     }
   }
 
   void computeBid(final CallForBids cfb) {
+    computing.set(true);
     LOGGER.trace("start computing bid {}", cfb);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
@@ -175,6 +183,7 @@ public class RtSolverBidder
         if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
           ev.removeListener(this, EventType.NEW_SCHEDULE);
         }
+        computing.set(false);
       }
     };
     solverHandle.get().getEventAPI().addListener(currentListener,

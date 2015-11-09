@@ -93,11 +93,11 @@ public class AuctionPanel
               parcelItems.put(ae.getParcel(), item);
             }
 
+            final TreeItem parent = parcelItems.get(ae.getParcel());
             final boolean finish = e.getEventType() == EventType.FINISH_AUCTION;
 
-            final TreeItem item =
-              new TreeItem(parcelItems.get(ae.getParcel()), 0);
-            parcelItems.get(ae.getParcel()).setExpanded(true);
+            final TreeItem item = new TreeItem(parent, 0);
+            parent.setExpanded(true);
             item.setText(new String[] {
                 ae.getEventType().toString(),
                 FORMATTER.print(new Period(0, ae.getTime())),
@@ -107,11 +107,13 @@ public class AuctionPanel
             });
 
             if (collapseButton.get().getSelection()) {
-              parcelItems.get(ae.getParcel()).setExpanded(!finish);
+              parent.setExpanded(!finish);
             }
             if (scrollButton.get().getSelection()) {
-              tree.get()
-                  .showItem(finish ? parcelItems.get(ae.getParcel()) : item);
+
+              final TreeItem target = parent.getExpanded() ? item : parent;
+              tree.get().showItem(target);
+              tree.get().select(target);
             }
 
             statusLabel.get().setText(

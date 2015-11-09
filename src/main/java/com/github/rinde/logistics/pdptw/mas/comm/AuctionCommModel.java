@@ -27,12 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.math3.random.RandomGenerator;
-
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.core.model.rand.RandomProvider;
 import com.github.rinde.rinsim.core.model.time.Clock;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController.ClockMode;
@@ -58,8 +55,6 @@ public class AuctionCommModel<T extends Bid<T>>
     implements TickListener {
   private static final long MAX_AUCTION_DURATION = 5 * 60 * 1000L;
 
-  private final RandomGenerator rng;
-
   final SetMultimap<Parcel, ParcelAuctioneer> bidMap;
   final AuctionStopCondition<T> stopCondition;
 
@@ -69,8 +64,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
   final AtomicInteger numAuctions;
 
-  AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc, Clock c) {
-    rng = r;
+  AuctionCommModel(AuctionStopCondition<T> sc, Clock c) {
     stopCondition = sc;
     bidMap = LinkedHashMultimap.create();
 
@@ -374,7 +368,7 @@ public class AuctionCommModel<T extends Bid<T>>
       implements Serializable {
 
     Builder() {
-      setDependencies(RandomProvider.class, Clock.class);
+      setDependencies(Clock.class);
       setProvidingTypes(AuctionCommModel.class);
     }
 
@@ -386,10 +380,8 @@ public class AuctionCommModel<T extends Bid<T>>
 
     @Override
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
-      final RandomGenerator r = dependencyProvider.get(RandomProvider.class)
-          .newInstance();
       final Clock clock = dependencyProvider.get(Clock.class);
-      return new AuctionCommModel<T>(r, getStopCondition(), clock);
+      return new AuctionCommModel<T>(getStopCondition(), clock);
     }
 
     static <T extends Bid<T>> Builder<T> create() {
