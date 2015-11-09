@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
@@ -70,6 +71,7 @@ public class AuctionPanel
 
   Optional<Button> collapseButton;
   Optional<Button> scrollButton;
+  Optional<Label> statusLabel;
 
   AuctionPanel(AuctionCommModel<?> m) {
     model = m;
@@ -111,6 +113,9 @@ public class AuctionPanel
               tree.get()
                   .showItem(finish ? parcelItems.get(ae.getParcel()) : item);
             }
+
+            statusLabel.get().setText(
+              "# ongoing auctions: " + model.getNumberOfOngoingAuctions());
           }
         });
 
@@ -120,10 +125,13 @@ public class AuctionPanel
 
   @Override
   public void initializePanel(Composite parent) {
-    final GridLayout layout = new GridLayout(2, true);
+    final GridLayout layout = new GridLayout(3, true);
     layout.marginHeight = 0;
     layout.marginWidth = 0;
     parent.setLayout(layout);
+
+    statusLabel = Optional.of(new Label(parent, SWT.NONE));
+    statusLabel.get().setText("# ongoing auctions: 0");
     collapseButton = Optional.of(new Button(parent, SWT.CHECK));
     collapseButton.get().setText("Auto expand/collapse");
     collapseButton.get().setToolTipText(
@@ -138,7 +146,7 @@ public class AuctionPanel
     tree.get().setLinesVisible(true);
 
     final GridData treeLayoutData = new GridData();
-    treeLayoutData.horizontalSpan = 2;
+    treeLayoutData.horizontalSpan = 3;
     treeLayoutData.grabExcessVerticalSpace = true;
     treeLayoutData.grabExcessHorizontalSpace = true;
     treeLayoutData.verticalAlignment = SWT.FILL;

@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
@@ -64,6 +65,8 @@ public class AuctionCommModel<T extends Bid<T>>
   @Nullable
   final RealtimeClockController clock;
 
+  final AtomicInteger numAuctions;
+
   AuctionCommModel(RandomGenerator r, AuctionStopCondition<T> sc, Clock c) {
     rng = r;
     stopCondition = sc;
@@ -75,10 +78,16 @@ public class AuctionCommModel<T extends Bid<T>>
     } else {
       clock = null;
     }
+
+    numAuctions = new AtomicInteger();
   }
 
   public EventAPI getEventAPI() {
     return eventDispatcher.getPublicEventAPI();
+  }
+
+  public int getNumberOfOngoingAuctions() {
+    return numAuctions.get();
   }
 
   @Override
@@ -92,14 +101,31 @@ public class AuctionCommModel<T extends Bid<T>>
   }
 
   @Override
-  public void tick(TimeLapse timeLapse) {
-
-  }
+  public void tick(TimeLapse timeLapse) {}
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
+    int numOfOngoingAuctions = 0;
     for (final ParcelAuctioneer pa : bidMap.values()) {
       pa.update(timeLapse.getStartTime());
+      if (!pa.hasWinner()) {
+        numOfOngoingAuctions++;
+      }
+    }
+    if (numOfOngoingAuctions > 0) {
+      checkRealtime();
+    }
+    numAuctions.set(numOfOngoingAuctions);
+  }
+
+  void checkRealtime() {
+    if (clock != null) {
+      checkState(clock.getClockMode() == ClockMode.REAL_TIME,
+        "Clock must be in real-time mode, but is in %s mode.",
+        clock.getClockMode());
+      // make sure we stay in rt
+      LOGGER.info("check real time -> switch to real time");
+      clock.switchToRealTime();
     }
   }
 
@@ -209,15 +235,18 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
+    boolean hasWinner() {
+      return winner.isPresent();
+    }
+
     void update(long time) {
-      if (!winner.isPresent()) {
-        checkRealtime();
+      if (winner.isPresent()) {
+        return;
       }
 
       synchronized (bids) {
-        if (!winner.isPresent() && stopCondition.apply(
-          Collections.unmodifiableSet(bids), communicators.size(),
-          auctionStartTime, time)) {
+        if (stopCondition.apply(Collections.unmodifiableSet(bids),
+          communicators.size(), auctionStartTime, time)) {
 
           LOGGER.trace(
             ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
@@ -263,17 +292,6 @@ public class AuctionCommModel<T extends Bid<T>>
             clock.switchToRealTime();
           }
         }
-      }
-    }
-
-    void checkRealtime() {
-      if (clock != null) {
-        checkState(clock.getClockMode() == ClockMode.REAL_TIME,
-          "Clock must be in real-time mode, but is in %s mode.",
-          clock.getClockMode());
-        // make sure we stay in rt
-        LOGGER.info("check real time -> switch to real time");
-        clock.switchToRealTime();
       }
     }
 
