@@ -256,7 +256,7 @@ public class AuctionCommModel<T extends Bid<T>>
           if (clock != null) {
             // this is called to prevent the clock from switching to simulated
             // time because the winner also needs to do some computation itself.
-            LOGGER.trace("switchToRealTime");
+            LOGGER.info("end of auction -> switch to real time");
             clock.switchToRealTime();
           }
         }
@@ -269,7 +269,7 @@ public class AuctionCommModel<T extends Bid<T>>
           "Clock must be in real-time mode, but is in %s mode.",
           clock.getClockMode());
         // make sure we stay in rt
-        LOGGER.trace("switchToRealTime");
+        LOGGER.info("check real time -> switch to real time");
         clock.switchToRealTime();
       }
     }
