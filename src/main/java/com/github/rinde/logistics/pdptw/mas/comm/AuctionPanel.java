@@ -19,7 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -66,6 +68,9 @@ public class AuctionPanel
 
   Map<Parcel, TreeItem> parcelItems;
 
+  Optional<Button> collapseButton;
+  Optional<Button> scrollButton;
+
   AuctionPanel(AuctionCommModel<?> m) {
     model = m;
     tree = Optional.absent();
@@ -86,16 +91,26 @@ public class AuctionPanel
               parcelItems.put(ae.getParcel(), item);
             }
 
+            final boolean finish = e.getEventType() == EventType.FINISH_AUCTION;
+
             final TreeItem item =
               new TreeItem(parcelItems.get(ae.getParcel()), 0);
             parcelItems.get(ae.getParcel()).setExpanded(true);
             item.setText(new String[] {
                 ae.getEventType().toString(),
                 FORMATTER.print(new Period(0, ae.getTime())),
-                e.getEventType() == EventType.FINISH_AUCTION
+                finish
                     ? ae.getWinner().get().toString() + " " + ae.getNumBids()
                     : ""
             });
+
+            if (collapseButton.get().getSelection()) {
+              parcelItems.get(ae.getParcel()).setExpanded(!finish);
+            }
+            if (scrollButton.get().getSelection()) {
+              tree.get()
+                  .showItem(finish ? parcelItems.get(ae.getParcel()) : item);
+            }
           }
         });
 
@@ -105,10 +120,31 @@ public class AuctionPanel
 
   @Override
   public void initializePanel(Composite parent) {
-    parent.setLayout(new FillLayout());
+    final GridLayout layout = new GridLayout(2, true);
+    layout.marginHeight = 0;
+    layout.marginWidth = 0;
+    parent.setLayout(layout);
+    collapseButton = Optional.of(new Button(parent, SWT.CHECK));
+    collapseButton.get().setText("Auto expand/collapse");
+    collapseButton.get().setToolTipText(
+      "Automatically expands parcels that are being auctioned, collapses "
+          + "parcels for which the auction is over.");
+    scrollButton = Optional.of(new Button(parent, SWT.CHECK));
+    scrollButton.get().setText("Auto scroll");
+
     tree = Optional.of(
       new Tree(parent, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL));
     tree.get().setHeaderVisible(true);
+    tree.get().setLinesVisible(true);
+
+    final GridData treeLayoutData = new GridData();
+    treeLayoutData.horizontalSpan = 2;
+    treeLayoutData.grabExcessVerticalSpace = true;
+    treeLayoutData.grabExcessHorizontalSpace = true;
+    treeLayoutData.verticalAlignment = SWT.FILL;
+    treeLayoutData.horizontalAlignment = SWT.FILL;
+    tree.get().setLayoutData(treeLayoutData);
+
     final TreeColumn tc = new TreeColumn(tree.get(), 0);
     tc.setText("Parcel");
     tc.setWidth(150);
@@ -119,6 +155,7 @@ public class AuctionPanel
     final TreeColumn tc3 = new TreeColumn(tree.get(), 0);
     tc3.setText("Winner");
     tc3.setWidth(200);
+
   }
 
   @Override
@@ -148,7 +185,6 @@ public class AuctionPanel
 
   @Override
   public boolean unregister(Parcel element) {
-    // TODO Auto-generated method stub
     return false;
   }
 
