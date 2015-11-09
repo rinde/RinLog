@@ -50,6 +50,7 @@ import com.google.common.collect.SetMultimap;
 /**
  * A communication model that supports auctions.
  * @author Rinde van Lon
+ * @param <T> The type of bid.
  */
 public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
@@ -112,6 +113,8 @@ public class AuctionCommModel<T extends Bid<T>>
   }
 
   /**
+   * @param type The type of {@link Bid}.
+   * @param <T> The type of {@link Bid}.
    * @return A new {@link Builder} instance.
    */
   public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {

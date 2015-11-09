@@ -15,7 +15,6 @@
  */
 package com.github.rinde.logistics.pdptw.mas.route;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -40,10 +39,10 @@ import com.google.common.collect.ImmutableList;
  * <ol>
  * <li>constructor</li>
  * <li>{@link #init(RoadModel, PDPModel, Vehicle)}</li>
- * <li>{@link #update(Collection, long)}</li>
+ * <li>{@link #update(Set, long)}</li>
  * </ol>
  * Once these methods are called in this order, {@link #next(long)} may be
- * called. {@link #update(Collection, long)} may be called more than once. All
+ * called. {@link #update(Set, long)} may be called more than once. All
  * implementations of this interface should throw {@link IllegalStateException}s
  * when these methods are called in an incorrect order (as defined by the test
  * class).
@@ -54,7 +53,7 @@ import com.google.common.collect.ImmutableList;
  * of {@link #current()} should always return the same value. That is, unless
  * one of the two <i>modifying</i> methods are called:
  * <ul>
- * <li>{@link #update(Collection, long)}</li>
+ * <li>{@link #update(Set, long)}</li>
  * <li>{@link #next(long)}</li>
  * </ul>
  * Each time one of these is called the route <i>may</i> change. If the route
@@ -96,8 +95,8 @@ public interface RoutePlanner {
    * Should return the current parcel (the parcel that should be visited next).
    * Subsequent calls should always return the same destination (no
    * re-computation should be done). Only when one of the <i>modifying</i>
-   * methods is called, {@link #update(Collection, long)} or {@link #next(long)}
-   * , this method may return a different value.
+   * methods is called, {@link #update(Set, long)} or {@link #next(long)} , this
+   * method may return a different value.
    * @return The current parcel that should be visited next, returns
    *         {@link Optional#absent()} when there are no parcels to go to.
    */

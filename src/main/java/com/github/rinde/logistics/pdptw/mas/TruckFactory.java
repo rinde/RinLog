@@ -39,14 +39,14 @@ public interface TruckFactory
     extends TimedEventHandler<AddVehicleEvent>, Serializable {
 
   /**
-   * Supplier for {@link RoutePlanner} instances, it supplies a new instance for
-   * <i>every</i> {@link Truck}.
+   * @return Supplier for {@link RoutePlanner} instances, it supplies a new
+   *         instance for <i>every</i> {@link Truck}.
    */
   StochasticSupplier<? extends RoutePlanner> getRoutePlanner();
 
   /**
-   * Supplier for {@link Communicator} instances, it supplies a new instance for
-   * <i>every</i> {@link Truck}.
+   * @return Supplier for {@link Communicator} instances, it supplies a new
+   *         instance for <i>every</i> {@link Truck}.
    */
   StochasticSupplier<? extends Communicator> getCommunicator();
 

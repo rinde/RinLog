@@ -61,6 +61,8 @@ public class Truck
    * @param pDto The truck properties.
    * @param rp The route planner used.
    * @param c The communicator used.
+   * @param ra Route adjuster.
+   * @param lazyRouteComp If true, lazy route computing is on.
    */
   public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
       RouteAdjuster ra, boolean lazyRouteComp) {

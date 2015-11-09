@@ -23,13 +23,12 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
  */
 public interface Bidder<T extends Bid<T>> extends Communicator {
 
-  /**
+  /*
    * Should compute the 'bid value' for the specified {@link Parcel}. It can be
    * assumed that this method is called only once for each {@link Parcel}, the
    * caller is responsible for any caching if necessary.
    * @param p The {@link Parcel} that needs to be handled.
    * @param time The current time.
-   * @return The bid value, the lower the better (i.e. cheaper).
    */
   // double getBidFor(Parcel p, long time);
 
@@ -37,7 +36,7 @@ public interface Bidder<T extends Bid<T>> extends Communicator {
 
   void endOfAuction(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
 
-  /**
+  /*
    * When an auction has been won by this {@link Bidder}, the {@link Parcel} is
    * received via this method.
    * @param p The {@link Parcel} that is won.

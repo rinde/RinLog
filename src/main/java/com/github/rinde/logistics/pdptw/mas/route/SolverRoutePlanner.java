@@ -17,7 +17,6 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.collect.Lists.newLinkedList;
 
-import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 
@@ -37,8 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * A {@link RoutePlanner} implementation that uses a {@link Solver} that
- * computes a complete route each time {@link #update(Collection, long)} is
- * called.
+ * computes a complete route each time {@link #update(Set, long)} is called.
  * @author Rinde van Lon
  */
 public class SolverRoutePlanner
@@ -67,8 +65,8 @@ public class SolverRoutePlanner
 
   /**
    * Calling this method overrides the route of this planner. This method has
-   * similar effect as {@link #update(Collection, long)} except that no
-   * computations are done.
+   * similar effect as {@link #update(Set, long)} except that no computations
+   * are done.
    * @param r The new route.
    */
   public void changeRoute(Queue<? extends Parcel> r) {

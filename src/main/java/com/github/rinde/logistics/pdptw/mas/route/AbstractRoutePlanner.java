@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.unmodifiableList;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -67,7 +66,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
 
   /**
    * Indicates that this route planner has been updated (via a call to
-   * {@link #update(Collection, long)}) at least once.
+   * {@link #update(Set, long)}) at least once.
    */
   protected boolean updated;
 

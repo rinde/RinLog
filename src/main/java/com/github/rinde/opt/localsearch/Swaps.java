@@ -78,7 +78,7 @@ public final class Swaps {
    *          route).
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
-   * @throws InterruptedException
+   * @throws InterruptedException When execution is interrupted.
    */
   public static <C, T> ImmutableList<ImmutableList<T>> bfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
@@ -109,7 +109,7 @@ public final class Swaps {
    *          route).
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
-   * @throws InterruptedException
+   * @throws InterruptedException When execution is interrupted.
    */
   public static <C, T> ImmutableList<ImmutableList<T>> dfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
