@@ -137,8 +137,13 @@ public class AuctionPanel
     collapseButton.get().setToolTipText(
       "Automatically expands parcels that are being auctioned, collapses "
           + "parcels for which the auction is over.");
+    collapseButton.get().setSelection(true);
     scrollButton = Optional.of(new Button(parent, SWT.CHECK));
     scrollButton.get().setText("Auto scroll");
+    scrollButton.get().setToolTipText(
+      "Automatically scrolls the view such that the newly added event "
+          + "is visible.");
+    scrollButton.get().setSelection(true);
 
     tree = Optional.of(
       new Tree(parent, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL));
