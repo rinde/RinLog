@@ -18,7 +18,11 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -127,25 +131,17 @@ public class AuctionPanel
 
   @Override
   public void initializePanel(Composite parent) {
-    final GridLayout layout = new GridLayout(3, true);
+    final GridLayout layout = new GridLayout(4, false);
     layout.marginHeight = 0;
     layout.marginWidth = 0;
     parent.setLayout(layout);
 
     statusLabel = Optional.of(new Label(parent, SWT.NONE));
     statusLabel.get().setText("# ongoing auctions: 0");
-    collapseButton = Optional.of(new Button(parent, SWT.CHECK));
-    collapseButton.get().setText("Auto expand/collapse");
-    collapseButton.get().setToolTipText(
-      "Automatically expands parcels that are being auctioned, collapses "
-          + "parcels for which the auction is over.");
-    collapseButton.get().setSelection(true);
-    scrollButton = Optional.of(new Button(parent, SWT.CHECK));
-    scrollButton.get().setText("Auto scroll");
-    scrollButton.get().setToolTipText(
-      "Automatically scrolls the view such that the newly added event "
-          + "is visible.");
-    scrollButton.get().setSelection(true);
+
+    final GridData statusLabelLayouData = new GridData();
+    statusLabelLayouData.horizontalSpan = 4;
+    statusLabel.get().setLayoutData(statusLabelLayouData);
 
     tree = Optional.of(
       new Tree(parent, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL));
@@ -153,7 +149,7 @@ public class AuctionPanel
     tree.get().setLinesVisible(true);
 
     final GridData treeLayoutData = new GridData();
-    treeLayoutData.horizontalSpan = 3;
+    treeLayoutData.horizontalSpan = 4;
     treeLayoutData.grabExcessVerticalSpace = true;
     treeLayoutData.grabExcessHorizontalSpace = true;
     treeLayoutData.verticalAlignment = SWT.FILL;
@@ -170,6 +166,48 @@ public class AuctionPanel
     final TreeColumn tc3 = new TreeColumn(tree.get(), 0);
     tc3.setText("Winner");
     tc3.setWidth(200);
+
+    collapseButton = Optional.of(new Button(parent, SWT.CHECK));
+    collapseButton.get().setText("Auto expand/collapse");
+    collapseButton.get().setToolTipText(
+      "Automatically expands parcels that are being auctioned, collapses "
+          + "parcels for which the auction is over.");
+    collapseButton.get().setSelection(true);
+    scrollButton = Optional.of(new Button(parent, SWT.CHECK));
+    scrollButton.get().setText("Auto scroll");
+    scrollButton.get().setToolTipText(
+      "Automatically scrolls the view such that the newly added event "
+          + "is visible.");
+    scrollButton.get().setSelection(true);
+
+    final Button b = new Button(parent, SWT.PUSH);
+    b.setText("Expand all");
+    b.addSelectionListener(new SelectionListener() {
+      @Override
+      public void widgetSelected(@Nullable SelectionEvent e) {
+        final TreeItem[] items = tree.get().getItems();
+        for (final TreeItem item : items) {
+          item.setExpanded(true);
+        }
+      }
+
+      @Override
+      public void widgetDefaultSelected(@Nullable SelectionEvent e) {}
+    });
+    final Button c = new Button(parent, SWT.PUSH);
+    c.addSelectionListener(new SelectionListener() {
+      @Override
+      public void widgetSelected(@Nullable SelectionEvent e) {
+        final TreeItem[] items = tree.get().getItems();
+        for (final TreeItem item : items) {
+          item.setExpanded(false);
+        }
+      }
+
+      @Override
+      public void widgetDefaultSelected(@Nullable SelectionEvent e) {}
+    });
+    c.setText("Collapse all");
 
   }
 
