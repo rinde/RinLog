@@ -56,6 +56,8 @@ import com.google.common.collect.SetMultimap;
 public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
     implements TickListener {
+  private static final long MAX_AUCTION_DURATION = 5 * 60 * 1000L;
+
   private final RandomGenerator rng;
 
   final SetMultimap<Parcel, ParcelAuctioneer> bidMap;
@@ -245,6 +247,11 @@ public class AuctionCommModel<T extends Bid<T>>
       }
 
       synchronized (bids) {
+        if (time - auctionStartTime > MAX_AUCTION_DURATION) {
+          throw new IllegalStateException(
+              "Auction duration exceeded threshold.");
+        }
+
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
           communicators.size(), auctionStartTime, time)) {
 
