@@ -28,6 +28,10 @@ import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.github.rinde.rinsim.util.StochasticSuppliers.AbstractStochasticSupplier;
 import com.google.common.collect.ImmutableList;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
+
 /**
  * Implementation of 2-opt local search algorithm. It is a decorator for another
  * {@link Solver}, it cannot be used directly since it relies on a complete
@@ -70,15 +74,16 @@ public class Opt2 implements Solver {
       throws InterruptedException {
     final ImmutableList<ImmutableList<Parcel>> schedule = delegate
         .solve(state);
-    final ImmutableList.Builder<Integer> indexBuilder = ImmutableList.builder();
+    final IntList indices = new IntArrayList();
     for (final VehicleStateObject vso : state.getVehicles()) {
-      indexBuilder.add(vso.getDestination().isPresent() ? 1 : 0);
+      indices.add(vso.getDestination().isPresent() ? 1 : 0);
     }
     if (depthFirstSearch) {
-      return Swaps.dfsOpt2(schedule, indexBuilder.build(), state, evaluator,
-        rng);
+      return Swaps.dfsOpt2(schedule, IntLists.unmodifiable(indices), state,
+        evaluator, rng);
     }
-    return Swaps.bfsOpt2(schedule, indexBuilder.build(), state, evaluator);
+    return Swaps.bfsOpt2(schedule, IntLists.unmodifiable(indices), state,
+      evaluator);
   }
 
   /**

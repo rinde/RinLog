@@ -33,9 +33,11 @@ import com.github.rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+
 /**
- * @author Rinde van Lon 
- * 
+ * @author Rinde van Lon
+ *
  */
 public class InsertionsTest {
 
@@ -51,7 +53,7 @@ public class InsertionsTest {
   @Test
   public void oneInsertions() {
     List<ImmutableList<String>> strings = insertions(
-        ImmutableList.<String> of(), Z, 0, 1);
+      ImmutableList.<String>of(), Z, 0, 1);
     assertEquals(1, strings.size());
     assertEquals(asList(Z), strings.get(0));
 
@@ -80,7 +82,7 @@ public class InsertionsTest {
   @Test
   public void twoInsertions() {
     List<ImmutableList<String>> strings = insertions(ImmutableList.of(A, B, C),
-        Z, 0, 2);
+      Z, 0, 2);
     assertEquals(10, strings.size());
     assertEquals(asList(Z, Z, A, B, C), strings.get(0));
     assertEquals(asList(Z, A, Z, B, C), strings.get(1));
@@ -99,7 +101,7 @@ public class InsertionsTest {
     assertEquals(strings.size(), newHashSet(strings).size());
 
     // test empty
-    strings = insertions(ImmutableList.<String> of(), Z, 0, 2);
+    strings = insertions(ImmutableList.<String>of(), Z, 0, 2);
     assertEquals(1, strings.size());
     assertEquals(asList(Z, Z), strings.get(0));
   }
@@ -110,7 +112,7 @@ public class InsertionsTest {
   @Test
   public void fourInsertionsTest() {
     final List<ImmutableList<String>> strings = insertions(
-        InsertionsTest.list(A, B, C, D), Z, 2, 4);
+      InsertionsTest.list(A, B, C, D), Z, 2, 4);
 
     assertEquals(15, strings.size());
     assertEquals(15, ImmutableSet.copyOf(strings).size());
@@ -142,7 +144,7 @@ public class InsertionsTest {
   public void nInsertionsTest() {
     for (int i = 0; i < 20; i++) {
       final List<ImmutableList<String>> strings = insertions(
-          InsertionsTest.list(A, B, C, D), Z, 0, 1 + i);
+        InsertionsTest.list(A, B, C, D), Z, 0, 1 + i);
       final long size = Insertions.multichoose(5, 1 + i);
       // check for correct size
       assertEquals(size, strings.size());
@@ -189,7 +191,7 @@ public class InsertionsTest {
   @Test
   public void iteratorNextFail() {
     final Iterator<ImmutableList<String>> it = insertionsIterator(
-        InsertionsTest.list(A, B), Z, 0, 1);
+      InsertionsTest.list(A, B), Z, 0, 1);
     it.next();
     it.next();
     it.next();
@@ -208,8 +210,7 @@ public class InsertionsTest {
    */
   @Test(expected = UnsupportedOperationException.class)
   public void insertionIndexGeneratorRemoveFail() {
-    ((Iterator<ImmutableList<Integer>>) new InsertionIndexGenerator(1, 0, 0))
-        .remove();
+    ((Iterator<IntList>) new InsertionIndexGenerator(1, 0, 0)).remove();
   }
 
   /**
@@ -217,8 +218,7 @@ public class InsertionsTest {
    */
   @Test
   public void insertionIndexGeneratorNextFail() {
-    final Iterator<ImmutableList<Integer>> iig = new InsertionIndexGenerator(1,
-        0, 0);
+    final Iterator<IntList> iig = new InsertionIndexGenerator(1, 0, 0);
     iig.next();
     boolean fail = false;
     try {
@@ -235,25 +235,25 @@ public class InsertionsTest {
   @Test
   public void insertTest() {
     assertEquals(InsertionsTest.list(A, C, B, C),
-        insert(InsertionsTest.list(A, B), InsertionsTest.list(1, 2), C));
+      insert(InsertionsTest.list(A, B), InsertionsTest.list(1, 2), C));
     assertEquals(InsertionsTest.list(A, C, B, C, C, C),
-        insert(InsertionsTest.list(A, B), InsertionsTest.list(1, 2, 2, 2), C));
+      insert(InsertionsTest.list(A, B), InsertionsTest.list(1, 2, 2, 2), C));
 
     assertEquals(InsertionsTest.list(C, C, C),
-        insert(InsertionsTest.list(), InsertionsTest.list(0, 0, 0), C));
+      insert(InsertionsTest.list(), InsertionsTest.list(0, 0, 0), C));
     assertEquals(
-        InsertionsTest.list(D, A, D, B, D, C, D),
-        insert(InsertionsTest.list(A, B, C), InsertionsTest.list(0, 1, 2, 3), D));
+      InsertionsTest.list(D, A, D, B, D, C, D),
+      insert(InsertionsTest.list(A, B, C), InsertionsTest.list(0, 1, 2, 3), D));
 
     assertEquals(InsertionsTest.list(A, B, C, D),
-        insert(InsertionsTest.list(A, B, C), InsertionsTest.list(3), D));
+      insert(InsertionsTest.list(A, B, C), InsertionsTest.list(3), D));
 
     assertEquals(InsertionsTest.list(A, B, C),
-        insert(InsertionsTest.list(B, C), InsertionsTest.list(0), A));
+      insert(InsertionsTest.list(B, C), InsertionsTest.list(0), A));
     assertEquals(InsertionsTest.list(B, A, C),
-        insert(InsertionsTest.list(B, C), InsertionsTest.list(1), A));
+      insert(InsertionsTest.list(B, C), InsertionsTest.list(1), A));
     assertEquals(InsertionsTest.list(B, C, A),
-        insert(InsertionsTest.list(B, C), InsertionsTest.list(2), A));
+      insert(InsertionsTest.list(B, C), InsertionsTest.list(2), A));
   }
 
   /**
@@ -285,7 +285,7 @@ public class InsertionsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void insertNoIndices() {
-    insert(InsertionsTest.list(A, B, C), ImmutableList.<Integer> of(), D);
+    insert(InsertionsTest.list(A, B, C), ImmutableList.<Integer>of(), D);
   }
 
   // @Test

@@ -16,6 +16,8 @@
 package com.github.rinde.opt.localsearch;
 
 import static com.github.rinde.opt.localsearch.InsertionsTest.list;
+import static com.github.rinde.opt.localsearch.Swaps.asDoubleList;
+import static com.github.rinde.opt.localsearch.Swaps.asIntList;
 import static com.github.rinde.opt.localsearch.Swaps.inListSwap;
 import static com.github.rinde.opt.localsearch.Swaps.removeAll;
 import static com.github.rinde.opt.localsearch.Swaps.replace;
@@ -34,12 +36,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.rinde.opt.localsearch.Swaps.Swap;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 
 /**
  * Test of {@link Swaps}.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class SwapsTest {
 
@@ -65,8 +68,8 @@ public class SwapsTest {
   @Before
   public void setUp() {
     schedule = Schedule.create(SortDirection.ASCENDING,
-        list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)), list(0, 0),
-        new StringListEvaluator());
+      list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)), asIntList(0, 0),
+      new StringListEvaluator());
   }
 
   /**
@@ -75,21 +78,21 @@ public class SwapsTest {
   @Test
   public void generateTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.DESCENDING, list(list(A, A, B, E), list(C, D)),
-        list(0, 0), new StringListEvaluator());
+      SortDirection.DESCENDING, list(list(A, A, B, E), list(C, D)),
+      asIntList(0, 0), new StringListEvaluator());
 
     final Iterator<Swap<String>> it = Swaps.swapIterator(s);
     while (it.hasNext()) {
       final Swap<String> swapOperation = it.next();
       final ImmutableList<ImmutableList<String>> routes = Swaps.swap(s,
-          swapOperation, 100).get().routes;
+        swapOperation, 100).get().routes;
     }
   }
 
   /**
    * Evaluator providing an objective function for sorting strings in ascending
    * or descending order.
-   * @author Rinde van Lon 
+   * @author Rinde van Lon
    */
   static class StringListEvaluator implements
       RouteEvaluator<SortDirection, String> {
@@ -112,7 +115,7 @@ public class SwapsTest {
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(this).toString();
+      return MoreObjects.toStringHelper(this).toString();
     }
   }
 
@@ -123,13 +126,15 @@ public class SwapsTest {
   @Test
   public void singleSwapTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.ASCENDING, list(list(A, C, B), list(D)), list(0, 0),
-        new StringListEvaluator());
+      SortDirection.ASCENDING, list(list(A, C, B), list(D)), asIntList(0, 0),
+      new StringListEvaluator());
 
-    assertFalse(swap(s, new Swap<String>(B, 0, 0, list(0)), 0d).isPresent());
-    assertFalse(swap(s, new Swap<String>(B, 0, 1, list(1)), 0d).isPresent());
+    assertFalse(
+      swap(s, new Swap<String>(B, 0, 0, asIntList(0)), 0d).isPresent());
+    assertFalse(
+      swap(s, new Swap<String>(B, 0, 1, asIntList(1)), 0d).isPresent());
     final Schedule<SortDirection, String> swap1 = swap(s,
-        new Swap<String>(B, 0, 1, list(0)), 0d).get();
+      new Swap<String>(B, 0, 1, asIntList(0)), 0d).get();
     assertEquals(s.context, swap1.context);
     assertEquals(s.evaluator, swap1.evaluator);
     assertEquals(list(list(A, C), list(B, D)), swap1.routes);
@@ -137,7 +142,7 @@ public class SwapsTest {
     assertEquals(0, swap1.objectiveValue, 0.00001);
 
     final Schedule<SortDirection, String> swap2 = swap(s,
-        new Swap<String>(B, 0, 0, list(1)), 0d).get();
+      new Swap<String>(B, 0, 0, asIntList(1)), 0d).get();
     assertEquals(s.context, swap2.context);
     assertEquals(s.evaluator, swap2.evaluator);
     assertEquals(list(list(A, B, C), list(D)), swap2.routes);
@@ -153,50 +158,50 @@ public class SwapsTest {
   @Test
   public void doubleSwapTest() {
     final Schedule<SortDirection, String> s = Schedule.create(
-        SortDirection.ASCENDING,
-        list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)), list(0, 0),
-        new StringListEvaluator());
+      SortDirection.ASCENDING,
+      list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)), asIntList(0, 0),
+      new StringListEvaluator());
     assertEquals(s.objectiveValues.size(), s.routes.size());
     assertFalse(s.toString().isEmpty());
 
     final Schedule<SortDirection, String> swap1 = swap(s,
-        new Swap<String>(A, 1, 0, list(1, 3)), 10).get();
+      new Swap<String>(A, 1, 0, asIntList(1, 3)), 10).get();
     assertEquals(s.context, swap1.context);
     assertEquals(s.evaluator, swap1.evaluator);
     assertEquals(list(list(G, A, D, D, A, G), list(C, B, F, E, F, B)),
-        swap1.routes);
+      swap1.routes);
     assertEquals(list(11d, 8d), swap1.objectiveValues);
     assertEquals(s.objectiveValue, swap1.objectiveValue, 0.00001);
 
     // within list
     assertEquals(list(list(G, D, D, G), list(A, A, C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(0, 0)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(0, 0)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(A, C, A, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(0, 1)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(0, 1)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, A, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 1)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 1)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, A, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 2)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 2)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, A, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 3)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 3)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, A, F, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 4)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 4)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, F, A, B)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 5)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 5)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, F, B, A)),
-        swap(s, new Swap<String>(A, 1, 1, list(1, 6)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 6)), 10).get().routes);
 
     // to other list
     assertEquals(list(list(A, A, G, D, D, G), list(C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 0, list(0, 0)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 0)), 10).get().routes);
     assertEquals(list(list(A, G, A, D, D, G), list(C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 0, list(0, 1)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 1)), 10).get().routes);
     assertEquals(list(list(A, G, D, A, D, G), list(C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 0, list(0, 2)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 2)), 10).get().routes);
     assertEquals(list(list(A, G, D, D, A, G), list(C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 0, list(0, 3)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 3)), 10).get().routes);
     assertEquals(list(list(A, G, D, D, G, A), list(C, B, F, E, F, B)),
-        swap(s, new Swap<String>(A, 1, 0, list(0, 4)), 10).get().routes);
+      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 4)), 10).get().routes);
   }
 
   /**
@@ -204,7 +209,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapNegativeFromRow() {
-    swap(schedule, new Swap<String>(A, -1, 1, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, -1, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -212,7 +217,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToLargeFromRow() {
-    swap(schedule, new Swap<String>(A, 2, 1, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, 2, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -220,7 +225,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapNegativeToRow() {
-    swap(schedule, new Swap<String>(A, 1, -1, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, 1, -1, asIntList(1)), 0d);
   }
 
   /**
@@ -228,7 +233,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapTooLargeToRow() {
-    swap(schedule, new Swap<String>(A, 1, 2, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, 1, 2, asIntList(1)), 0d);
   }
 
   /**
@@ -236,7 +241,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapWrongRow() {
-    swap(schedule, new Swap<String>(A, 0, 1, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, 0, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -245,7 +250,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapIncorrectIndicesSize() {
-    swap(schedule, new Swap<String>(A, 1, 0, list(1)), 0d);
+    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1)), 0d);
   }
 
   /**
@@ -253,7 +258,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToNegativeIndices() {
-    swap(schedule, new Swap<String>(A, 1, 0, list(1, -1)), 0d);
+    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1, -1)), 0d);
   }
 
   /**
@@ -261,7 +266,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToTooLargeIndices() {
-    swap(schedule, new Swap<String>(A, 1, 0, list(1, 8)), 0d);
+    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1, 8)), 0d);
   }
 
   /**
@@ -270,24 +275,23 @@ public class SwapsTest {
   @Test
   public void inListSwapTest() {
     assertEquals(InsertionsTest.list(A, C, B),
-        inListSwap(InsertionsTest.list(A, B, C), list(2), B));
+      inListSwap(InsertionsTest.list(A, B, C), asIntList(2), B));
 
     assertEquals(
-        InsertionsTest.list(D, A, B, C, D, D),
-        inListSwap(InsertionsTest.list(A, B, C, D, D, D),
-            InsertionsTest.list(0, 3, 3), D));
+      InsertionsTest.list(D, A, B, C, D, D),
+      inListSwap(InsertionsTest.list(A, B, C, D, D, D), asIntList(0, 3, 3), D));
 
     boolean fail = false;
     try {
-      inListSwap(InsertionsTest.list(A, B, C), InsertionsTest.list(0), A);
+      inListSwap(InsertionsTest.list(A, B, C), asIntList(0), A);
     } catch (final IllegalArgumentException e) {
       fail = true;
     }
     assertTrue(fail);
     assertEquals(InsertionsTest.list(B, A, C),
-        inListSwap(InsertionsTest.list(A, B, C), InsertionsTest.list(1), A));
+      inListSwap(InsertionsTest.list(A, B, C), asIntList(1), A));
     assertEquals(InsertionsTest.list(B, C, A),
-        inListSwap(InsertionsTest.list(A, B, C), InsertionsTest.list(2), A));
+      inListSwap(InsertionsTest.list(A, B, C), asIntList(2), A));
   }
 
   /**
@@ -295,7 +299,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void insListSwapEmptyList() {
-    inListSwap(InsertionsTest.list(), InsertionsTest.list(1), A);
+    inListSwap(InsertionsTest.list(), asIntList(1), A);
   }
 
   /**
@@ -303,7 +307,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void inListSwapSameLocation() {
-    inListSwap(InsertionsTest.list(A, B, C), InsertionsTest.list(1), B);
+    inListSwap(InsertionsTest.list(A, B, C), asIntList(1), B);
   }
 
   /**
@@ -311,7 +315,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void inListSwapNonSymmetric1() {
-    inListSwap(InsertionsTest.list(A, B, C), InsertionsTest.list(1, 2), B);
+    inListSwap(InsertionsTest.list(A, B, C), asIntList(1, 2), B);
   }
 
   /**
@@ -319,7 +323,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void inListSwapNonSymmetric2() {
-    inListSwap(InsertionsTest.list(A, B, C, B), InsertionsTest.list(2), B);
+    inListSwap(InsertionsTest.list(A, B, C, B), asIntList(2), B);
   }
 
   /**
@@ -348,9 +352,13 @@ public class SwapsTest {
    */
   @Test
   public void replaceTest() {
+    Truth.<Iterable<Double>>assertThat(
+      replace(asDoubleList(1, 2, 3), asIntList(0, 1, 2), asDoubleList(4, 5, 6)))
+        .isEqualTo(asDoubleList(4, 5, 6));
+
     assertEquals(list(4, 5, 6),
-        replace(list(1, 2, 3), list(0, 1, 2), list(4, 5, 6)));
-    assertEquals(list(), replace(list(), ImmutableList.<Integer> of(), list()));
+      replace(list(1, 2, 3), asIntList(0, 1, 2), list(4, 5, 6)));
+    assertEquals(list(), replace(list(), asIntList(), list()));
   }
 
   /**
@@ -358,7 +366,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void replaceInvalidTest() {
-    replace(list(1), list(0, 0), list(2));
+    replace(list(1), asIntList(0, 0), list(2));
   }
 
 }

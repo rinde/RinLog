@@ -29,7 +29,10 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import com.google.common.primitives.Ints;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 
 /**
  * Utilities for creating insertions.
@@ -126,8 +129,8 @@ public final class Insertions {
     return builder.build();
   }
 
-  static class IndexToInsertionTransform<T> implements
-      Function<ImmutableList<Integer>, ImmutableList<T>> {
+  static class IndexToInsertionTransform<T>
+      implements Function<IntList, ImmutableList<T>> {
     final List<T> originalList;
     final T item;
 
@@ -137,14 +140,12 @@ public final class Insertions {
     }
 
     @Override
-    public @Nullable ImmutableList<T> apply(
-        @Nullable ImmutableList<Integer> input) {
+    public @Nullable ImmutableList<T> apply(@Nullable IntList input) {
       return insert(originalList, checkNotNull(input), item);
     }
   }
 
-  static class InsertionIndexGenerator implements
-      Iterator<ImmutableList<Integer>> {
+  static class InsertionIndexGenerator implements Iterator<IntList> {
     private final int[] insertionPositions;
     private final int originalListSize;
     private final long length;
@@ -168,7 +169,7 @@ public final class Insertions {
     }
 
     @Override
-    public ImmutableList<Integer> next() {
+    public IntList next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
@@ -186,7 +187,7 @@ public final class Insertions {
         }
       }
       index++;
-      return ImmutableList.copyOf(Ints.asList(insertionPositions));
+      return IntLists.unmodifiable(new IntArrayList(insertionPositions));
     }
 
     @Deprecated
