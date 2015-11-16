@@ -37,9 +37,9 @@ import it.unimi.dsi.fastutil.ints.IntLists;
  * {@link Solver}, it cannot be used directly since it relies on a complete
  * schedule as input (i.e. all parcels must already be assigned to a vehicle).
  * For more information about the algorithm see
- * {@link Swaps#bfsOpt2(ImmutableList, ImmutableList, Object, com.github.rinde.opt.localsearch.RouteEvaluator)}
+ * {@link Swaps#bfsOpt2(ImmutableList, IntList, Object, com.github.rinde.opt.localsearch.RouteEvaluator)}
  * and
- * {@link Swaps#dfsOpt2(ImmutableList, ImmutableList, Object, com.github.rinde.opt.localsearch.RouteEvaluator, org.apache.commons.math3.random.RandomGenerator)}
+ * {@link Swaps#dfsOpt2(ImmutableList, IntList, Object, com.github.rinde.opt.localsearch.RouteEvaluator, RandomGenerator)}
  * .
  * @author Rinde van Lon
  */
