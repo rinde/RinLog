@@ -43,7 +43,7 @@ import it.unimi.dsi.fastutil.ints.IntLists;
  * .
  * @author Rinde van Lon
  */
-public class Opt2 implements Solver {
+public final class Opt2 implements Solver {
 
   final RandomGenerator rng;
   final Solver delegate;
@@ -62,7 +62,7 @@ public class Opt2 implements Solver {
    * @param dfs If true <i>depth first search</i> will be used, otherwise
    *          <i>breadth first search</i> is used.
    */
-  public Opt2(long seed, Solver deleg, ObjectiveFunction objFunc, boolean dfs) {
+  Opt2(long seed, Solver deleg, ObjectiveFunction objFunc, boolean dfs) {
     rng = new MersenneTwister(seed);
     delegate = deleg;
     evaluator = new ParcelRouteEvaluator(objFunc);
@@ -121,20 +121,31 @@ public class Opt2 implements Solver {
     private static final long serialVersionUID = -1213455191941076859L;
     private final StochasticSupplier<Solver> delegate;
     private final ObjectiveFunction objectiveFunction;
-    private final boolean depthFirstSearch;
+    private final boolean dfs;
 
     Opt2Supplier(StochasticSupplier<Solver> del, ObjectiveFunction objFunc,
-        boolean dfs) {
+        boolean depthFirst) {
       delegate = del;
       objectiveFunction = objFunc;
-      depthFirstSearch = dfs;
+      dfs = depthFirst;
     }
 
     @Override
     public Solver get(long seed) {
       final RandomGenerator rand = new MersenneTwister(seed);
       return new Opt2(rand.nextLong(), delegate.get(rand.nextLong()),
-          objectiveFunction, depthFirstSearch);
+          objectiveFunction, dfs);
+    }
+
+    @Override
+    public String toString() {
+      return new StringBuilder(Opt2.class.getSimpleName())
+          .append((dfs ? ".deptFirstSupplier(" : ".breadthFirstSupplier("))
+          .append(delegate)
+          .append(",")
+          .append(objectiveFunction)
+          .append(")")
+          .toString();
     }
   }
 }

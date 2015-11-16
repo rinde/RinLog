@@ -55,9 +55,9 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
  * Class for swap algorithms. Currently supports two variants of 2-opt:
  * <ul>
  * <li>Breadth-first 2-opt search:
- * {@link #bfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator)}.</li>
+ * {@link #bfsOpt2(ImmutableList, IntList, Object, RouteEvaluator)}.</li>
  * <li>Depth-first 2-opt search:
- * {@link #dfsOpt2(ImmutableList, ImmutableList, Object, RouteEvaluator, RandomGenerator)}
+ * {@link #dfsOpt2(ImmutableList, IntList, Object, RouteEvaluator, RandomGenerator)}
  * .</li>
  * </ul>
  * @author Rinde van Lon
@@ -69,7 +69,9 @@ public final class Swaps {
   /**
    * 2-opt local search procedure for schedules. Performs breadth-first search
    * in 2-swap space, picks <i>best swap</i> and uses that as starting point for
-   * next iteration. Stops as soon as there is no improving swap anymore.
+   * next iteration. Stops as soon as there is no improving swap anymore. This
+   * algorithm is deterministic on the input, that is, the method will have the
+   * same result when provided with the same arguments.
    * @param schedule The schedule to improve.
    * @param startIndices Indices indicating which part of the schedule can be
    *          modified. <code>startIndices[j] = n</code> indicates that
