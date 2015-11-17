@@ -182,6 +182,12 @@ public class CheapestInsertionHeuristic implements Solver {
       public Solver get(long seed) {
         return new CheapestInsertionHeuristic(objFunc);
       }
+
+      @Override
+      public String toString() {
+        return CheapestInsertionHeuristic.class.getSimpleName() + ".supplier("
+            + objFunc + ")";
+      }
     };
   }
 
