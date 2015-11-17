@@ -470,9 +470,12 @@ public final class Swaps {
 
     @Override
     public String toString() {
-      return MoreObjects.toStringHelper(this).add("item", item)
-          .add("fromRow", fromRow).add("toRow", toRow)
-          .add("toIndices", toIndices).toString();
+      return MoreObjects.toStringHelper(this)
+          .add("item", item)
+          .add("fromRow", fromRow)
+          .add("toRow", toRow)
+          .add("toIndices", toIndices)
+          .toString();
     }
   }
 
