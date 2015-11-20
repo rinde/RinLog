@@ -140,7 +140,7 @@ public final class Opt2 implements Solver {
     @Override
     public String toString() {
       return new StringBuilder(Opt2.class.getSimpleName())
-          .append((dfs ? ".deptFirstSupplier(" : ".breadthFirstSupplier("))
+          .append((dfs ? ".depthFirstSupplier(" : ".breadthFirstSupplier("))
           .append(delegate)
           .append(",")
           .append(objectiveFunction)

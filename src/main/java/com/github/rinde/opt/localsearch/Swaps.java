@@ -49,7 +49,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.objects.Object2DoubleLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 
 /**
  * Class for swap algorithms. Currently supports two variants of 2-opt:
@@ -63,6 +62,8 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
  * @author Rinde van Lon
  */
 public final class Swaps {
+
+  private static final int CACHE_SIZE = 1000;
 
   private Swaps() {}
 
@@ -139,8 +140,8 @@ public final class Swaps {
     final Schedule<C, T> baseSchedule = Schedule.create(context, schedule,
       startIndices, evaluator);
 
-    final Object2DoubleMap<ImmutableList<T>> routeCostCache =
-      new Object2DoubleLinkedOpenHashMap<>();
+    final Object2DoubleLinkedOpenHashMap<ImmutableList<T>> routeCostCache =
+      new Object2DoubleLinkedOpenHashMap<>(CACHE_SIZE);
 
     for (int i = 0; i < baseSchedule.routes.size(); i++) {
       routeCostCache.put(baseSchedule.routes.get(i),
@@ -262,7 +263,8 @@ public final class Swaps {
    *         (lower) than the threshold, {@link Optional#absent()} otherwise.
    */
   static <C, T> Optional<Schedule<C, T>> swap(Schedule<C, T> s, Swap<T> swap,
-      double threshold, Object2DoubleMap<ImmutableList<T>> cache) {
+      double threshold,
+      Object2DoubleLinkedOpenHashMap<ImmutableList<T>> cache) {
 
     checkArgument(swap.fromRow >= 0 && swap.fromRow < s.routes.size(),
       "fromRow must be >= 0 and < %s, it is %s.", s.routes.size(),
@@ -351,12 +353,16 @@ public final class Swaps {
   }
 
   static <C, T> double computeCost(Schedule<C, T> s, int row,
-      ImmutableList<T> newRoute, Object2DoubleMap<ImmutableList<T>> cache) {
+      ImmutableList<T> newRoute,
+      Object2DoubleLinkedOpenHashMap<ImmutableList<T>> cache) {
     if (cache.containsKey(newRoute)) {
-      return cache.getDouble(newRoute);
+      return cache.getAndMoveToFirst(newRoute);
     }
     final double newCost = s.evaluator.computeCost(s.context, row, newRoute);
-    cache.put(newRoute, newCost);
+    cache.putAndMoveToFirst(newRoute, newCost);
+    if (cache.size() > CACHE_SIZE) {
+      cache.removeLastDouble();
+    }
     return newCost;
   }
 
