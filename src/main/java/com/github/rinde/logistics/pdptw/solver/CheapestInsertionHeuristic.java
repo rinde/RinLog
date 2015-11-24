@@ -17,14 +17,13 @@ package com.github.rinde.logistics.pdptw.solver;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verifyNotNull;
-import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.util.Iterator;
-import java.util.Set;
 
 import com.github.rinde.opt.localsearch.Insertions;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
+import com.github.rinde.rinsim.central.GlobalStateObjects;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -49,16 +48,6 @@ public class CheapestInsertionHeuristic implements Solver {
    */
   public CheapestInsertionHeuristic(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
-  }
-
-  static ImmutableSet<Parcel> unassignedParcels(GlobalStateObject state) {
-    final Set<Parcel> set = newLinkedHashSet(state.getAvailableParcels());
-    for (final VehicleStateObject vso : state.getVehicles()) {
-      if (vso.getRoute().isPresent()) {
-        set.removeAll(vso.getRoute().get());
-      }
-    }
-    return ImmutableSet.copyOf(set);
   }
 
   @Override
@@ -95,7 +84,8 @@ public class CheapestInsertionHeuristic implements Solver {
       throws InterruptedException {
     ImmutableList<ImmutableList<Parcel>> schedule = createSchedule(state);
     ImmutableList<Double> costs = decomposedCost(state, schedule);
-    final ImmutableSet<Parcel> newParcels = unassignedParcels(state);
+    final ImmutableSet<Parcel> newParcels =
+      GlobalStateObjects.unassignedParcels(state);
     // all new parcels need to be inserted in the plan
     for (final Parcel p : newParcels) {
       double cheapestInsertion = Double.POSITIVE_INFINITY;
