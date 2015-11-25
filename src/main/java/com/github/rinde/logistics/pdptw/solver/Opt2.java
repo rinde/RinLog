@@ -41,6 +41,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
@@ -114,6 +115,11 @@ public final class Opt2 {
         public RealtimeSolver get(long seed) {
           return new RealtimeOpt2(b, seed);
         }
+
+        @Override
+        public String toString() {
+          return supplierToString(b.deptFirstSearch(), true);
+        }
       };
     }
 
@@ -128,18 +134,30 @@ public final class Opt2 {
       final StochasticSupplier<Solver> delegate = deleg != null
           ? deleg : CheapestInsertionHeuristic.supplier(objFunc);
 
-      final boolean bfs = deptFirstSearch();
+      final boolean dfs = deptFirstSearch();
       return new StochasticSupplier<Solver>() {
         @Override
         public Solver get(long seed) {
-          if (bfs) {
+          if (dfs) {
             final RandomGenerator rng = new MersenneTwister(seed);
             return new DfsOpt2(rng.nextLong(), delegate.get(rng.nextLong()),
                 objFunc, progressListener);
           }
           return new BfsOpt2(delegate.get(seed), objFunc, progressListener);
         }
+
+        @Override
+        public String toString() {
+          return supplierToString(dfs, false);
+        }
       };
+    }
+
+    static String supplierToString(boolean dfs, boolean rt) {
+      return Joiner.on("-").join(
+        Opt2.class.getSimpleName(),
+        dfs ? "Dfs" : "Bfs",
+        rt ? "RealtimeSolver" : "Solver");
     }
 
     @SuppressWarnings("unchecked")
