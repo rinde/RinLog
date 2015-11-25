@@ -23,6 +23,7 @@ import static com.github.rinde.opt.localsearch.Swaps.removeAll;
 import static com.github.rinde.opt.localsearch.Swaps.replace;
 import static com.github.rinde.opt.localsearch.Swaps.swap;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.reverseOrder;
 import static java.util.Collections.sort;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.rinde.opt.localsearch.Swaps.Swap;
+import com.github.rinde.rinsim.testutil.TestUtil;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 
@@ -67,6 +70,7 @@ public class SwapsTest {
   @SuppressWarnings("unchecked")
   @Before
   public void setUp() {
+    TestUtil.testPrivateConstructor(Swaps.class);
     schedule = Schedule.create(SortDirection.ASCENDING,
       list(list(G, D, D, G), list(A, C, B, F, E, F, A, B)), asIntList(0, 0),
       new StringListEvaluator());
@@ -109,6 +113,7 @@ public class SwapsTest {
       for (int i = 0; i < expected.size(); i++) {
         final int foundAtIndex = newRoute.indexOf(expected.get(i));
         error += Math.abs(i - foundAtIndex);
+
       }
       return error;
     }
@@ -130,11 +135,11 @@ public class SwapsTest {
       new StringListEvaluator());
 
     assertFalse(
-      swap(s, new Swap<String>(B, 0, 0, asIntList(0)), 0d).isPresent());
+      swap(s, Swap.<String>create(B, 0, 0, asIntList(0)), 0d).isPresent());
     assertFalse(
-      swap(s, new Swap<String>(B, 0, 1, asIntList(1)), 0d).isPresent());
+      swap(s, Swap.<String>create(B, 0, 1, asIntList(1)), 0d).isPresent());
     final Schedule<SortDirection, String> swap1 = swap(s,
-      new Swap<String>(B, 0, 1, asIntList(0)), 0d).get();
+      Swap.<String>create(B, 0, 1, asIntList(0)), 0d).get();
     assertEquals(s.context, swap1.context);
     assertEquals(s.evaluator, swap1.evaluator);
     assertEquals(list(list(A, C), list(B, D)), swap1.routes);
@@ -142,7 +147,7 @@ public class SwapsTest {
     assertEquals(0, swap1.objectiveValue, 0.00001);
 
     final Schedule<SortDirection, String> swap2 = swap(s,
-      new Swap<String>(B, 0, 0, asIntList(1)), 0d).get();
+      Swap.<String>create(B, 0, 0, asIntList(1)), 0d).get();
     assertEquals(s.context, swap2.context);
     assertEquals(s.evaluator, swap2.evaluator);
     assertEquals(list(list(A, B, C), list(D)), swap2.routes);
@@ -165,7 +170,7 @@ public class SwapsTest {
     assertFalse(s.toString().isEmpty());
 
     final Schedule<SortDirection, String> swap1 = swap(s,
-      new Swap<String>(A, 1, 0, asIntList(1, 3)), 10).get();
+      Swap.<String>create(A, 1, 0, asIntList(1, 3)), 10).get();
     assertEquals(s.context, swap1.context);
     assertEquals(s.evaluator, swap1.evaluator);
     assertEquals(list(list(G, A, D, D, A, G), list(C, B, F, E, F, B)),
@@ -175,33 +180,33 @@ public class SwapsTest {
 
     // within list
     assertEquals(list(list(G, D, D, G), list(A, A, C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(0, 0)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(0, 0)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(A, C, A, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(0, 1)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(0, 1)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, A, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 1)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 1)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, A, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 2)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 2)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, A, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 3)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 3)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, A, F, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 4)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 4)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, F, A, B)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 5)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 5)), 10).get().routes);
     assertEquals(list(list(G, D, D, G), list(C, A, B, F, E, F, B, A)),
-      swap(s, new Swap<String>(A, 1, 1, asIntList(1, 6)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 1, asIntList(1, 6)), 10).get().routes);
 
     // to other list
     assertEquals(list(list(A, A, G, D, D, G), list(C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 0)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 0, asIntList(0, 0)), 10).get().routes);
     assertEquals(list(list(A, G, A, D, D, G), list(C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 1)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 0, asIntList(0, 1)), 10).get().routes);
     assertEquals(list(list(A, G, D, A, D, G), list(C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 2)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 0, asIntList(0, 2)), 10).get().routes);
     assertEquals(list(list(A, G, D, D, A, G), list(C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 3)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 0, asIntList(0, 3)), 10).get().routes);
     assertEquals(list(list(A, G, D, D, G, A), list(C, B, F, E, F, B)),
-      swap(s, new Swap<String>(A, 1, 0, asIntList(0, 4)), 10).get().routes);
+      swap(s, Swap.<String>create(A, 1, 0, asIntList(0, 4)), 10).get().routes);
   }
 
   /**
@@ -209,7 +214,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapNegativeFromRow() {
-    swap(schedule, new Swap<String>(A, -1, 1, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, -1, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -217,7 +222,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToLargeFromRow() {
-    swap(schedule, new Swap<String>(A, 2, 1, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, 2, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -225,7 +230,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapNegativeToRow() {
-    swap(schedule, new Swap<String>(A, 1, -1, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, 1, -1, asIntList(1)), 0d);
   }
 
   /**
@@ -233,7 +238,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapTooLargeToRow() {
-    swap(schedule, new Swap<String>(A, 1, 2, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, 1, 2, asIntList(1)), 0d);
   }
 
   /**
@@ -241,7 +246,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapWrongRow() {
-    swap(schedule, new Swap<String>(A, 0, 1, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, 0, 1, asIntList(1)), 0d);
   }
 
   /**
@@ -250,7 +255,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapIncorrectIndicesSize() {
-    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1)), 0d);
+    swap(schedule, Swap.<String>create(A, 1, 0, asIntList(1)), 0d);
   }
 
   /**
@@ -258,7 +263,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToNegativeIndices() {
-    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1, -1)), 0d);
+    swap(schedule, Swap.<String>create(A, 1, 0, asIntList(1, -1)), 0d);
   }
 
   /**
@@ -266,7 +271,7 @@ public class SwapsTest {
    */
   @Test(expected = IllegalArgumentException.class)
   public void swapToTooLargeIndices() {
-    swap(schedule, new Swap<String>(A, 1, 0, asIntList(1, 8)), 0d);
+    swap(schedule, Swap.<String>create(A, 1, 0, asIntList(1, 8)), 0d);
   }
 
   /**
@@ -352,9 +357,8 @@ public class SwapsTest {
    */
   @Test
   public void replaceTest() {
-    Truth.<Iterable<Double>>assertThat(
-      replace(asDoubleList(1, 2, 3), asIntList(0, 1, 2), asDoubleList(4, 5, 6)))
-        .isEqualTo(asDoubleList(4, 5, 6));
+    assertThat((List<Double>) replace(asDoubleList(1, 2, 3), asIntList(0, 1, 2),
+      asDoubleList(4, 5, 6))).isEqualTo(asDoubleList(4, 5, 6));
 
     assertEquals(list(4, 5, 6),
       replace(list(1, 2, 3), asIntList(0, 1, 2), list(4, 5, 6)));
@@ -369,4 +373,34 @@ public class SwapsTest {
     replace(list(1), asIntList(0, 0), list(2));
   }
 
+  @Test
+  public void testOpt2() {
+    final ImmutableList<ImmutableList<String>> sched =
+      list(list(F, B, D, A), list(G, E, C));
+
+    try {
+
+      final ProgressListenerHistory<String> history1 =
+        new ProgressListenerHistory<>();
+
+      final ImmutableList<ImmutableList<String>> newSched =
+        Swaps.bfsOpt2(sched, asIntList(0, 0), SortDirection.ASCENDING,
+          new StringListEvaluator(),
+          Optional.of(history1));
+
+      assertThat(newSched).isEqualTo(list(list(A, B, D, F), list(C, E, G)));
+      assertThat(history1.getSchedules()).isNotEmpty();
+
+      final ProgressListenerHistory<String> history2 =
+        new ProgressListenerHistory<>();
+      final ImmutableList<ImmutableList<String>> newSched2 =
+        Swaps.bfsOpt2(sched, asIntList(0, 0), SortDirection.DESCENDING,
+          new StringListEvaluator(), Optional.of(history2));
+
+      assertThat(newSched2).isEqualTo(list(list(F, D, B, A), list(G, E, C)));
+      assertThat(history2.getSchedules()).isNotEmpty();
+    } catch (final InterruptedException e) {
+      Truth.assert_().fail("%s", e);
+    }
+  }
 }

@@ -305,6 +305,7 @@ public class InsertionsTest {
    * @param items The items of the list.
    * @return An {@link ImmutableList}.
    */
+  @SafeVarargs
   public static <T> ImmutableList<T> list(T... items) {
     return ImmutableList.copyOf(items);
   }

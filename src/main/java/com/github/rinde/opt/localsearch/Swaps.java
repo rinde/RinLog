@@ -34,8 +34,8 @@ import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.opt.localsearch.Insertions.InsertionIndexGenerator;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -54,9 +54,10 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleLinkedOpenHashMap;
  * Class for swap algorithms. Currently supports two variants of 2-opt:
  * <ul>
  * <li>Breadth-first 2-opt search:
- * {@link #bfsOpt2(ImmutableList, IntList, Object, RouteEvaluator)}.</li>
+ * {@link #bfsOpt2(ImmutableList, IntList, Object, RouteEvaluator, Optional)}.
+ * </li>
  * <li>Depth-first 2-opt search:
- * {@link #dfsOpt2(ImmutableList, IntList, Object, RouteEvaluator, RandomGenerator)}
+ * {@link #dfsOpt2(ImmutableList, IntList, Object, RouteEvaluator, RandomGenerator,Optional)}
  * .</li>
  * </ul>
  * @author Rinde van Lon
@@ -85,16 +86,22 @@ public final class Swaps {
    * @param <C> The context type.
    * @param <T> The route item type (i.e. the locations that are part of a
    *          route).
+   * @param listener An optional progress listener. If provided,
+   *          {@link ProgressListener#notify(ImmutableList, double)} will be
+   *          called each time an <i>improving</i> schedule is found.
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
    * @throws InterruptedException When execution is interrupted.
    */
   public static <C, T> ImmutableList<ImmutableList<T>> bfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
-      IntList startIndices, C context,
-      RouteEvaluator<C, T> evaluator) throws InterruptedException {
+      IntList startIndices,
+      C context,
+      RouteEvaluator<C, T> evaluator,
+      Optional<? extends ProgressListener<T>> listener)
+          throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, false,
-      Optional.<RandomGenerator>absent());
+      Optional.<RandomGenerator>absent(), listener);
   }
 
   /**
@@ -116,24 +123,34 @@ public final class Swaps {
    * @param <C> The context type.
    * @param <T> The route item type (i.e. the locations that are part of a
    *          route).
+   * @param listener An optional progress listener. If provided,
+   *          {@link ProgressListener#notify(ImmutableList, double)} will be
+   *          called each time an <i>improving</i> schedule is found.
    * @return An improved schedule (or the input schedule if no improvement could
    *         be made).
    * @throws InterruptedException When execution is interrupted.
    */
   public static <C, T> ImmutableList<ImmutableList<T>> dfsOpt2(
       ImmutableList<ImmutableList<T>> schedule,
-      IntList startIndices, C context,
-      RouteEvaluator<C, T> evaluator, RandomGenerator rng)
+      IntList startIndices,
+      C context,
+      RouteEvaluator<C, T> evaluator,
+      RandomGenerator rng,
+      Optional<? extends ProgressListener<T>> listener)
           throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, true,
-      Optional.of(rng));
+      Optional.of(rng), listener);
   }
 
   static <C, T> ImmutableList<ImmutableList<T>> opt2(
       ImmutableList<ImmutableList<T>> schedule,
-      IntList startIndices, C context,
-      RouteEvaluator<C, T> evaluator, boolean depthFirst,
-      Optional<RandomGenerator> rng) throws InterruptedException {
+      IntList startIndices,
+      C context,
+      RouteEvaluator<C, T> evaluator,
+      boolean depthFirst,
+      Optional<RandomGenerator> rng,
+      Optional<? extends ProgressListener<T>> listener)
+          throws InterruptedException {
 
     checkArgument(schedule.size() == startIndices.size());
 
@@ -167,7 +184,7 @@ public final class Swaps {
           throw new InterruptedException();
         }
         final Swap<T> swapOperation = it.next();
-        final Optional<Schedule<C, T>> newSchedule = Swaps.swap(curBest,
+        final Optional<Schedule<C, T>> newSchedule = swap(curBest,
           swapOperation,
           bestSchedule.objectiveValue - curBest.objectiveValue,
           routeCostCache);
@@ -175,6 +192,11 @@ public final class Swaps {
         if (newSchedule.isPresent()) {
           isImproving = true;
           bestSchedule = newSchedule.get();
+
+          if (listener.isPresent()) {
+            listener.get().notify(bestSchedule.routes,
+              bestSchedule.objectiveValue);
+          }
           if (depthFirst) {
             // first improving swap is chosen as new starting point (depth
             // first).
@@ -266,32 +288,32 @@ public final class Swaps {
       double threshold,
       Object2DoubleLinkedOpenHashMap<ImmutableList<T>> cache) {
 
-    checkArgument(swap.fromRow >= 0 && swap.fromRow < s.routes.size(),
+    checkArgument(swap.fromRow() >= 0 && swap.fromRow() < s.routes.size(),
       "fromRow must be >= 0 and < %s, it is %s.", s.routes.size(),
-      swap.fromRow);
-    checkArgument(swap.toRow >= 0 && swap.toRow < s.routes.size(),
-      "toRow must be >= 0 and < %s, it is %s.", s.routes.size(), swap.toRow);
+      swap.fromRow());
+    checkArgument(swap.toRow() >= 0 && swap.toRow() < s.routes.size(),
+      "toRow must be >= 0 and < %s, it is %s.", s.routes.size(), swap.toRow());
 
-    if (swap.fromRow == swap.toRow) {
+    if (swap.fromRow() == swap.toRow()) {
       // 1. swap within same vehicle
       // compute cost of original ordering
       // compute cost of new ordering
-      final double originalCost = s.objectiveValues.getDouble(swap.fromRow);
-      final ImmutableList<T> newRoute = inListSwap(s.routes.get(swap.fromRow),
-        swap.toIndices, swap.item);
+      final double originalCost = s.objectiveValues.getDouble(swap.fromRow());
+      final ImmutableList<T> newRoute = inListSwap(s.routes.get(swap.fromRow()),
+        swap.toIndices(), swap.item());
 
-      final double newCost = computeCost(s, swap.fromRow, newRoute, cache);
+      final double newCost = computeCost(s, swap.fromRow(), newRoute, cache);
       final double diff = newCost - originalCost;
 
       if (diff < threshold) {
         // it improves
         final ImmutableList<ImmutableList<T>> newRoutes = replace(s.routes,
-          asIntList(swap.fromRow),
+          asIntList(swap.fromRow()),
           ImmutableList.of(newRoute));
         final double newObjectiveValue = s.objectiveValue + diff;
         final DoubleList newObjectiveValues = replace(
           s.objectiveValues,
-          asIntList(swap.fromRow),
+          asIntList(swap.fromRow()),
           asDoubleList(newCost));
         return Optional.of(Schedule.create(s.context, newRoutes, s.startIndices,
           newObjectiveValues, newObjectiveValue, s.evaluator));
@@ -302,34 +324,34 @@ public final class Swaps {
       // 2. swap between vehicles
 
       // compute cost of removal from original vehicle
-      final double originalCostA = s.objectiveValues.getDouble(swap.fromRow);
+      final double originalCostA = s.objectiveValues.getDouble(swap.fromRow());
       final ImmutableList<T> newRouteA = ImmutableList.copyOf(filter(
-        s.routes.get(swap.fromRow), not(equalTo(swap.item))));
-      final int itemCount = s.routes.get(swap.fromRow).size()
+        s.routes.get(swap.fromRow()), not(equalTo(swap.item()))));
+      final int itemCount = s.routes.get(swap.fromRow()).size()
           - newRouteA.size();
       checkArgument(
         itemCount > 0,
         "The item (%s) is not in row %s, hence it cannot be swapped to another row.",
-        swap.item, swap.fromRow);
+        swap.item(), swap.fromRow());
       checkArgument(
-        itemCount == swap.toIndices.size(),
+        itemCount == swap.toIndices().size(),
         "The number of occurences in the fromRow (%s) should equal the number of insertion indices (%s).",
-        itemCount, swap.toIndices.size());
+        itemCount, swap.toIndices().size());
 
-      final double newCostA = computeCost(s, swap.fromRow, newRouteA, cache);
+      final double newCostA = computeCost(s, swap.fromRow(), newRouteA, cache);
       final double diffA = newCostA - originalCostA;
 
       // compute cost of insertion in new vehicle
-      final double originalCostB = s.objectiveValues.getDouble(swap.toRow);
+      final double originalCostB = s.objectiveValues.getDouble(swap.toRow());
       final ImmutableList<T> newRouteB = Insertions.insert(
-        s.routes.get(swap.toRow), swap.toIndices, swap.item);
+        s.routes.get(swap.toRow()), swap.toIndices(), swap.item());
 
-      final double newCostB = computeCost(s, swap.toRow, newRouteB, cache);
+      final double newCostB = computeCost(s, swap.toRow(), newRouteB, cache);
       final double diffB = newCostB - originalCostB;
 
       final double diff = diffA + diffB;
       if (diff < threshold) {
-        final IntList rows = asIntList(swap.fromRow, swap.toRow);
+        final IntList rows = asIntList(swap.fromRow(), swap.toRow());
         final ImmutableList<ImmutableList<T>> newRoutes = replace(s.routes,
           rows, ImmutableList.of(newRouteA, newRouteB));
         final double newObjectiveValue = s.objectiveValue + diff;
@@ -437,11 +459,15 @@ public final class Swaps {
     return IntLists.unmodifiable(indices);
   }
 
-  static <T> ImmutableList<T> replace(ImmutableList<T> list, IntList indices,
-      ImmutableList<T> elements) {
+  static <T> void checkIndices(IntList indices, List<T> elements) {
     checkArgument(indices.size() == elements.size(),
       "Number of indices (%s) must equal number of elements (%s).",
       indices.size(), elements.size());
+  }
+
+  static <T> ImmutableList<T> replace(ImmutableList<T> list, IntList indices,
+      ImmutableList<T> elements) {
+    checkIndices(indices, elements);
     final List<T> newL = newArrayList(list);
     for (int i = 0; i < indices.size(); i++) {
       newL.set(indices.getInt(i), elements.get(i));
@@ -451,9 +477,7 @@ public final class Swaps {
 
   static DoubleList replace(DoubleList list, IntList indices,
       DoubleList elements) {
-    checkArgument(indices.size() == elements.size(),
-      "Number of indices (%s) must equal number of elements (%s).",
-      indices.size(), elements.size());
+    checkIndices(indices, elements);
     final DoubleList newL = new DoubleArrayList(list);
     for (int i = 0; i < indices.size(); i++) {
       newL.set(indices.getInt(i), elements.getDouble(i));
@@ -461,27 +485,18 @@ public final class Swaps {
     return DoubleLists.unmodifiable(newL);
   }
 
-  static class Swap<T> {
-    final T item;
-    final int fromRow;
-    final int toRow;
-    final IntList toIndices;
+  @AutoValue
+  abstract static class Swap<T> {
+    abstract T item();
 
-    Swap(T i, int from, int to, IntList toInd) {
-      item = i;
-      fromRow = from;
-      toRow = to;
-      toIndices = toInd;
-    }
+    abstract int fromRow();
 
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("item", item)
-          .add("fromRow", fromRow)
-          .add("toRow", toRow)
-          .add("toIndices", toIndices)
-          .toString();
+    abstract int toRow();
+
+    abstract IntList toIndices();
+
+    static <T> Swap<T> create(T i, int from, int to, IntList toInd) {
+      return new AutoValue_Swaps_Swap<T>(i, from, to, toInd);
     }
   }
 
@@ -498,7 +513,7 @@ public final class Swaps {
 
     @Override
     public @Nullable Swap<T> apply(@Nullable IntList input) {
-      return new Swap<T>(item, fromRow, toRow, checkNotNull(input));
+      return Swap.create(item, fromRow, toRow, checkNotNull(input));
     }
   }
 }
