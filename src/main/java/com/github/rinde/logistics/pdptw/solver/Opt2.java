@@ -118,7 +118,7 @@ public final class Opt2 {
 
         @Override
         public String toString() {
-          return supplierToString(b.deptFirstSearch(), true);
+          return supplierToString(b.deptFirstSearch(), true, b.objFunc());
         }
       };
     }
@@ -148,16 +148,19 @@ public final class Opt2 {
 
         @Override
         public String toString() {
-          return supplierToString(dfs, false);
+          return supplierToString(dfs, false, objFunc);
         }
       };
     }
 
-    static String supplierToString(boolean dfs, boolean rt) {
-      return Joiner.on("-").join(
+    static String supplierToString(boolean dfs, boolean rt,
+        @Nullable ObjectiveFunction objFunc) {
+      return Joiner.on("").join(
         Opt2.class.getSimpleName(),
         dfs ? "Dfs" : "Bfs",
-        rt ? "RealtimeSolver" : "Solver");
+        rt ? "RT(" : "(",
+        objFunc,
+        ")");
     }
 
     @SuppressWarnings("unchecked")
