@@ -226,7 +226,9 @@ public class RtSolverBidder
       final Set<Parcel> swappableParcels = new LinkedHashSet<>();
       for (final Parcel ap : assignedParcels) {
         if (!pdpModel.get().getParcelState(ap).isPickedUp()
-            && !pdpModel.get().getParcelState(ap).isTransitionState()) {
+            && !pdpModel.get().getParcelState(ap).isTransitionState()
+            && !state.getVehicles().get(0).getDestination().asSet()
+                .contains(ap)) {
           swappableParcels.add(ap);
         }
       }
