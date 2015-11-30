@@ -74,7 +74,7 @@ public class Truck
       @SuppressWarnings("synthetic-access")
       @Override
       public void handleEvent(Event e) {
-        LOGGER.trace("routeplanner is done, update route");
+        LOGGER.trace("routeplanner computed a new route, update route");
         updateRoute();
       }
     }, RoutePlannerEventType.CHANGE);
@@ -170,7 +170,7 @@ public class Truck
       }
 
       if ((event.newState == waitState
-          || (isDiversionAllowed() && event.newState != serviceState))
+          || isDiversionAllowed() && event.newState != serviceState)
           && changed) {
         updateAssignmentAndRoutePlanner();
       }
