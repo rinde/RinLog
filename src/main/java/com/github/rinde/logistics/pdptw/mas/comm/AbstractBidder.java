@@ -154,7 +154,7 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
   }
 
   @Override
-  public void releaseParcel(Parcel p) {
+  public boolean releaseParcel(Parcel p) {
     checkArgument(!pdpModel.get().getParcelState(p).isPickedUp()
         && !pdpModel.get().getParcelState(p).isTransitionState());
     LOGGER.info("{} releaseParcel {}", this, p);
@@ -163,6 +163,7 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
     checkState(!assignedParcels.contains(p));
     eventDispatcher
         .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+    return true;
   }
 
   @Override

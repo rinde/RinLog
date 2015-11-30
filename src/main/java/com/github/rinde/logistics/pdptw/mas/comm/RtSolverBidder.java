@@ -265,7 +265,6 @@ public class RtSolverBidder
         // }
 
         // try to reauction
-
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
 
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
@@ -282,20 +281,26 @@ public class RtSolverBidder
   }
 
   @Override
-  public void releaseParcel(Parcel p) {
+  public boolean releaseParcel(Parcel p) {
     LOGGER.trace("{} RELEASE PARCEL {}", this, p);
     // remove the parcel from the route immediately to avoid going there
     final List<Parcel> currentRoute =
       new ArrayList<>(((Truck) vehicle.get()).getRoute());
     if (currentRoute.contains(p)) {
+      final List<Parcel> original = new ArrayList<>(currentRoute);
       LOGGER.trace(" > remove parcel from route: {}", currentRoute);
       currentRoute.removeAll(Collections.singleton(p));
-      ((Truck) vehicle.get()).setRoute(currentRoute);
 
-      checkState(!((Truck) vehicle.get()).getRoute().contains(p));
-
+      final Truck truck = (Truck) vehicle.get();
+      truck.setRoute(currentRoute);
+      if (truck.getRoute().contains(p)) {
+        LOGGER.warn("Could not release parcel, cancelling auction.");
+        // set back original route
+        truck.setRoute(original);
+        return false;
+      }
     }
-    super.releaseParcel(p);
+    return super.releaseParcel(p);
   }
 
   @Override

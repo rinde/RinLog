@@ -43,6 +43,6 @@ public interface Bidder<T extends Bid<T>> extends Communicator {
    */
   void receiveParcel(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
 
-  void releaseParcel(Parcel p);
+  boolean releaseParcel(Parcel p);
 
 }

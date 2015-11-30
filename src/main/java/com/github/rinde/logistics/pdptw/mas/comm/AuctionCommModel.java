@@ -280,11 +280,16 @@ public class AuctionCommModel<T extends Bid<T>>
             // nothing changes
             initiator = Optional.absent();
           } else {
+            boolean success = true;
             if (initiator.isPresent()) {
-              initiator.get().releaseParcel(parcel);
+              success = initiator.get().releaseParcel(parcel);
               initiator = Optional.absent();
             }
-            winner.get().receiveParcel(this, parcel, auctionStartTime);
+            // if parcel could not be released, the parcel will not be
+            // transferred (the auction will complete without effect)
+            if (success) {
+              winner.get().receiveParcel(this, parcel, auctionStartTime);
+            }
           }
           if (clock != null) {
             // this is called to prevent the clock from switching to simulated
