@@ -205,7 +205,6 @@ public class RtSolverBidder
   }
 
   public enum BidFunctions implements BidFunction {
-
     PLAIN {
       @Override
       public double computeBidValue(int numLocations, double additionalCost) {
@@ -215,19 +214,19 @@ public class RtSolverBidder
     BALANCED {
       @Override
       public double computeBidValue(int numLocations, double additionalCost) {
-        return numLocations * additionalCost;
+        return additionalCost + numLocations * additionalCost;
       }
     },
     BALANCED_LOW {
       @Override
       public double computeBidValue(int numLocations, double additionalCost) {
-        return numLocations / 10d * additionalCost;
+        return additionalCost + numLocations / 10d * additionalCost;
       }
     },
     BALANCED_HIGH {
       @Override
       public double computeBidValue(int numLocations, double additionalCost) {
-        return 10d * numLocations * additionalCost;
+        return additionalCost + 10d * numLocations * additionalCost;
       }
     }
   }
