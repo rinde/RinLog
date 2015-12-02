@@ -221,7 +221,9 @@ public class RtSolverBidder
     // include over time
 
     if (!reauctioning.get()
-        && (stats.pickupTardiness > 0 || stats.deliveryTardiness > 0)) {
+        && (stats.pickupTardiness > 0
+            || stats.deliveryTardiness > 0
+            || stats.overTime > 0)) {
 
       // find all swappable parcels, a parcel can be swapped if it is not yet in
       // cargo (it must occur twice in route for that)
