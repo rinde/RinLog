@@ -177,8 +177,9 @@ public class RtSolverBidder
 
         LOGGER.trace("baseline {}, newcost {}", baseline, cost);
 
-        cfb.getAuctioneer().submit(DoubleBid.create(cfb.getTime(), bidder,
-          cfb.getParcel(), cost - baseline));
+        final double bidValue = (currentRoute.size() + 2) * (cost - baseline);
+        cfb.getAuctioneer().submit(DoubleBid.create(
+          cfb.getTime(), bidder, cfb.getParcel(), bidValue));
 
         if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
           ev.removeListener(this, EventType.NEW_SCHEDULE);
@@ -214,6 +215,11 @@ public class RtSolverBidder
 
     // if there is any tardiness in the current route, lets try to reacution one
     // parcel
+
+    // compute business? e.g. % of time in the near future where the vehicle is
+    // busy?
+    // include over time
+
     if (!reauctioning.get()
         && (stats.pickupTardiness > 0 || stats.deliveryTardiness > 0)) {
 
@@ -255,7 +261,7 @@ public class RtSolverBidder
 
       // we have found the most expensive parcel in the route, that is, removing
       // this parcel from the route will yield the greatest cost reduction.
-      if (toSwap != null) {
+      if (toSwap != null && !reauctioning.get()) {
         reauctioning.set(true);
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
         // parcelAuctioneers
@@ -267,8 +273,9 @@ public class RtSolverBidder
         // try to reauction
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
 
+        final double bidValue = currentRoute.size() * (baseline - lowestCost);
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
-          toSwap, baseline - lowestCost);
+          toSwap, bidValue);
         auct.auctionParcel(this, state.getTime(), initialBid,
           new Listener() {
             @Override
