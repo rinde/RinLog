@@ -127,7 +127,8 @@ public class RtRoutePlannerTest {
               DefaultTruckFactory.builder()
                   .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
                   .setCommunicator(
-                    RtSolverBidder.supplier(objFunc, rtSolverSup))
+                    RtSolverBidder.supplier(objFunc, rtSolverSup,
+                      RtSolverBidder.BidFunctions.PLAIN))
                   .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
                   .setLazyComputation(false)
                   .build())

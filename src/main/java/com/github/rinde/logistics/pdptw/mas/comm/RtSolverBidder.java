@@ -77,10 +77,14 @@ public class RtSolverBidder
   AtomicBoolean reauctioning;
   AtomicBoolean computing;
 
-  RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s) {
+  final BidFunction bidFunction;
+
+  RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
+      BidFunction bidFunc) {
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
+    bidFunction = bidFunc;
     cfbQueue = Queues.synchronizedQueue(new LinkedList<CallForBids>());
     parcelAuctioneers = new LinkedHashMap<>();
     reauctioning = new AtomicBoolean();
@@ -177,7 +181,8 @@ public class RtSolverBidder
 
         LOGGER.trace("baseline {}, newcost {}", baseline, cost);
 
-        final double bidValue = (currentRoute.size() + 2) * (cost - baseline);
+        final double bidValue =
+          bidFunction.computeBidValue(currentRoute.size() + 2, cost - baseline);
         cfb.getAuctioneer().submit(DoubleBid.create(
           cfb.getTime(), bidder, cfb.getParcel(), bidValue));
 
@@ -193,6 +198,38 @@ public class RtSolverBidder
     LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
       parcels);
     solverHandle.get().solve(state);
+  }
+
+  public interface BidFunction {
+    double computeBidValue(int numLocations, double additionalCost);
+  }
+
+  public enum BidFunctions implements BidFunction {
+
+    PLAIN {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return additionalCost;
+      }
+    },
+    BALANCED {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return numLocations * additionalCost;
+      }
+    },
+    BALANCED_LOW {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return numLocations / 10d * additionalCost;
+      }
+    },
+    BALANCED_HIGH {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return 10d * numLocations * additionalCost;
+      }
+    }
   }
 
   @SuppressWarnings("unused")
@@ -215,10 +252,6 @@ public class RtSolverBidder
 
     // if there is any tardiness in the current route, lets try to reacution one
     // parcel
-
-    // compute business? e.g. % of time in the near future where the vehicle is
-    // busy?
-    // include over time
 
     if (!reauctioning.get()
         && (stats.pickupTardiness > 0
@@ -275,7 +308,8 @@ public class RtSolverBidder
         // try to reauction
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
 
-        final double bidValue = currentRoute.size() * (baseline - lowestCost);
+        final double bidValue = bidFunction.computeBidValue(currentRoute.size(),
+          baseline - lowestCost);
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
           toSwap, bidValue);
         auct.auctionParcel(this, state.getTime(), initialBid,
@@ -330,8 +364,10 @@ public class RtSolverBidder
 
   public static StochasticSupplier<RtSolverBidder> supplier(
       ObjectiveFunction objFunc,
-      StochasticSupplier<? extends RealtimeSolver> solverSupplier) {
-    return new AutoValue_RtSolverBidder_Sup(objFunc, solverSupplier);
+      StochasticSupplier<? extends RealtimeSolver> solverSupplier,
+      BidFunction bidFunction) {
+    return new AutoValue_RtSolverBidder_Sup(objFunc, solverSupplier,
+        bidFunction);
   }
 
   @AutoValue
@@ -356,10 +392,12 @@ public class RtSolverBidder
 
     abstract StochasticSupplier<? extends RealtimeSolver> getSolverSupplier();
 
+    abstract BidFunction getBidFunction();
+
     @Override
     public RtSolverBidder get(long seed) {
       return new RtSolverBidder(getObjectiveFunction(),
-          getSolverSupplier().get(seed));
+          getSolverSupplier().get(seed), getBidFunction());
     }
 
     @Override
