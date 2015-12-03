@@ -17,8 +17,8 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.collect.Lists.newLinkedList;
 
+import java.util.Deque;
 import java.util.LinkedHashSet;
-import java.util.Queue;
 import java.util.Set;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
@@ -28,6 +28,7 @@ import com.github.rinde.rinsim.central.rt.RtSimSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver.EventType;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
+import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
@@ -43,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     implements RtSolverUser {
 
-  Queue<? extends Parcel> route;
+  Deque<Parcel> route;
   private final RealtimeSolver solver;
   Optional<RtSimSolver> simSolver;
 
@@ -60,6 +61,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       route.clear();
     } else {
       final Set<Parcel> toRemove = new LinkedHashSet<Parcel>();
+      // remove all parcels which are no longer assigned to this routeplanner
       for (final Parcel p : route) {
         if (!onMap.contains(p)
             && !pdpModel.get().getParcelState(p).isPickedUp()
@@ -71,6 +73,18 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       route.removeAll(toRemove);
       LOGGER.trace("to remove: {}", toRemove);
 
+      if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
+        // vehicle is picking up or delivering -> make sure that first item in
+        // route is the parcel that is being serviced
+        final Parcel servicingParcel =
+          pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel();
+        if (!route.peek().equals(servicingParcel)) {
+          // remove first occurrence
+          route.removeFirstOccurrence(servicingParcel);
+          route.addFirst(servicingParcel);
+        }
+      }
+
       final GlobalStateObject gso =
         simSolver.get().getCurrentState(SolveArgs.create()
             .useParcels(onMap)
@@ -81,7 +95,6 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       if (dest.isPresent()) {
         LOGGER.trace("parcel state {}",
           pdpModel.get().getParcelState(dest.get()));
-
       }
 
       simSolver.get().solve(gso);
@@ -95,7 +108,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
   @Override
   public Optional<Parcel> current() {
-    return Optional.fromNullable((Parcel) route.peek());
+    return Optional.fromNullable(route.peek());
   }
 
   @Override
