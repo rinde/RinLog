@@ -253,9 +253,10 @@ public class RtSolverBidder
     // parcel
 
     if (!reauctioning.get()
-        && (stats.pickupTardiness > 0
-            || stats.deliveryTardiness > 0
-            || stats.overTime > 0)) {
+    // && (stats.pickupTardiness > 0
+    // || stats.deliveryTardiness > 0
+    // || stats.overTime > 0)
+    ) {
 
       // find all swappable parcels, a parcel can be swapped if it is not yet in
       // cargo (it must occur twice in route for that)
@@ -268,7 +269,8 @@ public class RtSolverBidder
         if (!pdpModel.get().getParcelState(ap).isPickedUp()
             && !pdpModel.get().getParcelState(ap).isTransitionState()
             && !state.getVehicles().get(0).getDestination().asSet()
-                .contains(ap)) {
+                .contains(ap)
+            && !ap.equals(p)) {
           swappableParcels.add(ap);
         }
       }
@@ -295,7 +297,7 @@ public class RtSolverBidder
 
       // we have found the most expensive parcel in the route, that is, removing
       // this parcel from the route will yield the greatest cost reduction.
-      if (toSwap != null && !reauctioning.get()) {
+      if (toSwap != null && !reauctioning.get() && !toSwap.equals(p)) {
         reauctioning.set(true);
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
         // parcelAuctioneers
