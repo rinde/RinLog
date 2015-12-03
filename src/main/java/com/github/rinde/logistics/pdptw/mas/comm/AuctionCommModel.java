@@ -255,16 +255,17 @@ public class AuctionCommModel<T extends Bid<T>>
           checkState(!bids.isEmpty(),
             "No bids received (yet), cannot end auction.");
 
-          for (final Bidder<T> bidder : communicators) {
-            bidder.endOfAuction(this, parcel, auctionStartTime);
-          }
-
           // end of auction, choose winner
           final T winningBid = Collections.min(bids);
           LOGGER.trace("Winning bid : {}", winningBid);
 
           winner = Optional.of(winningBid.getBidder());
 
+          // notify all bidders
+          for (final Bidder<T> bidder : communicators) {
+            bidder.endOfAuction(this, parcel, auctionStartTime);
+          }
+          // notify anybody else interested in auctions
           final AuctionEvent ev =
             new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
                 bids.size());

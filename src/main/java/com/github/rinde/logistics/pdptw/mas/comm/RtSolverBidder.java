@@ -68,6 +68,9 @@ public class RtSolverBidder
     extends AbstractBidder<DoubleBid>
     implements RtSolverUser, TickListener {
 
+  // 5 minutes
+  private static final long MAX_LOSING_TIME = 5 * 60 * 1000;
+
   private final RealtimeSolver solver;
   final ObjectiveFunction objectiveFunction;
   Optional<RtSimSolver> solverHandle;
@@ -79,6 +82,8 @@ public class RtSolverBidder
   AtomicBoolean computing;
 
   final BidFunction bidFunction;
+
+  long lastAuctionWinTime;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
       BidFunction bidFunc) {
@@ -126,6 +131,14 @@ public class RtSolverBidder
       long time) {
     final CallForBids endedAuction =
       CallForBids.create(auctioneer, parcel, time);
+
+    // we have won
+    if (auctioneer.getWinner().equals(this)) {
+      lastAuctionWinTime = time;
+    } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
+        && !assignedParcels.isEmpty()) {
+      reauction();
+    }
 
     synchronized (computing) {
       if (computing.get()) {
@@ -258,6 +271,7 @@ public class RtSolverBidder
   }
 
   void reauction() {
+
     final ImmutableList<Parcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
