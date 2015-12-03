@@ -55,6 +55,7 @@ import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Queues;
@@ -89,6 +90,7 @@ public class RtSolverBidder
     parcelAuctioneers = new LinkedHashMap<>();
     reauctioning = new AtomicBoolean();
     computing = new AtomicBoolean();
+
   }
 
   @Override
@@ -105,6 +107,18 @@ public class RtSolverBidder
       RtSolverModel.class.getSimpleName());
 
     next();
+  }
+
+  @Override
+  public void afterInit() {
+    super.afterInit();
+    ((Truck) vehicle.get()).getEventAPI().addListener(new Listener() {
+      @Override
+      public void handleEvent(Event e) {
+        reauction();
+      }
+    },
+      Truck.TruckEvent.ROUTE_CHANGE);
   }
 
   @Override
@@ -241,7 +255,9 @@ public class RtSolverBidder
 
     super.receiveParcel(auctioneer, p, auctionStartTime);
     checkArgument(auctioneer.getWinner().equals(this));
+  }
 
+  void reauction() {
     final ImmutableList<Parcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
@@ -249,8 +265,7 @@ public class RtSolverBidder
     final StatisticsDTO stats =
       Solvers.computeStats(state, ImmutableList.of(currentRoute));
 
-    // if there is any tardiness in the current route, lets try to reacution one
-    // parcel
+    final Parcel lastReceivedParcel = Iterables.getLast(assignedParcels);
 
     if (!reauctioning.get()
     // && (stats.pickupTardiness > 0
@@ -270,7 +285,7 @@ public class RtSolverBidder
             && !pdpModel.get().getParcelState(ap).isTransitionState()
             && !state.getVehicles().get(0).getDestination().asSet()
                 .contains(ap)
-            && !ap.equals(p)) {
+            && !ap.equals(lastReceivedParcel)) {
           swappableParcels.add(ap);
         }
       }
@@ -297,7 +312,9 @@ public class RtSolverBidder
 
       // we have found the most expensive parcel in the route, that is, removing
       // this parcel from the route will yield the greatest cost reduction.
-      if (toSwap != null && !reauctioning.get() && !toSwap.equals(p)) {
+      if (toSwap != null
+          && !reauctioning.get()
+          && !toSwap.equals(lastReceivedParcel)) {
         reauctioning.set(true);
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
         // parcelAuctioneers

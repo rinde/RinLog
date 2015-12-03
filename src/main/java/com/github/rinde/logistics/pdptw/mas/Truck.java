@@ -34,6 +34,8 @@ import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
+import com.github.rinde.rinsim.event.EventAPI;
+import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
 import com.github.rinde.rinsim.fsm.StateMachine.StateTransitionEvent;
@@ -54,6 +56,8 @@ public class Truck
   private final Communicator communicator;
   private boolean changed;
   private final boolean lazyRouteComputing;
+  private final EventDispatcher eventDispatcher;
+  private final Event routeChangedEvent;
 
   /**
    * Create a new Truck using the specified {@link RoutePlanner} and
@@ -81,8 +85,15 @@ public class Truck
     stateMachine.getEventAPI().addListener(this,
       StateMachineEvent.STATE_TRANSITION);
     lazyRouteComputing = lazyRouteComp;
+    eventDispatcher = new EventDispatcher(TruckEvent.values());
+    routeChangedEvent = new Event(TruckEvent.ROUTE_CHANGE, this);
     LOGGER.trace("Truck constructor, {}, {}, {}, {}.", rp, c, ra,
       lazyRouteComp);
+
+  }
+
+  public enum TruckEvent {
+    ROUTE_CHANGE
   }
 
   @Override
@@ -120,6 +131,10 @@ public class Truck
     }
   }
 
+  public EventAPI getEventAPI() {
+    return eventDispatcher.getPublicEventAPI();
+  }
+
   /**
    * Updates the route based on the {@link RoutePlanner}.
    */
@@ -129,6 +144,7 @@ public class Truck
     } else {
       setRoute(new LinkedList<Parcel>());
     }
+    eventDispatcher.dispatchEvent(routeChangedEvent);
   }
 
   @Override
