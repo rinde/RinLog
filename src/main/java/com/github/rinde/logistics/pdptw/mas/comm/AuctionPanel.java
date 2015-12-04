@@ -121,7 +121,15 @@ public class AuctionPanel
             }
 
             statusLabel.get().setText(
-              "# ongoing auctions: " + model.getNumberOfOngoingAuctions());
+              "# parcels: " + model.getNumParcels()
+                  + " # ongoing auctions: " + model.getNumberOfOngoingAuctions()
+                  + " reacutions: " + (model.getNumAuctions()
+                      - model.getNumParcels())
+                  + " unsuccessful: " + model.getNumUnsuccesfulAuctions()
+                  + " failed: " + model.getNumFailedAuctions());
+
+            statusLabel.get().pack(true);
+            statusLabel.get().getParent().layout();
           }
         });
 
@@ -141,6 +149,7 @@ public class AuctionPanel
 
     final GridData statusLabelLayouData = new GridData();
     statusLabelLayouData.horizontalSpan = 4;
+    statusLabelLayouData.grabExcessHorizontalSpace = true;
     statusLabel.get().setLayoutData(statusLabelLayouData);
 
     tree = Optional.of(

@@ -21,7 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,8 +44,6 @@ import com.github.rinde.rinsim.event.Listener;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.SetMultimap;
 
 /**
  * A communication model that supports auctions.
@@ -55,18 +55,16 @@ public class AuctionCommModel<T extends Bid<T>>
     implements TickListener {
   private static final long MAX_AUCTION_DURATION = 5 * 60 * 1000L;
 
-  final SetMultimap<Parcel, ParcelAuctioneer> bidMap;
+  final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
   final AuctionStopCondition<T> stopCondition;
-
   final EventDispatcher eventDispatcher;
   @Nullable
   final RealtimeClockController clock;
-
   final AtomicInteger numAuctions;
 
   AuctionCommModel(AuctionStopCondition<T> sc, Clock c) {
     stopCondition = sc;
-    bidMap = LinkedHashMultimap.create();
+    parcelAuctioneerMap = new LinkedHashMap<>();
 
     eventDispatcher = new EventDispatcher(EventType.values());
     if (c instanceof RealtimeClockController) {
@@ -82,8 +80,36 @@ public class AuctionCommModel<T extends Bid<T>>
     return eventDispatcher.getPublicEventAPI();
   }
 
+  public int getNumParcels() {
+    return parcelAuctioneerMap.size();
+  }
+
   public int getNumberOfOngoingAuctions() {
     return numAuctions.get();
+  }
+
+  public int getNumUnsuccesfulAuctions() {
+    int total = 0;
+    for (final ParcelAuctioneer pa : parcelAuctioneerMap.values()) {
+      total += pa.unsuccessfulAuctions;
+    }
+    return total;
+  }
+
+  public int getNumAuctions() {
+    int total = 0;
+    for (final ParcelAuctioneer pa : parcelAuctioneerMap.values()) {
+      total += pa.auctions;
+    }
+    return total;
+  }
+
+  public int getNumFailedAuctions() {
+    int total = 0;
+    for (final ParcelAuctioneer pa : parcelAuctioneerMap.values()) {
+      total += pa.failedAuctions;
+    }
+    return total;
   }
 
   @Override
@@ -91,7 +117,7 @@ public class AuctionCommModel<T extends Bid<T>>
     checkState(!communicators.isEmpty(), "there are no bidders..");
 
     final ParcelAuctioneer auctioneer = new ParcelAuctioneer(p);
-    bidMap.put(p, auctioneer);
+    parcelAuctioneerMap.put(p, auctioneer);
     auctioneer.initialAuction(time);
     auctioneer.update(time);
   }
@@ -102,7 +128,7 @@ public class AuctionCommModel<T extends Bid<T>>
   @Override
   public void afterTick(TimeLapse timeLapse) {
     int numOfOngoingAuctions = 0;
-    for (final ParcelAuctioneer pa : bidMap.values()) {
+    for (final ParcelAuctioneer pa : parcelAuctioneerMap.values()) {
       pa.update(timeLapse.getStartTime());
       if (!pa.hasWinner()) {
         numOfOngoingAuctions++;
@@ -209,6 +235,8 @@ public class AuctionCommModel<T extends Bid<T>>
     int auctions;
 
     Optional<Listener> callback;
+    int unsuccessfulAuctions;
+    int failedAuctions;
 
     ParcelAuctioneer(Parcel p) {
       parcel = p;
@@ -278,6 +306,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
           if (initiator.isPresent()
               && winningBid.getBidder().equals(initiator.get())) {
+            unsuccessfulAuctions++;
             // nothing changes
             initiator = Optional.absent();
           } else {
@@ -290,6 +319,8 @@ public class AuctionCommModel<T extends Bid<T>>
             // transferred (the auction will complete without effect)
             if (success) {
               winner.get().receiveParcel(this, parcel, auctionStartTime);
+            } else {
+              failedAuctions++;
             }
           }
           if (clock != null) {
