@@ -18,7 +18,6 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Sets.newLinkedHashSet;
 import static java.util.Collections.unmodifiableSet;
 
 import java.util.Set;
@@ -26,6 +25,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.rinde.logistics.pdptw.mas.comm.SetFactories.SetFactory;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -83,8 +83,12 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
    * Initializes bidder.
    */
   public AbstractBidder() {
-    assignedParcels = newLinkedHashSet();
-    claimedParcels = newLinkedHashSet();
+    this(SetFactories.linkedHashSet());
+  }
+
+  public AbstractBidder(SetFactory factory) {
+    assignedParcels = factory.create();
+    claimedParcels = factory.create();
     eventDispatcher = new EventDispatcher(CommunicatorEventType.values());
     roadModel = Optional.absent();
     pdpModel = Optional.absent();

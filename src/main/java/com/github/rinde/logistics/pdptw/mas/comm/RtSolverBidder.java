@@ -87,6 +87,7 @@ public class RtSolverBidder
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
       BidFunction bidFunc) {
+    super(SetFactories.synchronizedFactory(SetFactories.linkedHashSet()));
     objectiveFunction = objFunc;
     solver = s;
     solverHandle = Optional.absent();
