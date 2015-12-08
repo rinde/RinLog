@@ -249,10 +249,10 @@ public class AuctionCommModel<T extends Bid<T>>
     void initialAuction(long time) {
       LOGGER.trace("*** Start auction at {} for {}. ***", time, parcel);
       checkRealtime();
-      eventDispatcher.dispatchEvent(
-        new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
       auctionStartTime = time;
       auctions++;
+      eventDispatcher.dispatchEvent(
+        new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
 
       for (final Bidder<T> b : communicators) {
         b.callForBids(this, parcel, time);
@@ -289,21 +289,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
           winner = Optional.of(winningBid.getBidder());
 
-          // notify all bidders
-          for (final Bidder<T> bidder : communicators) {
-            bidder.endOfAuction(this, parcel, auctionStartTime);
-          }
-          // notify anybody else interested in auctions
-          final AuctionEvent ev =
-            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
-                bids.size());
-
-          eventDispatcher.dispatchEvent(ev);
-          if (callback.isPresent()) {
-            callback.get().handleEvent(ev);
-            callback = Optional.absent();
-          }
-
           if (initiator.isPresent()
               && winningBid.getBidder().equals(initiator.get())) {
             unsuccessfulAuctions++;
@@ -329,6 +314,21 @@ public class AuctionCommModel<T extends Bid<T>>
             LOGGER.info("end of auction -> switch to real time");
             clock.switchToRealTime();
           }
+
+          // notify all bidders
+          for (final Bidder<T> bidder : communicators) {
+            bidder.endOfAuction(this, parcel, auctionStartTime);
+          }
+          // notify anybody else interested in auctions
+          final AuctionEvent ev =
+            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
+                bids.size());
+
+          eventDispatcher.dispatchEvent(ev);
+          if (callback.isPresent()) {
+            callback.get().handleEvent(ev);
+            callback = Optional.absent();
+          }
         }
       }
     }
@@ -353,9 +353,6 @@ public class AuctionCommModel<T extends Bid<T>>
             + "found %s. Parcel: %s.",
         winner.get(), currentOwner, parcel);
 
-      eventDispatcher.dispatchEvent(
-        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this, time));
-
       callback = Optional.of(cb);
       winner = Optional.absent();
       bids.clear();
@@ -370,6 +367,9 @@ public class AuctionCommModel<T extends Bid<T>>
           b.callForBids(this, parcel, time);
         }
       }
+
+      eventDispatcher.dispatchEvent(
+        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this, time));
     }
 
     @Override

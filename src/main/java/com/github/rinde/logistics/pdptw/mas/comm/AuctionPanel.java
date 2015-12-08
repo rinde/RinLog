@@ -114,21 +114,30 @@ public class AuctionPanel
               parent.setExpanded(!finish);
             }
             if (scrollButton.get().getSelection()) {
-
               final TreeItem target = parent.getExpanded() ? item : parent;
               tree.get().showItem(target);
               tree.get().select(target);
             }
 
+            final int reauctions =
+              model.getNumAuctions() - model.getNumParcels();
+            final int perc =
+              (int) ((reauctions - model.getNumUnsuccesfulAuctions()
+                  - model.getNumFailedAuctions()) / (double) reauctions
+                  * 100d);
+
             statusLabel.get().setText(
               "# parcels: " + model.getNumParcels()
                   + " # ongoing auctions: " + model.getNumberOfOngoingAuctions()
-                  + " reacutions: " + (model.getNumAuctions()
-                      - model.getNumParcels())
-                  + " unsuccessful: " + model.getNumUnsuccesfulAuctions()
+                  + " reauctions: " + reauctions
+                  + " (success: " + perc + "%)");
+
+            statusLabel.get().setToolTipText(
+              "unsuccessful: " + model.getNumUnsuccesfulAuctions()
                   + " failed: " + model.getNumFailedAuctions());
 
             statusLabel.get().pack(true);
+            statusLabel.get().getParent().redraw();
             statusLabel.get().getParent().layout();
           }
         });

@@ -137,6 +137,7 @@ public class RtSolverBidder
       lastAuctionWinTime = time;
     } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
         && !assignedParcels.isEmpty()) {
+      // we haven't won an auction for a while
       reauction();
     }
 
