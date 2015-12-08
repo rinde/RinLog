@@ -273,6 +273,9 @@ public class RtSolverBidder
   }
 
   void reauction() {
+    if (assignedParcels.isEmpty()) {
+      return;
+    }
 
     final ImmutableList<Parcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
