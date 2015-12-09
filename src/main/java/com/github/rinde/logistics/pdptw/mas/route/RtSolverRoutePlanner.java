@@ -21,6 +21,8 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
@@ -32,6 +34,7 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
+import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -47,11 +50,18 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
   Deque<Parcel> route;
   private final RealtimeSolver solver;
   Optional<RtSimSolver> simSolver;
+  Optional<PDPRoadModel> pdpRoadModel;
 
   RtSolverRoutePlanner(RealtimeSolver s) {
     route = newLinkedList();
     solver = s;
     simSolver = Optional.absent();
+    pdpRoadModel = Optional.absent();
+  }
+
+  @Override
+  protected void afterInit() {
+    pdpRoadModel = Optional.of((PDPRoadModel) roadModel.get());
   }
 
   @Override
@@ -73,15 +83,21 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       route.removeAll(toRemove);
       LOGGER.trace("to remove: {}", toRemove);
 
-      if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
+      @Nullable
+      final Parcel destination =
+        pdpRoadModel.get().getDestinationToParcel(vehicle.get());
+
+      if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE
+          || destination != null) {
         // vehicle is picking up or delivering -> make sure that first item in
         // route is the parcel that is being serviced
-        final Parcel servicingParcel =
-          pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel();
-        if (!route.peek().equals(servicingParcel)) {
+        final Parcel next = destination == null
+            ? pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel()
+            : destination;
+        if (!route.peek().equals(next)) {
           // remove first occurrence
-          route.removeFirstOccurrence(servicingParcel);
-          route.addFirst(servicingParcel);
+          route.removeFirstOccurrence(next);
+          route.addFirst(next);
         }
       }
 
