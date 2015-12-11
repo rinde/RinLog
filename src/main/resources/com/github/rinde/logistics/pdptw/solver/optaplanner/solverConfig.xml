@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solver>
+  <!-- Define the model -->
+  <solutionClass>org.optaplanner.examples.nqueens.domain.NQueens</solutionClass>
+  <entityClass>org.optaplanner.examples.nqueens.domain.Queen</entityClass>
+
+  <!-- Define the score function -->
+  <scoreDirectorFactory>
+    <scoreDefinitionType>SIMPLE</scoreDefinitionType>
+    <scoreDrl>org/optaplanner/examples/nqueens/solver/nQueensScoreRules.drl</scoreDrl>
+  </scoreDirectorFactory>
+
+  <!-- Configure the optimization algorithm(s) -->
+  <termination>
+    ...
+  </termination>
+  <constructionHeuristic>
+    ...
+  </constructionHeuristic>
+  <localSearch>
+    ...
+  </localSearch>
+</solver>
