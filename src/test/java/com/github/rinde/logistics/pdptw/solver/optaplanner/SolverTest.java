@@ -17,7 +17,11 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import org.junit.Test;
 
+import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.geom.Point;
 
 /**
  *
@@ -26,9 +30,19 @@ import com.github.rinde.rinsim.central.Solver;
 public class SolverTest {
 
   @Test
-  public void test() {
+  public void test() throws InterruptedException {
 
     final Solver s = new OptplannerSolver();
+
+    final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+        .addAvailableParcel(
+          Parcel.builder(new Point(0, 0), new Point(2, 0)).build())
+        .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+            .setLocation(new Point(5, 5))
+            .build())
+        .build();
+
+    // s.solve(gso);
 
   }
 

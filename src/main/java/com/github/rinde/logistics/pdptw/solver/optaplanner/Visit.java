@@ -15,10 +15,29 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
+
+import com.github.rinde.rinsim.geom.Point;
+
 /**
- * 
+ *
  * @author Rinde van Lon
  */
+@PlanningEntity
 public interface Visit {
+
+  // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
+  // }, graphType = PlanningVariableGraphType.CHAINED)
+  // Visit getPreviousVisit();
+  //
+  // void setPreviousVisit(Visit v);
+
+  @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
+  ParcelVisit getNextVisit();
+
+  void setNextVisit(ParcelVisit v);
+
+  Point getPosition();
 
 }

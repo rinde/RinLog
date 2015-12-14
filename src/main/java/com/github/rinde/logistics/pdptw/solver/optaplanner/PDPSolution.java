@@ -31,6 +31,9 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 @PlanningSolution
 public class PDPSolution implements Solution<HardSoftLongScore> {
 
+  // problem facts
+  long startTime;
+
   @PlanningEntityCollectionProperty
   @ValueRangeProvider(id = "parcelRange")
   List<ParcelVisit> parcelList;
@@ -40,6 +43,12 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   List<Vehicle> vehicleList;
 
   HardSoftLongScore score;
+
+  PDPSolution() {}
+
+  PDPSolution(long st) {
+    startTime = st;
+  }
 
   @Override
   public HardSoftLongScore getScore() {
