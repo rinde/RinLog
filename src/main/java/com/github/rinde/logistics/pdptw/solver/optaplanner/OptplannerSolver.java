@@ -52,7 +52,8 @@ public class OptplannerSolver implements Solver {
   private final org.optaplanner.core.api.solver.Solver solver;
 
   OptplannerSolver() {
-    final SolverFactory factory = SolverFactory.createEmpty();
+    final SolverFactory factory = SolverFactory.createFromXmlResource(
+      "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml");
     final SolverConfig config = factory.getSolverConfig();
 
     // final ScanAnnotatedClassesConfig scan = new ScanAnnotatedClassesConfig();
@@ -110,11 +111,14 @@ public class OptplannerSolver implements Solver {
     problem.vehicleList = vehicleList;
 
     // TODO fix the initial allocation
-    // Visit prev = vehicleList.get(0);
-    // for (final ParcelVisit pv : parcelList) {
-    // pv.setPreviousVisit(prev);
-    // prev = pv;
-    // }
+    final Vehicle vehicle = vehicleList.get(0);
+    Visit prev = vehicle;
+    for (final ParcelVisit pv : parcelList) {
+      pv.setPreviousVisit(prev);
+      pv.setVehicle(vehicle);
+      prev.setNextVisit(pv);
+      prev = pv;
+    }
 
     solver.solve(problem);
 

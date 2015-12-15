@@ -15,11 +15,21 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.score.director.incremental.AbstractIncrementalScoreCalculator;
 
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
@@ -34,63 +44,88 @@ public class ScoreCalculator
   long hardScore;
   long softScore;
 
-  Object2LongMap<ParcelVisit> parcelDoneTimes;
-  Object2LongMap<ParcelVisit> parcelTravelTimes;
-  Object2LongMap<ParcelVisit> parcelTardiness;
-  Object2LongMap<Vehicle> vehicleOverTime;
+  Object2LongMap<Visit> doneTimes;
+  Object2LongMap<Visit> travelTimes;
+  Object2LongMap<Visit> tardiness;
+
+  Map<Parcel, Vehicle> pickupOwner;
+  Map<Parcel, Vehicle> deliveryOwner;
+
+  SetMultimap<Vehicle, ParcelVisit> changes;
+
+  long startTime;
+
+  Set<ParcelVisit> unplannedParcelVisits;
 
   @Override
   public void resetWorkingSolution(PDPSolution workingSolution) {
     System.out.println("resetWorkingSolution: " + workingSolution);
 
+    unplannedParcelVisits = new LinkedHashSet<>(workingSolution.parcelList);
+
+    changes = LinkedHashMultimap.create();
+
+    startTime = workingSolution.startTime;
+
     final int numVisits = workingSolution.parcelList.size();
     final int numVehicles = workingSolution.vehicleList.size();
-    parcelDoneTimes = new Object2LongOpenHashMap<>(numVisits);
-    parcelTravelTimes = new Object2LongOpenHashMap<>(numVisits);
-    parcelTardiness = new Object2LongOpenHashMap<>(numVisits);
-    vehicleOverTime = new Object2LongOpenHashMap<>(numVehicles);
+    final int size = numVisits + numVehicles;
+    doneTimes = new Object2LongOpenHashMap<>(size);
+    travelTimes = new Object2LongOpenHashMap<>(size);
+    tardiness = new Object2LongOpenHashMap<>(size);
 
+    pickupOwner = new LinkedHashMap<>(numVisits);
+    deliveryOwner = new LinkedHashMap<>(numVisits);
+
+    hardScore = 0;
+    softScore = 0;
     for (final Vehicle v : workingSolution.vehicleList) {
-      long currentTime = workingSolution.startTime;
+      // final long currentTime = workingSolution.startTime;
 
       ParcelVisit pv = v.getNextVisit();
-      Point currentPos = v.getPosition();
+      // if (v.vehicle.getDestination().isPresent()) {
+      // if (pv == null
+      // || !pv.getParcel().equals(v.vehicle.getDestination().get())) {
+      // hardScore -= 1L;
+      // }
+      // }
+
+      // final Set<Parcel> deliveryRequired = new LinkedHashSet<>();
+      // deliveryRequired.addAll(v.vehicle.getContents());
 
       while (pv != null) {
-        final Point newPos = pv.getPosition();
-
-        // compute travel time from current pos to parcel pos
-        final long tt = v.computeTravelTime(currentPos, newPos);
-        currentTime += tt;
-        parcelTravelTimes.put(pv, tt);
-
-        // compute tardiness
-        currentTime = pv.computeServiceStartTime(currentTime);
-        parcelTardiness.put(pv, pv.computeTardiness(currentTime));
-
-        // compute time when servicing of this parcel is done
-        currentTime += pv.getServiceDuration();
-        parcelDoneTimes.put(pv, currentTime);
-
-        // update variables for next step
-        currentPos = newPos;
+        insert(pv);
         pv = pv.getNextVisit();
       }
 
-      final long depotTT =
-        v.computeTravelTime(currentPos, v.getDepotLocation());
-      currentTime += depotTT;
+      updateDepotScore(v);
 
-      final long depotTardiness = v.computeDepotTardiness(currentTime);
-
-      // TODO where to store depot values?
-
+      // the number of parcels that are not delivered even though they should
+      // have been is used as a hard constraint violation
+      // hardScore -= deliveryRequired.size();
     }
+  }
 
-    // TODO what about constraint violations?
+  void updateDepotScore(Vehicle v) {
+    softScore += tardiness.getLong(v);
+    softScore += travelTimes.getLong(v);
 
-    // parcelArrivalTimes.g
+    final ParcelVisit lastStop = v.getLastVisit();
+    final Point fromPos =
+      lastStop == null ? v.getPosition() : lastStop.getPosition();
+    long currentTime =
+      lastStop == null ? startTime : doneTimes.getLong(lastStop);
 
+    // travel to depot soft constraints
+    final long depotTT =
+      v.computeTravelTime(fromPos, v.getDepotLocation());
+    currentTime += depotTT;
+    softScore -= depotTT;
+    travelTimes.put(v, depotTT);
+
+    final long depotTardiness = v.computeDepotTardiness(currentTime);
+    softScore -= depotTardiness;
+    tardiness.put(v, depotTardiness);
   }
 
   @Override
@@ -109,6 +144,18 @@ public class ScoreCalculator
   public void beforeVariableChanged(Object entity, String variableName) {
     System.out.println("beforeVariableChanged: " + entity);
     System.out.println(" > next:" + ((Visit) entity).getNextVisit());
+
+    final Visit visit = (Visit) entity;
+
+    if (visit.getNextVisit() == null) {
+      // we can safely ignore this
+
+    } else {
+      // we have to remove this entity from the schedule
+      remove(visit.getNextVisit());
+      changes.put(visit.getVehicle(), visit.getNextVisit());
+    }
+    System.out.println("softScore: " + softScore);
   }
 
   @Override
@@ -116,6 +163,17 @@ public class ScoreCalculator
     System.out.println("afterVariableChanged: " + entity);
     System.out.println(" > next:" + ((Visit) entity).getNextVisit());
 
+    final Visit visit = (Visit) entity;
+    if (visit.getNextVisit() == null) {
+      // we can ignore this
+    } else {
+      // we have to add this entity to the schedule
+
+      insert(visit.getNextVisit());
+      changes.put(visit.getVehicle(), visit.getNextVisit());
+    }
+
+    System.out.println("softScore: " + softScore);
   }
 
   @Override
@@ -133,8 +191,88 @@ public class ScoreCalculator
   @Override
   public Score calculateScore() {
     System.out.println("***calculate score***");
-    // TODO Auto-generated method stub
-    return HardSoftLongScore.valueOf(0, 0);
+    if (!changes.isEmpty()) {
+      for (final Entry<Vehicle, Collection<ParcelVisit>> entry : changes.asMap()
+          .entrySet()) {
+        updateRoute(entry.getKey(), entry.getValue());
+      }
+    }
+    changes.clear();
+    return HardSoftLongScore.valueOf(hardScore, softScore);
+  }
+
+  void updateRoute(Vehicle v, Collection<ParcelVisit> visits) {
+    System.out.println("updateRoute " + v);
+    ParcelVisit cur = v.getNextVisit();
+
+    while (cur != null) {
+      // we know that visits is always a set
+      if (!visits.contains(cur)) {
+        remove(cur);
+      }
+      insert(cur);
+
+      cur = cur.getNextVisit();
+    }
+
+    updateDepotScore(v);
+  }
+
+  void remove(ParcelVisit pv) {
+
+    softScore += travelTimes.getLong(pv);
+    softScore += tardiness.getLong(pv);
+
+  }
+
+  void insert(ParcelVisit pv) {
+    unplannedParcelVisits.remove(pv);
+
+    final Vehicle vehicle = pv.getVehicle();
+    final Visit prev = pv.getPreviousVisit();
+    final Point prevPos = prev.getPosition();
+
+    long currentTime;
+    if (prev.equals(vehicle)) {
+      currentTime = startTime;
+    } else {
+      currentTime = doneTimes.getLong(prev);
+    }
+
+    final Point newPos = pv.getPosition();
+
+    // compute travel time from current pos to parcel pos
+    final long tt = vehicle.computeTravelTime(prevPos, newPos);
+    currentTime += tt;
+    softScore -= tt;
+    travelTimes.put(pv, tt);
+
+    // compute tardiness
+    currentTime = pv.computeServiceStartTime(currentTime);
+    final long tard = pv.computeTardiness(currentTime);
+    softScore -= tard;
+    tardiness.put(pv, tard);
+
+    // compute time when servicing of this parcel is done
+    currentTime += pv.getServiceDuration();
+    doneTimes.put(pv, currentTime);
+
+    // check hard constraints
+    // if (deliveryRequired.contains(pv.getParcel())) {
+    // // it needs to be delivered
+    // if (pv.getVisitType() == VisitType.DELIVER) {
+    // deliveryRequired.remove(pv.getParcel());
+    // } else {
+    // hardScore -= 1L;
+    // }
+    // } else {
+    // // it needs to be picked up
+    // if (pv.getVisitType() == VisitType.PICKUP) {
+    // deliveryRequired.add(pv.getParcel());
+    // } else {
+    // hardScore -= 1L;
+    // }
+    // }
   }
 
 }

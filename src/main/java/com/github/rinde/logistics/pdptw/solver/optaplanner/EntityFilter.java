@@ -15,34 +15,22 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
-import org.optaplanner.core.api.domain.entity.PlanningEntity;
-import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
-
-import com.github.rinde.rinsim.geom.Point;
+import org.optaplanner.core.impl.heuristic.selector.common.decorator.SelectionFilter;
+import org.optaplanner.core.impl.score.director.ScoreDirector;
 
 /**
  *
  * @author Rinde van Lon
  */
-@PlanningEntity
-public interface Visit {
+public class EntityFilter implements SelectionFilter<Visit> {
 
-  // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
-  // }, graphType = PlanningVariableGraphType.CHAINED)
-  // Visit getPreviousVisit();
-  //
-  // void setPreviousVisit(Visit v);
+  @Override
+  public boolean accept(ScoreDirector scoreDirector, Visit selection) {
+    if (selection.getVehicle().equals(selection)
+        && selection.getVehicle().vehicle.getDestination().isPresent()) {
+      return false;
+    }
+    return true;
+  }
 
-  @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
-  ParcelVisit getNextVisit();
-
-  void setNextVisit(ParcelVisit v);
-
-  Vehicle getVehicle();
-
-  void setVehicle(Vehicle v);
-
-  Point getPosition();
-
-  ParcelVisit getLastVisit();
 }

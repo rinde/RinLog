@@ -18,6 +18,7 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.variable.AnchorShadowVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 
@@ -45,6 +46,7 @@ public class ParcelVisit implements Visit {
 
   // shadow variables
   ParcelVisit nextVisit;
+  Vehicle vehicle;
 
   ParcelVisit() {}
 
@@ -98,6 +100,17 @@ public class ParcelVisit implements Visit {
     nextVisit = v;
   }
 
+  @AnchorShadowVariable(sourceVariableName = "previousVisit")
+  @Override
+  public Vehicle getVehicle() {
+    return vehicle;
+  }
+
+  @Override
+  public void setVehicle(Vehicle v) {
+    vehicle = v;
+  }
+
   @Override
   public Point getPosition() {
     return position;
@@ -122,6 +135,14 @@ public class ParcelVisit implements Visit {
         .add("Parcel", parcel)
         .addValue(visitType)
         .toString();
+  }
+
+  @Override
+  public ParcelVisit getLastVisit() {
+    if (nextVisit == null) {
+      return this;
+    }
+    return nextVisit.getLastVisit();
   }
 
 }

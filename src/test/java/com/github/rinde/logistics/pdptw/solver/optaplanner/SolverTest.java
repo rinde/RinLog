@@ -42,7 +42,7 @@ public class SolverTest {
             .build())
         .build();
 
-    // s.solve(gso);
+    s.solve(gso);
 
   }
 

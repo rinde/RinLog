@@ -71,6 +71,22 @@ public class Vehicle implements Visit {
   }
 
   @Override
+  public Vehicle getVehicle() {
+    return this;
+  }
+
+  @Override
+  public ParcelVisit getLastVisit() {
+    if (nextVisit == null) {
+      return null;
+    }
+    return nextVisit.getLastVisit();
+  }
+
+  @Override
+  public void setVehicle(Vehicle v) {}
+
+  @Override
   public Point getPosition() {
     return vehicle.getLocation();
   }
