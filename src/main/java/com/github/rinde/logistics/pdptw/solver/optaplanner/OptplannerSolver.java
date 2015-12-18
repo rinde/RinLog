@@ -34,6 +34,7 @@ import org.optaplanner.core.config.score.director.ScoreDirectorFactoryConfig;
 import org.optaplanner.core.config.solver.EnvironmentMode;
 import org.optaplanner.core.config.solver.SolverConfig;
 import org.optaplanner.core.config.solver.random.RandomType;
+import org.optaplanner.core.config.solver.termination.TerminationConfig;
 
 import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.central.GlobalStateObject;
@@ -65,8 +66,12 @@ public class OptplannerSolver implements Solver {
         // Vehicle.class,
         Visit.class));
     config.setSolutionClass(PDPSolution.class);
-    // final TerminationConfig terminationConfig =
-    // config.getTerminationConfig();
+
+    final TerminationConfig terminationConfig = new TerminationConfig();
+
+    // terminationConfig.setStepCountLimit(10);
+    terminationConfig.setUnimprovedSecondsSpentLimit(1L);
+    config.setTerminationConfig(terminationConfig);
 
     final ScoreDirectorFactoryConfig scoreConfig =
       new ScoreDirectorFactoryConfig();
@@ -85,10 +90,7 @@ public class OptplannerSolver implements Solver {
   static final Unit<Velocity> SPEED_UNIT = NonSI.KILOMETERS_PER_HOUR;
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
 
-  @Override
-  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
-      throws InterruptedException {
-
+  static PDPSolution convert(GlobalStateObject state) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
     checkArgument(state.getDistUnit().equals(DISTANCE_UNIT));
@@ -119,6 +121,14 @@ public class OptplannerSolver implements Solver {
       prev.setNextVisit(pv);
       prev = pv;
     }
+    return problem;
+  }
+
+  @Override
+  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
+      throws InterruptedException {
+
+    final PDPSolution problem = convert(state);
 
     solver.solve(problem);
 

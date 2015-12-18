@@ -16,45 +16,53 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import org.junit.Test;
+import org.optaplanner.core.api.score.Score;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
-import com.github.rinde.rinsim.central.Solver;
-import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
-import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
-import com.google.common.collect.ImmutableList;
 
 /**
  *
  * @author Rinde van Lon
  */
-public class SolverTest {
+public class ScoreCalculatorTest {
 
   @Test
-  public void test() throws InterruptedException {
+  public void test() {
 
-    final Solver s = new OptplannerSolver();
+    final ScoreCalculator sc = new ScoreCalculator();
 
-    final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+    final GlobalStateObject state = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(
-          Parcel.builder(new Point(0, 0), new Point(2, 0)).build())
+          Parcel.builder(new Point(0, 0), new Point(0, 1)).build())
         .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
-            .setLocation(new Point(5, 5))
-            .setRoute(ImmutableList.<Parcel>of())
+            .setVehicleDTO(VehicleDTO.builder()
+                .speed(1d)
+                .build())
             .build())
         .build();
 
-    final StatisticsDTO stats = Solvers.computeStats(gso, null);
+    final PDPSolution sol = OptplannerSolver.convert(state);
 
-    final double cost =
-      Gendreau06ObjectiveFunction.instance(50d).computeCost(stats);
-    System.out.println(cost * 60000);
+    sc.resetWorkingSolution(sol);
 
-    final ImmutableList<ImmutableList<Parcel>> schedule = s.solve(gso);
-    System.out.println(schedule);
+    final Score score = sc.calculateScore();
+    System.out.println(score);
+
+    sc.beforeVariableChanged(sol.vehicleList.get(0).getNextVisit(),
+      "previousVisit");
+
+    // final Score score2 = sc.calculateScore();
+    // System.out.println(score2);
+
+    sc.afterVariableChanged(sol.vehicleList.get(0).getNextVisit(),
+      "previousVisit");
+
+    final Score score3 = sc.calculateScore();
+    System.out.println(score3);
+
   }
-
 }

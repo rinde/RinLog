@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.score.director.incremental.AbstractIncrementalScoreCalculator;
 
+import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.LinkedHashMultimap;
@@ -51,6 +53,8 @@ public class ScoreCalculator
   Map<Parcel, Vehicle> pickupOwner;
   Map<Parcel, Vehicle> deliveryOwner;
 
+  Object2LongMap<Vehicle> routeHardScores;
+
   SetMultimap<Vehicle, ParcelVisit> changes;
 
   long startTime;
@@ -62,9 +66,8 @@ public class ScoreCalculator
     System.out.println("resetWorkingSolution: " + workingSolution);
 
     unplannedParcelVisits = new LinkedHashSet<>(workingSolution.parcelList);
-
     changes = LinkedHashMultimap.create();
-
+    routeHardScores = new Object2LongOpenHashMap<>();
     startTime = workingSolution.startTime;
 
     final int numVisits = workingSolution.parcelList.size();
@@ -82,28 +85,144 @@ public class ScoreCalculator
     for (final Vehicle v : workingSolution.vehicleList) {
       // final long currentTime = workingSolution.startTime;
 
-      ParcelVisit pv = v.getNextVisit();
-      // if (v.vehicle.getDestination().isPresent()) {
-      // if (pv == null
-      // || !pv.getParcel().equals(v.vehicle.getDestination().get())) {
-      // hardScore -= 1L;
-      // }
-      // }
+      updateRoute(v, Collections.<ParcelVisit>emptyList());
 
-      // final Set<Parcel> deliveryRequired = new LinkedHashSet<>();
-      // deliveryRequired.addAll(v.vehicle.getContents());
+      // ParcelVisit pv = v.getNextVisit();
+      // while (pv != null) {
+      //
+      //
+      // insert(pv);
+      // pv = pv.getNextVisit();
+      // }
+      //
+      // updateDepotScore(v);
 
-      while (pv != null) {
-        insert(pv);
-        pv = pv.getNextVisit();
+    }
+  }
+
+  @Override
+  public void beforeEntityAdded(Object entity) {
+    System.out.println("beforeEntityAdded: " + entity);
+
+  }
+
+  @Override
+  public void afterEntityAdded(Object entity) {
+    System.out.println("afterEntityAdded: " + entity);
+
+  }
+
+  @Override
+  public void beforeVariableChanged(Object entity, String variableName) {
+    // System.out.println("beforeVariableChanged: " + entity);
+    // System.out.println(" > next:" + ((Visit) entity).getNextVisit());
+
+    final Visit visit = (Visit) entity;
+
+    if (visit.getNextVisit() == null) {
+      // we can safely ignore this
+
+    } else {
+      // we have to remove this entity from the schedule
+      remove(visit.getNextVisit());
+      changes.put(visit.getVehicle(), visit.getNextVisit());
+    }
+    // System.out.println("softScore: " + softScore);
+  }
+
+  @Override
+  public void afterVariableChanged(Object entity, String variableName) {
+    // System.out.println("afterVariableChanged: " + entity);
+    // System.out.println(" > next:" + ((Visit) entity).getNextVisit());
+
+    final Visit visit = (Visit) entity;
+    if (visit.getNextVisit() == null) {
+      // we can ignore this
+    } else {
+      // we have to add this entity to the schedule
+
+      // insert(visit.getNextVisit());
+      changes.put(visit.getVehicle(), visit.getNextVisit());
+    }
+
+    // System.out.println("softScore: " + softScore);
+  }
+
+  @Override
+  public void beforeEntityRemoved(Object entity) {
+    System.out.println("beforeEntityRemoved: " + entity);
+
+  }
+
+  @Override
+  public void afterEntityRemoved(Object entity) {
+    System.out.println("afterEntityRemoved: " + entity);
+
+  }
+
+  @Override
+  public Score calculateScore() {
+    if (!changes.isEmpty()) {
+      for (final Entry<Vehicle, Collection<ParcelVisit>> entry : changes.asMap()
+          .entrySet()) {
+        updateRoute(entry.getKey(), entry.getValue());
+      }
+    }
+    changes.clear();
+    System.out.println("***calculate score ***" + hardScore + "/" + softScore);
+    return HardSoftLongScore.valueOf(hardScore, softScore);
+  }
+
+  void updateRoute(Vehicle v, Collection<ParcelVisit> visits) {
+    hardScore -= routeHardScores.getLong(v);
+    long routeHardScore = 0L;
+
+    ParcelVisit cur = v.getNextVisit();
+    if (v.vehicle.getDestination().isPresent()) {
+      if (cur == null
+          || !cur.getParcel().equals(v.vehicle.getDestination().get())) {
+        routeHardScore -= 1L;
+      }
+    }
+
+    final Set<Parcel> deliveryRequired = new LinkedHashSet<>();
+    deliveryRequired.addAll(v.vehicle.getContents());
+
+    while (cur != null) {
+      // we know that visits is always a set
+      if (!visits.contains(cur)) {
+        remove(cur);
+      }
+      insert(cur);
+
+      // check hard constraints
+      if (deliveryRequired.contains(cur.getParcel())) {
+        // it needs to be delivered
+        if (cur.getVisitType() == VisitType.DELIVER) {
+          deliveryRequired.remove(cur.getParcel());
+        } else {
+          routeHardScore -= 1L;
+        }
+      } else {
+        // it needs to be picked up
+        if (cur.getVisitType() == VisitType.PICKUP) {
+          deliveryRequired.add(cur.getParcel());
+        } else {
+          routeHardScore -= 1L;
+        }
       }
 
-      updateDepotScore(v);
-
-      // the number of parcels that are not delivered even though they should
-      // have been is used as a hard constraint violation
-      // hardScore -= deliveryRequired.size();
+      cur = cur.getNextVisit();
     }
+
+    // the number of parcels that are not delivered even though they should
+    // have been is used as a hard constraint violation
+    routeHardScore -= deliveryRequired.size();
+
+    routeHardScores.put(v, routeHardScore);
+    hardScore += routeHardScore;
+
+    updateDepotScore(v);
   }
 
   void updateDepotScore(Vehicle v) {
@@ -128,104 +247,15 @@ public class ScoreCalculator
     tardiness.put(v, depotTardiness);
   }
 
-  @Override
-  public void beforeEntityAdded(Object entity) {
-    System.out.println("beforeEntityAdded: " + entity);
-
-  }
-
-  @Override
-  public void afterEntityAdded(Object entity) {
-    System.out.println("afterEntityAdded: " + entity);
-
-  }
-
-  @Override
-  public void beforeVariableChanged(Object entity, String variableName) {
-    System.out.println("beforeVariableChanged: " + entity);
-    System.out.println(" > next:" + ((Visit) entity).getNextVisit());
-
-    final Visit visit = (Visit) entity;
-
-    if (visit.getNextVisit() == null) {
-      // we can safely ignore this
-
-    } else {
-      // we have to remove this entity from the schedule
-      remove(visit.getNextVisit());
-      changes.put(visit.getVehicle(), visit.getNextVisit());
-    }
-    System.out.println("softScore: " + softScore);
-  }
-
-  @Override
-  public void afterVariableChanged(Object entity, String variableName) {
-    System.out.println("afterVariableChanged: " + entity);
-    System.out.println(" > next:" + ((Visit) entity).getNextVisit());
-
-    final Visit visit = (Visit) entity;
-    if (visit.getNextVisit() == null) {
-      // we can ignore this
-    } else {
-      // we have to add this entity to the schedule
-
-      insert(visit.getNextVisit());
-      changes.put(visit.getVehicle(), visit.getNextVisit());
-    }
-
-    System.out.println("softScore: " + softScore);
-  }
-
-  @Override
-  public void beforeEntityRemoved(Object entity) {
-    System.out.println("beforeEntityRemoved: " + entity);
-
-  }
-
-  @Override
-  public void afterEntityRemoved(Object entity) {
-    System.out.println("afterEntityRemoved: " + entity);
-
-  }
-
-  @Override
-  public Score calculateScore() {
-    System.out.println("***calculate score***");
-    if (!changes.isEmpty()) {
-      for (final Entry<Vehicle, Collection<ParcelVisit>> entry : changes.asMap()
-          .entrySet()) {
-        updateRoute(entry.getKey(), entry.getValue());
-      }
-    }
-    changes.clear();
-    return HardSoftLongScore.valueOf(hardScore, softScore);
-  }
-
-  void updateRoute(Vehicle v, Collection<ParcelVisit> visits) {
-    System.out.println("updateRoute " + v);
-    ParcelVisit cur = v.getNextVisit();
-
-    while (cur != null) {
-      // we know that visits is always a set
-      if (!visits.contains(cur)) {
-        remove(cur);
-      }
-      insert(cur);
-
-      cur = cur.getNextVisit();
-    }
-
-    updateDepotScore(v);
-  }
-
   void remove(ParcelVisit pv) {
-
+    hardScore -= 1L;
+    unplannedParcelVisits.add(pv);
     softScore += travelTimes.getLong(pv);
     softScore += tardiness.getLong(pv);
-
   }
 
   void insert(ParcelVisit pv) {
+    hardScore += 1L;
     unplannedParcelVisits.remove(pv);
 
     final Vehicle vehicle = pv.getVehicle();
@@ -256,23 +286,6 @@ public class ScoreCalculator
     // compute time when servicing of this parcel is done
     currentTime += pv.getServiceDuration();
     doneTimes.put(pv, currentTime);
-
-    // check hard constraints
-    // if (deliveryRequired.contains(pv.getParcel())) {
-    // // it needs to be delivered
-    // if (pv.getVisitType() == VisitType.DELIVER) {
-    // deliveryRequired.remove(pv.getParcel());
-    // } else {
-    // hardScore -= 1L;
-    // }
-    // } else {
-    // // it needs to be picked up
-    // if (pv.getVisitType() == VisitType.PICKUP) {
-    // deliveryRequired.add(pv.getParcel());
-    // } else {
-    // hardScore -= 1L;
-    // }
-    // }
   }
 
 }
