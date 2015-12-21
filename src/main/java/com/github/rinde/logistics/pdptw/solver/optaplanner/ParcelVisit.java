@@ -16,6 +16,7 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.AnchorShadowVariable;
@@ -48,6 +49,9 @@ public class ParcelVisit implements Visit {
   ParcelVisit nextVisit;
   Vehicle vehicle;
 
+  // helper variable
+  ParcelVisit associated;
+
   ParcelVisit() {}
 
   ParcelVisit(Parcel p, VisitType t) {
@@ -55,12 +59,12 @@ public class ParcelVisit implements Visit {
     visitType = t;
     if (visitType == VisitType.DELIVER) {
       position = parcel.getDeliveryLocation();
-      timeWindow = parcel.getDeliveryTimeWindow();
-      serviceDuration = parcel.getDeliveryDuration();
+      timeWindow = Util.msToNs(parcel.getDeliveryTimeWindow());
+      serviceDuration = Util.msToNs(parcel.getDeliveryDuration());
     } else {
       position = parcel.getPickupLocation();
-      timeWindow = parcel.getPickupTimeWindow();
-      serviceDuration = parcel.getPickupDuration();
+      timeWindow = Util.msToNs(parcel.getPickupTimeWindow());
+      serviceDuration = Util.msToNs(parcel.getPickupDuration());
     }
     latestStartTime = timeWindow.end() - serviceDuration;
   }
@@ -145,4 +149,16 @@ public class ParcelVisit implements Visit {
     return nextVisit.getLastVisit();
   }
 
+  /**
+   * @param delivery
+   */
+  public void setAssociation(ParcelVisit pv) {
+    checkArgument(pv.getParcel().equals(getParcel()));
+    checkArgument(pv.getVisitType() != getVisitType());
+    associated = pv;
+  }
+
+  public ParcelVisit getAssociation() {
+    return associated;
+  }
 }

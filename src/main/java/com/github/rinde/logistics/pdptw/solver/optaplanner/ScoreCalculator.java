@@ -68,7 +68,7 @@ public class ScoreCalculator
     unplannedParcelVisits = new LinkedHashSet<>(workingSolution.parcelList);
     changes = LinkedHashMultimap.create();
     routeHardScores = new Object2LongOpenHashMap<>();
-    startTime = workingSolution.startTime;
+    startTime = workingSolution.getStartTime();
 
     final int numVisits = workingSolution.parcelList.size();
     final int numVehicles = workingSolution.vehicleList.size();
@@ -178,15 +178,15 @@ public class ScoreCalculator
     long routeHardScore = 0L;
 
     ParcelVisit cur = v.getNextVisit();
-    if (v.vehicle.getDestination().isPresent()) {
+    if (v.getDestination().isPresent()) {
       if (cur == null
-          || !cur.getParcel().equals(v.vehicle.getDestination().get())) {
+          || !cur.getParcel().equals(v.getDestination().get())) {
         routeHardScore -= 1L;
       }
     }
 
     final Set<Parcel> deliveryRequired = new LinkedHashSet<>();
-    deliveryRequired.addAll(v.vehicle.getContents());
+    deliveryRequired.addAll(v.getContents());
 
     while (cur != null) {
       // we know that visits is always a set

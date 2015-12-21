@@ -19,11 +19,9 @@ import org.junit.Test;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
-import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.google.common.collect.ImmutableList;
 
@@ -36,7 +34,7 @@ public class SolverTest {
   @Test
   public void test() throws InterruptedException {
 
-    final Solver s = new OptplannerSolver();
+    final OptaplannerSolver s = new OptaplannerSolver(123, true);
 
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(
@@ -47,14 +45,23 @@ public class SolverTest {
             .build())
         .build();
 
-    final StatisticsDTO stats = Solvers.computeStats(gso, null);
+    // final StatisticsDTO stats = Solvers.computeStats(gso, null);
 
-    final double cost =
-      Gendreau06ObjectiveFunction.instance(50d).computeCost(stats);
-    System.out.println(cost * 60000);
+    // final double cost =
+    // Gendreau06ObjectiveFunction.instance(50d).computeCost(stats);
+    // System.out.println(cost * 60000);
 
     final ImmutableList<ImmutableList<Parcel>> schedule = s.solve(gso);
+    System.out.println(s.getSoftScore());
     System.out.println(schedule);
+
+    final double cost = Gendreau06ObjectiveFunction.instance(50d)
+        .computeCost(Solvers.computeStats(gso, schedule));
+    System.out.println("cost: " + cost * 60000d);
+    // TODO create integration test that verifies score
+
+    // cases that are currently not covered:
+    // - partially (un)loaded parcel
   }
 
 }

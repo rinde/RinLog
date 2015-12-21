@@ -13,9 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.rinde.logistics.pdptw.solver.optaplanner;
+
+import com.github.rinde.rinsim.util.TimeWindow;
+
 /**
  *
  * @author Rinde van Lon
  */
-@javax.annotation.ParametersAreNonnullByDefault
-package com.github.rinde.logistics.pdptw.solver.optaplanner;
+class Util {
+
+  static long msToNs(long duration) {
+    return duration * 1000000L;
+  }
+
+  static TimeWindow msToNs(TimeWindow tw) {
+    if (tw.equals(TimeWindow.always())) {
+      return TimeWindow.always();
+    }
+    return TimeWindow.create(msToNs(tw.begin()), msToNs(tw.end()));
+  }
+
+}

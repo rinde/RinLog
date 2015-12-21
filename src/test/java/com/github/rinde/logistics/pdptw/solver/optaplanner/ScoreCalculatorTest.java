@@ -45,7 +45,7 @@ public class ScoreCalculatorTest {
             .build())
         .build();
 
-    final PDPSolution sol = OptplannerSolver.convert(state);
+    final PDPSolution sol = OptaplannerSolver.convert(state);
 
     sc.resetWorkingSolution(sol);
 

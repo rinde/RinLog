@@ -15,6 +15,8 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import javax.annotation.Nullable;
+
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
 
@@ -33,6 +35,7 @@ public interface Visit {
   //
   // void setPreviousVisit(Visit v);
 
+  @Nullable
   @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
   ParcelVisit getNextVisit();
 
@@ -44,5 +47,6 @@ public interface Visit {
 
   Point getPosition();
 
+  @Nullable
   ParcelVisit getLastVisit();
 }

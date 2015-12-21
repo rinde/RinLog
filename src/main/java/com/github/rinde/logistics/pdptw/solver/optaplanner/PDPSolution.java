@@ -32,7 +32,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 public class PDPSolution implements Solution<HardSoftLongScore> {
 
   // problem facts
-  long startTime;
+  private long startTime;
 
   @PlanningEntityCollectionProperty
   @ValueRangeProvider(id = "parcelRange")
@@ -47,7 +47,7 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   PDPSolution() {}
 
   PDPSolution(long st) {
-    startTime = st;
+    startTime = Util.msToNs(st);
   }
 
   @Override
@@ -58,6 +58,10 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   @Override
   public void setScore(HardSoftLongScore s) {
     score = s;
+  }
+
+  public long getStartTime() {
+    return startTime;
   }
 
   @Override

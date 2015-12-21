@@ -17,10 +17,15 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import java.math.RoundingMode;
 
+import javax.annotation.Nullable;
+
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.math.DoubleMath;
 
 /**
@@ -31,20 +36,25 @@ import com.google.common.math.DoubleMath;
 public class Vehicle implements Visit {
 
   // planning variables
+  @Nullable
   final Visit previousVisit = null;
 
   // shadow variables
+  @Nullable
   ParcelVisit nextVisit;
 
   // problem facts
-  final VehicleStateObject vehicle;
+  private final VehicleStateObject vehicle;
+  private final long endTime;
 
   Vehicle() {
     vehicle = null;
+    endTime = -1;
   }
 
   Vehicle(VehicleStateObject vso) {
     vehicle = vso;
+    endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
   }
 
   // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
@@ -60,6 +70,7 @@ public class Vehicle implements Visit {
   // }
 
   // @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
+  @Nullable
   @Override
   public ParcelVisit getNextVisit() {
     return nextVisit;
@@ -75,6 +86,7 @@ public class Vehicle implements Visit {
     return this;
   }
 
+  @Nullable
   @Override
   public ParcelVisit getLastVisit() {
     if (nextVisit == null) {
@@ -91,13 +103,20 @@ public class Vehicle implements Visit {
     return vehicle.getLocation();
   }
 
+  public Optional<Parcel> getDestination() {
+    return vehicle.getDestination();
+  }
+
+  public ImmutableSet<Parcel> getContents() {
+    return vehicle.getContents();
+  }
+
   public Point getDepotLocation() {
     return vehicle.getDto().getStartPosition();
   }
 
   public long computeDepotTardiness(long timeOfArrival) {
-    return Math.max(0L,
-      timeOfArrival - vehicle.getDto().getAvailabilityTimeWindow().end());
+    return Math.max(0L, timeOfArrival - endTime);
   }
 
   public long computeTravelTime(Point from, Point to) {
@@ -106,8 +125,13 @@ public class Vehicle implements Visit {
     final double distKM = Point.distance(from, to);
 
     final double travelTimeH = distKM / speedKMH;
-
-    return DoubleMath.roundToLong(travelTimeH * 3600000d,
+    // convert to nanoseconds
+    return DoubleMath.roundToLong(travelTimeH * 3600000000000d,
       RoundingMode.HALF_DOWN);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + Integer.toHexString(hashCode());
   }
 }

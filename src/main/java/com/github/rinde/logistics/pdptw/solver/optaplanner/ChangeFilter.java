@@ -16,21 +16,31 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import org.optaplanner.core.impl.heuristic.selector.common.decorator.SelectionFilter;
+import org.optaplanner.core.impl.heuristic.selector.move.generic.ChangeMove;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 
 /**
  *
  * @author Rinde van Lon
  */
-public class EntityFilter implements SelectionFilter<Visit> {
+public class ChangeFilter implements SelectionFilter<ChangeMove> {
+
+  // TODO precedence constraint
 
   @Override
-  public boolean accept(ScoreDirector scoreDirector, Visit selection) {
-    if (selection.getVehicle().equals(selection)
-        && selection.getVehicle().getDestination().isPresent()) {
-      return false;
+  public boolean accept(ScoreDirector scoreDirector, ChangeMove move) {
+    System.out.println(move.getPlanningEntities());
+    System.out.println(move.getPlanningValues());
+    System.out.println(move);
+
+    final Object entity = move.getPlanningEntities().iterator().next();
+
+    if (move.getToPlanningValue() == null) {
+      return true;
     }
-    return true;
+
+    final ParcelVisit pv = (ParcelVisit) entity;
+    return pv.getVehicle().equals(pv.getAssociation().getVehicle());
   }
 
 }

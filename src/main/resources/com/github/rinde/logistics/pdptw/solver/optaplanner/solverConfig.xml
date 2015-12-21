@@ -12,10 +12,15 @@
 
 
 	<localSearch>
+		<unionMoveSelector>
 		<changeMoveSelector>
-			<entitySelector>
-				<filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.EntityFilter</filterClass>
-			</entitySelector>
-		</changeMoveSelector>
+				<filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.ChangeFilter</filterClass>
+				</changeMoveSelector>
+			<changeMoveSelector>
+				<entitySelector>
+					<filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.EntityFilter</filterClass>
+				</entitySelector>
+			</changeMoveSelector>
+		</unionMoveSelector>
 	</localSearch>
 </solver>
