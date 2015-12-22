@@ -16,10 +16,13 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.measure.quantity.Duration;
@@ -45,10 +48,11 @@ import com.github.rinde.rinsim.central.GlobalStateObjects;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
+import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -63,6 +67,7 @@ public class OptaplannerSolver implements Solver {
 
   private final org.optaplanner.core.api.solver.Solver solver;
   private long lastSoftScore;
+  private final ScoreCalculator scoreCalculator;
 
   OptaplannerSolver(long seed, boolean validated) {
     final SolverFactory factory = SolverFactory.createFromXmlResource(
@@ -90,6 +95,8 @@ public class OptaplannerSolver implements Solver {
     scoreConfig.setIncrementalScoreCalculatorClass(ScoreCalculator.class);
     config.setScoreDirectorFactoryConfig(scoreConfig);
 
+    scoreCalculator = new ScoreCalculator();
+
     config.setRandomSeed(seed);
     config.setRandomType(RandomType.MERSENNE_TWISTER);
     config.setEnvironmentMode(
@@ -110,7 +117,11 @@ public class OptaplannerSolver implements Solver {
 
     final HardSoftLongScore score = solution.getScore();
 
-    checkState(score.getHardScore() == 0);
+    scoreCalculator.resetWorkingSolution(solution);
+
+    System.out.println(state);
+    checkState(score.getHardScore() == 0,
+      "Optaplanner didn't find a solution satisfying all hard constraints.");
     lastSoftScore = score.getSoftScore();
 
     final ImmutableList.Builder<ImmutableList<Parcel>> scheduleBuilder =
@@ -133,6 +144,18 @@ public class OptaplannerSolver implements Solver {
     return lastSoftScore;
   }
 
+  long getTardiness() {
+    return scoreCalculator.getTardiness();
+  }
+
+  long getTravelTime() {
+    return scoreCalculator.getTravelTime();
+  }
+
+  long getOvertime() {
+    return scoreCalculator.getOvertime();
+  }
+
   static PDPSolution convert(GlobalStateObject state) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
@@ -143,32 +166,85 @@ public class OptaplannerSolver implements Solver {
     final Set<Parcel> parcels = GlobalStateObjects.allParcels(state);
 
     final List<ParcelVisit> parcelList = new ArrayList<>();
-    for (final Parcel p : parcels) {
+    final Map<Parcel, ParcelVisit> pickups = new LinkedHashMap<>();
+    final Map<Parcel, ParcelVisit> deliveries = new LinkedHashMap<>();
+
+    for (final Parcel p : state.getAvailableParcels()) {
       final ParcelVisit pickup = new ParcelVisit(p, VisitType.PICKUP);
       final ParcelVisit delivery = new ParcelVisit(p, VisitType.DELIVER);
+      pickups.put(p, pickup);
+      deliveries.put(p, delivery);
       pickup.setAssociation(delivery);
       delivery.setAssociation(pickup);
       parcelList.add(pickup);
       parcelList.add(delivery);
     }
-    problem.parcelList = parcelList;
+
+    boolean firstVehicle = true;
 
     final List<Vehicle> vehicleList = new ArrayList<>();
     for (final VehicleStateObject vso : state.getVehicles()) {
-      vehicleList.add(new Vehicle(vso));
+      final Vehicle vehicle = new Vehicle(vso);
+      vehicleList.add(vehicle);
+
+      final List<ParcelVisit> visits = new ArrayList<>();
+      if (vso.getRoute().isPresent()) {
+        List<Parcel> route = vso.getRoute().get();
+
+        if (firstVehicle) {
+          route = new ArrayList<>(route);
+          final Set<Parcel> unassigned =
+            GlobalStateObjects.unassignedParcels(state);
+          route.addAll(unassigned);
+          route.addAll(unassigned);
+          firstVehicle = false;
+        }
+
+        for (final Parcel p : route) {
+          // is it a pickup or a delivery?
+          if (vso.getContents().contains(p) || !pickups.containsKey(p)) {
+            ParcelVisit delivery;
+            if (deliveries.containsKey(p)) {
+              delivery = deliveries.remove(p);
+            } else {
+              delivery = new ParcelVisit(p, VisitType.DELIVER);
+              parcelList.add(delivery);
+            }
+            visits.add(delivery);
+          } else {
+            visits.add(checkNotNull(pickups.remove(p)));
+          }
+        }
+      } else {
+        throw new IllegalArgumentException();
+        // add destination
+        //
+        // final List<Parcel> route = new ArrayList<>();
+        // route.addAll(vso.getDestination().asSet());
+
+        // add contents
+      }
+      initRoute(vehicle, visits);
     }
+
+    problem.parcelList = parcelList;
     problem.vehicleList = vehicleList;
 
-    // TODO fix the initial allocation
-    final Vehicle vehicle = vehicleList.get(0);
-    Visit prev = vehicle;
-    for (final ParcelVisit pv : parcelList) {
+    System.out.println("**** INITIAL ****");
+    System.out.println(problem);
+
+    return problem;
+  }
+
+  static void initRoute(Vehicle vehicle, List<ParcelVisit> visits) {
+    final Visit last = vehicle.getLastVisit();
+    Visit prev = last == null ? vehicle : last;
+    for (final ParcelVisit pv : visits) {
       pv.setPreviousVisit(prev);
       pv.setVehicle(vehicle);
       prev.setNextVisit(pv);
       prev = pv;
     }
-    return problem;
   }
 
   public static StochasticSupplier<Solver> supplier() {
@@ -184,7 +260,8 @@ public class OptaplannerSolver implements Solver {
     return new OptaplannerSolver(123, false);
   }
 
-  static Solver validatedInstance(long seed, ObjectiveFunction objFunc) {
+  static Solver validatedInstance(long seed,
+      Gendreau06ObjectiveFunction objFunc) {
     return new Validator(seed, objFunc);
   }
 
@@ -197,9 +274,9 @@ public class OptaplannerSolver implements Solver {
   }
 
   static class ValSup implements StochasticSupplier<Solver> {
-    final ObjectiveFunction objectiveFunction;
+    final Gendreau06ObjectiveFunction objectiveFunction;
 
-    ValSup(ObjectiveFunction objFunc) {
+    ValSup(Gendreau06ObjectiveFunction objFunc) {
       objectiveFunction = objFunc;
     }
 
@@ -211,9 +288,9 @@ public class OptaplannerSolver implements Solver {
 
   static class Validator implements Solver {
     final OptaplannerSolver solver;
-    ObjectiveFunction objectiveFunction;
+    Gendreau06ObjectiveFunction objectiveFunction;
 
-    Validator(long seed, ObjectiveFunction objFunc) {
+    Validator(long seed, Gendreau06ObjectiveFunction objFunc) {
       solver = new OptaplannerSolver(seed, true);
       objectiveFunction = objFunc;
     }
@@ -223,13 +300,35 @@ public class OptaplannerSolver implements Solver {
         throws InterruptedException {
 
       final ImmutableList<ImmutableList<Parcel>> schedule = solver.solve(state);
+      System.out.println(state);
+      System.out.println("new schedule");
+      System.out.println(Joiner.on("\n").join(schedule));
 
-      final double cost =
-        objectiveFunction.computeCost(Solvers.computeStats(state, schedule))
-            * 100000d;
+      final StatisticsDTO stats = Solvers.computeStats(state, schedule);
 
-      final double optaplannerCost = solver.getSoftScore() / 10d;
-      checkState(Math.round(cost) == Math.round(optaplannerCost));
+      // convert cost to nanosecond precision
+      final double cost = objectiveFunction.computeCost(stats)
+          * 60000000000d;
+
+      System.out.println(" === RinSim ===");
+      System.out.println(objectiveFunction.printHumanReadableFormat(stats));
+      System.out.println(" === Optaplanner ===");
+      System.out
+          .println("Travel time: " + solver.getTravelTime() / 60000000000d);
+      System.out.println("Tardiness: " + solver.getTardiness() / 60000000000d);
+      System.out.println("Overtime: " + solver.getOvertime() / 60000000000d);
+      System.out.println("Total: " + solver.getSoftScore() / -60000000000d);
+
+      // optaplanner has nanosecond precision
+      final double optaplannerCost = solver.getSoftScore() * -1d;
+
+      final double difference = Math.abs(cost - optaplannerCost);
+      // max 10 nanosecond deviation is allowed
+      checkState(
+        difference < 100000000d,
+        "ObjectiveFunction cost (%s) must be equal to Optaplanner cost (%s),"
+            + " the difference is %s.",
+        cost, optaplannerCost, difference);
 
       return schedule;
     }

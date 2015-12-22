@@ -70,4 +70,19 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
     return null;
   }
 
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    for (final Vehicle v : vehicleList) {
+      sb.append(v);
+      ParcelVisit next = v.getNextVisit();
+      while (next != null) {
+        sb.append("->").append(next);
+        next = next.getNextVisit();
+      }
+      sb.append(System.lineSeparator());
+    }
+    return sb.toString();
+  }
+
 }

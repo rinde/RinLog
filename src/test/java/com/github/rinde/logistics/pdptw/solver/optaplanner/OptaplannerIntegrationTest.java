@@ -41,7 +41,7 @@ public class OptaplannerIntegrationTest {
     Experiment.build(Gendreau06ObjectiveFunction.instance())
         .withThreads(1)
         .addConfiguration(
-          Central.solverConfiguration(OptaplannerSolver.supplier()))
+          Central.solverConfiguration(OptaplannerSolver.validatedSupplier(30d)))
         .addScenario(Gendreau06Parser.parse(new File(
             "files/scenarios/gendreau06/req_rapide_1_240_24")))
         .showGui(View.builder()

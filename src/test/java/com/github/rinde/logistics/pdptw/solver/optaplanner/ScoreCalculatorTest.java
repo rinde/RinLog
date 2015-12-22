@@ -15,6 +15,8 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import org.junit.Test;
 import org.optaplanner.core.api.score.Score;
 
@@ -37,7 +39,9 @@ public class ScoreCalculatorTest {
 
     final GlobalStateObject state = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(
-          Parcel.builder(new Point(0, 0), new Point(0, 1)).build())
+          Parcel.builder(new Point(0, 0), new Point(0, 1))
+              .toString("A")
+              .build())
         .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
             .setVehicleDTO(VehicleDTO.builder()
                 .speed(1d)
@@ -48,21 +52,26 @@ public class ScoreCalculatorTest {
     final PDPSolution sol = OptaplannerSolver.convert(state);
 
     sc.resetWorkingSolution(sol);
-
+    System.out.println(sol.toString());
     final Score score = sc.calculateScore();
     System.out.println(score);
 
-    sc.beforeVariableChanged(sol.vehicleList.get(0).getNextVisit(),
-      "previousVisit");
+    sc.beforeVariableChanged(sol.vehicleList.get(0), "previousVisit");
 
-    // final Score score2 = sc.calculateScore();
-    // System.out.println(score2);
+    sol.vehicleList.get(0).getNextVisit().setPreviousVisit(null);
+    sol.vehicleList.get(0).getNextVisit().setVehicle(null);
+    sol.vehicleList.get(0).setNextVisit(null);
 
-    sc.afterVariableChanged(sol.vehicleList.get(0).getNextVisit(),
-      "previousVisit");
+    sc.afterVariableChanged(sol.vehicleList.get(0), "previousVisit");
 
     final Score score3 = sc.calculateScore();
     System.out.println(score3);
+
+    sc.resetWorkingSolution(sol);
+    final Score score3check = sc.calculateScore();
+
+    System.out.println(sol.toString());
+    assertThat(score3).isEqualTo(score3check);
 
   }
 }

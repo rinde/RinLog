@@ -29,18 +29,19 @@ public class ChangeFilter implements SelectionFilter<ChangeMove> {
 
   @Override
   public boolean accept(ScoreDirector scoreDirector, ChangeMove move) {
-    System.out.println(move.getPlanningEntities());
-    System.out.println(move.getPlanningValues());
-    System.out.println(move);
+    // System.out.println(move.getPlanningEntities());
+    // System.out.println(move.getPlanningValues());
+    // System.out.println(move);
 
-    final Object entity = move.getPlanningEntities().iterator().next();
-
-    if (move.getToPlanningValue() == null) {
-      return true;
-    }
-
-    final ParcelVisit pv = (ParcelVisit) entity;
-    return pv.getVehicle().equals(pv.getAssociation().getVehicle());
+    // final Object entity = move.getPlanningEntities().iterator().next();
+    //
+    // if (move.getToPlanningValue() == null) {
+    // return true;
+    // }
+    //
+    // final ParcelVisit pv = (ParcelVisit) entity;
+    // return pv.getVehicle().equals(pv.getAssociation().getVehicle());
+    return true;
   }
 
 }

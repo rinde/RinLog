@@ -15,8 +15,9 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
+
+import javax.annotation.Nullable;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.AnchorShadowVariable;
@@ -46,6 +47,7 @@ public class ParcelVisit implements Visit {
   Visit previousVisit;
 
   // shadow variables
+  @Nullable
   ParcelVisit nextVisit;
   Vehicle vehicle;
 
@@ -81,6 +83,7 @@ public class ParcelVisit implements Visit {
     return visitType;
   }
 
+  @Nullable
   @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
   }, graphType = PlanningVariableGraphType.CHAINED)
   // @Override
@@ -89,7 +92,8 @@ public class ParcelVisit implements Visit {
   }
 
   // @Override
-  public void setPreviousVisit(Visit v) {
+
+  public void setPreviousVisit(@Nullable Visit v) {
     previousVisit = v;
   }
 
@@ -135,12 +139,16 @@ public class ParcelVisit implements Visit {
 
   @Override
   public String toString() {
-    return toStringHelper(getClass().getSimpleName())
-        .add("Parcel", parcel)
-        .addValue(visitType)
-        .toString();
+
+    return visitType + "-" + parcel.toString();
+    //
+    // return toStringHelper(getClass().getSimpleName())
+    // .add("Parcel", parcel)
+    // .addValue(visitType)
+    // .toString();
   }
 
+  @Nullable
   @Override
   public ParcelVisit getLastVisit() {
     if (nextVisit == null) {
@@ -155,7 +163,7 @@ public class ParcelVisit implements Visit {
   public void setAssociation(ParcelVisit pv) {
     checkArgument(pv.getParcel().equals(getParcel()));
     checkArgument(pv.getVisitType() != getVisitType());
-    associated = pv;
+    // associated = pv;
   }
 
   public ParcelVisit getAssociation() {

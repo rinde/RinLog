@@ -39,11 +39,12 @@ public interface Visit {
   @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
   ParcelVisit getNextVisit();
 
-  void setNextVisit(ParcelVisit v);
+  void setNextVisit(@Nullable ParcelVisit v);
 
+  @Nullable
   Vehicle getVehicle();
 
-  void setVehicle(Vehicle v);
+  void setVehicle(@Nullable Vehicle v);
 
   Point getPosition();
 

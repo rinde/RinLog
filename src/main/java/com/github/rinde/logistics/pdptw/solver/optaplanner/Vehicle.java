@@ -46,15 +46,19 @@ public class Vehicle implements Visit {
   // problem facts
   private final VehicleStateObject vehicle;
   private final long endTime;
+  private final long remainingServiceTime;
 
   Vehicle() {
     vehicle = null;
     endTime = -1;
+    remainingServiceTime = -1;
   }
 
   Vehicle(VehicleStateObject vso) {
     vehicle = vso;
     endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
+    remainingServiceTime = vso.getRemainingServiceTime() > 0
+        ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
   }
 
   // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
@@ -77,7 +81,7 @@ public class Vehicle implements Visit {
   }
 
   @Override
-  public void setNextVisit(ParcelVisit v) {
+  public void setNextVisit(@Nullable final ParcelVisit v) {
     nextVisit = v;
   }
 
@@ -113,6 +117,10 @@ public class Vehicle implements Visit {
 
   public Point getDepotLocation() {
     return vehicle.getDto().getStartPosition();
+  }
+
+  public long getRemainingServiceTime() {
+    return remainingServiceTime;
   }
 
   public long computeDepotTardiness(long timeOfArrival) {
