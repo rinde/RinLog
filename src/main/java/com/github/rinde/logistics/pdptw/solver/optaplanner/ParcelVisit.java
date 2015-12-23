@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import javax.annotation.Nullable;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.solution.cloner.DeepPlanningClone;
 import org.optaplanner.core.api.domain.variable.AnchorShadowVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
@@ -52,6 +53,7 @@ public class ParcelVisit implements Visit {
   Vehicle vehicle;
 
   // helper variable
+  @Nullable
   ParcelVisit associated;
 
   ParcelVisit() {}
@@ -163,9 +165,11 @@ public class ParcelVisit implements Visit {
   public void setAssociation(ParcelVisit pv) {
     checkArgument(pv.getParcel().equals(getParcel()));
     checkArgument(pv.getVisitType() != getVisitType());
-    // associated = pv;
+    associated = pv;
   }
 
+  @DeepPlanningClone
+  @Nullable
   public ParcelVisit getAssociation() {
     return associated;
   }

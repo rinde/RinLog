@@ -46,6 +46,7 @@ import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjects;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
@@ -163,7 +164,7 @@ public class OptaplannerSolver implements Solver {
 
     final PDPSolution problem = new PDPSolution(state.getTime());
 
-    final Set<Parcel> parcels = GlobalStateObjects.allParcels(state);
+    // final Set<Parcel> parcels = GlobalStateObjects.allParcels(state);
 
     final List<ParcelVisit> parcelList = new ArrayList<>();
     final Map<Parcel, ParcelVisit> pickups = new LinkedHashMap<>();
@@ -300,6 +301,9 @@ public class OptaplannerSolver implements Solver {
         throws InterruptedException {
 
       final ImmutableList<ImmutableList<Parcel>> schedule = solver.solve(state);
+
+      SolverValidator.validateOutputs(schedule, state);
+
       System.out.println(state);
       System.out.println("new schedule");
       System.out.println(Joiner.on("\n").join(schedule));
@@ -325,7 +329,7 @@ public class OptaplannerSolver implements Solver {
       final double difference = Math.abs(cost - optaplannerCost);
       // max 10 nanosecond deviation is allowed
       checkState(
-        difference < 100000000d,
+        difference < 10000000000d,
         "ObjectiveFunction cost (%s) must be equal to Optaplanner cost (%s),"
             + " the difference is %s.",
         cost, optaplannerCost, difference);

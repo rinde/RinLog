@@ -15,6 +15,9 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verifyNotNull;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -143,12 +146,16 @@ public class ScoreCalculator
       } else {
         changes.put(pv.getVehicle(), pv.getPreviousVisit());
       }
+    } else if (variableName.equals(VEHICLE)) {
+
+      changes.put(visit.getVehicle(), visit);
     }
     // System.out.println("softScore: " + softScore);
   }
 
   static final String NEXT_VISIT = "nextVisit";
   static final String PREV_VISIT = "previousVisit";
+  static final String VEHICLE = "vehicle";
 
   @Override
   public void afterVariableChanged(Object entity, String variableName) {
@@ -177,6 +184,9 @@ public class ScoreCalculator
         // insert(visit.getNextVisit());
         changes.put(pv.getVehicle(), pv.getPreviousVisit());
       }
+    } else if (variableName.equals(VEHICLE)) {
+
+      changes.put(visit.getVehicle(), visit);
     }
 
     // System.out.println("softScore: " + softScore);
@@ -299,11 +309,15 @@ public class ScoreCalculator
     softScore += travelTimes.getLong(v);
 
     final ParcelVisit lastStop = v.getLastVisit();
+
+    if (v.getRemainingServiceTime() > 0) {
+      checkState(lastStop != null);
+    }
+
     final Point fromPos =
       lastStop == null ? v.getPosition() : lastStop.getPosition();
     long currentTime =
-      lastStop == null ? startTime + v.getRemainingServiceTime()
-          : doneTimes.getLong(lastStop);
+      lastStop == null ? startTime : doneTimes.getLong(lastStop);
 
     // travel to depot soft constraints
     final long depotTT = v.computeTravelTime(fromPos, v.getDepotLocation());
@@ -327,34 +341,48 @@ public class ScoreCalculator
     hardScore += 1L;
     unplannedParcelVisits.remove(pv);
 
-    final Vehicle vehicle = pv.getVehicle();
-    final Visit prev = pv.getPreviousVisit();
+    final Vehicle vehicle = verifyNotNull(pv.getVehicle());
+    final Visit prev = verifyNotNull(pv.getPreviousVisit());
     final Point prevPos = prev.getPosition();
 
+    boolean firstAndServicing = false;
     long currentTime;
     if (prev.equals(vehicle)) {
+      if (vehicle.getRemainingServiceTime() > 0) {
+        firstAndServicing = true;
+      }
       currentTime = startTime + vehicle.getRemainingServiceTime();
     } else {
       currentTime = doneTimes.getLong(prev);
     }
 
-    final Point newPos = pv.getPosition();
+    if (firstAndServicing) {
+      travelTimes.put(pv, 0L);
 
-    // compute travel time from current pos to parcel pos
-    final long tt = vehicle.computeTravelTime(prevPos, newPos);
-    currentTime += tt;
-    softScore -= tt;
-    travelTimes.put(pv, tt);
+      final long tard =
+        pv.computeTardiness(currentTime - pv.getServiceDuration());
+      softScore -= tard;
+      tardiness.put(pv, tard);
 
-    // compute tardiness
-    currentTime = pv.computeServiceStartTime(currentTime);
-    final long tard = pv.computeTardiness(currentTime);
-    softScore -= tard;
-    tardiness.put(pv, tard);
+      doneTimes.put(pv, currentTime);
+    } else {
+      // compute travel time from current pos to parcel pos
+      final Point newPos = pv.getPosition();
+      final long tt = vehicle.computeTravelTime(prevPos, newPos);
+      currentTime += tt;
+      softScore -= tt;
+      travelTimes.put(pv, tt);
 
-    // compute time when servicing of this parcel is done
-    currentTime += pv.getServiceDuration();
-    doneTimes.put(pv, currentTime);
+      // compute tardiness
+      currentTime = pv.computeServiceStartTime(currentTime);
+      final long tard = pv.computeTardiness(currentTime);
+      softScore -= tard;
+      tardiness.put(pv, tard);
+
+      // compute time when servicing of this parcel is done
+      currentTime += pv.getServiceDuration();
+      doneTimes.put(pv, currentTime);
+    }
   }
 
 }

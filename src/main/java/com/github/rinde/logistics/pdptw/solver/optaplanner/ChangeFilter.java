@@ -40,7 +40,8 @@ public class ChangeFilter implements SelectionFilter<ChangeMove> {
     // }
     //
     // final ParcelVisit pv = (ParcelVisit) entity;
-    // return pv.getVehicle().equals(pv.getAssociation().getVehicle());
+    // return pv.getAssociation() == null
+    // || pv.getVehicle().equals(pv.getAssociation().getVehicle());
     return true;
   }
 
