@@ -69,7 +69,7 @@ public class ScoreCalculator
 
   @Override
   public void resetWorkingSolution(PDPSolution workingSolution) {
-    System.out.println("resetWorkingSolution: \n" + workingSolution);
+    // System.out.println("resetWorkingSolution: \n" + workingSolution);
     solution = workingSolution;
 
     unplannedParcelVisits = new LinkedHashSet<>(workingSolution.parcelList);
@@ -122,9 +122,10 @@ public class ScoreCalculator
 
   @Override
   public void beforeVariableChanged(Object entity, String variableName) {
-    System.out.println("beforeVariableChanged: " + entity + " " + variableName);
-    System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
-    System.out.println(solution);
+    // System.out.println("beforeVariableChanged: " + entity + " " +
+    // variableName);
+    // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
+    // System.out.println(solution);
 
     final Visit visit = (Visit) entity;
 
@@ -159,9 +160,10 @@ public class ScoreCalculator
 
   @Override
   public void afterVariableChanged(Object entity, String variableName) {
-    System.out.println("afterVariableChanged: " + entity + " " + variableName);
-    System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
-    System.out.println(solution);
+    // System.out.println("afterVariableChanged: " + entity + " " +
+    // variableName);
+    // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
+    // System.out.println(solution);
 
     final Visit visit = (Visit) entity;
     if (variableName.equals(NEXT_VISIT)) {

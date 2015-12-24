@@ -74,7 +74,8 @@ public class MoveItFactory implements MoveIteratorFactory {
       deliveries = new ArrayList<>();
       for (final ParcelVisit pv : sol.parcelList) {
         if (pv.getVisitType() == VisitType.DELIVER
-            && pv.getAssociation() != null) {
+            && pv.getAssociation() != null
+            && pv.getVehicle().equals(pv.getAssociation())) {
           deliveries.add(pv);
         }
       }

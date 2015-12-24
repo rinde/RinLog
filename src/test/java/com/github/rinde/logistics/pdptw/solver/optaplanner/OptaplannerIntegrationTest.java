@@ -50,7 +50,7 @@ public class OptaplannerIntegrationTest {
             .with(RouteRenderer.builder())
             .with(TimeLinePanel.builder())
             .withAutoPlay())
-        .showGui(false)
+        .showGui(true)
         .perform();
 
   }
