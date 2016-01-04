@@ -86,7 +86,7 @@ public class OptaplannerSolver implements Solver {
 
     final TerminationConfig terminationConfig = new TerminationConfig();
     // terminationConfig.setStepCountLimit(10);
-    terminationConfig.setUnimprovedSecondsSpentLimit(10L);
+    terminationConfig.setUnimprovedSecondsSpentLimit(120L);
     config.setTerminationConfig(terminationConfig);
 
     final ScoreDirectorFactoryConfig scoreConfig =
