@@ -34,7 +34,7 @@ public class SolverTest {
   @Test
   public void test() throws InterruptedException {
 
-    final OptaplannerSolver s = new OptaplannerSolver(123, true);
+    final OptaplannerSolver s = new OptaplannerSolver(123, true, 1);
 
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(

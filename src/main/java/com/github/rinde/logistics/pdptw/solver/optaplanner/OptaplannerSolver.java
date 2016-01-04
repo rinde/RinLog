@@ -70,7 +70,7 @@ public class OptaplannerSolver implements Solver {
   private long lastSoftScore;
   private final ScoreCalculator scoreCalculator;
 
-  OptaplannerSolver(long seed, boolean validated) {
+  OptaplannerSolver(long seed, boolean validated, long unimprovedSecondsLimit) {
     final SolverFactory factory = SolverFactory.createFromXmlResource(
       "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml");
     final SolverConfig config = factory.getSolverConfig();
@@ -86,7 +86,7 @@ public class OptaplannerSolver implements Solver {
 
     final TerminationConfig terminationConfig = new TerminationConfig();
     // terminationConfig.setStepCountLimit(10);
-    terminationConfig.setUnimprovedSecondsSpentLimit(120L);
+    terminationConfig.setUnimprovedSecondsSpentLimit(unimprovedSecondsLimit);
     config.setTerminationConfig(terminationConfig);
 
     final ScoreDirectorFactoryConfig scoreConfig =
@@ -247,42 +247,53 @@ public class OptaplannerSolver implements Solver {
     }
   }
 
-  public static StochasticSupplier<Solver> supplier() {
-    return new Sup();
+  public static StochasticSupplier<Solver> supplier(
+      long unimprovedSecondsLimit) {
+    return new Sup(unimprovedSecondsLimit);
   }
 
   public static StochasticSupplier<Solver> validatedSupplier(
+      long unimprovedSecondsLimit,
       double vehicleSpeedKmH) {
-    return new ValSup(Gendreau06ObjectiveFunction.instance(vehicleSpeedKmH));
+    return new ValSup(Gendreau06ObjectiveFunction.instance(vehicleSpeedKmH),
+        unimprovedSecondsLimit);
   }
 
   static OptaplannerSolver instance() {
-    return new OptaplannerSolver(123, false);
+    return new OptaplannerSolver(123, false, 1);
   }
 
   static Solver validatedInstance(long seed,
-      Gendreau06ObjectiveFunction objFunc) {
-    return new Validator(seed, objFunc);
+      Gendreau06ObjectiveFunction objFunc, long unimprovedSecondsLimit) {
+    return new Validator(seed, objFunc, unimprovedSecondsLimit);
   }
 
   static class Sup implements StochasticSupplier<Solver> {
 
+    long usl;
+
+    Sup(long unimprovedSecondsLimit) {
+      usl = unimprovedSecondsLimit;
+    }
+
     @Override
     public Solver get(long seed) {
-      return new OptaplannerSolver(seed, false);
+      return new OptaplannerSolver(seed, false, usl);
     }
   }
 
   static class ValSup implements StochasticSupplier<Solver> {
     final Gendreau06ObjectiveFunction objectiveFunction;
+    long usl;
 
-    ValSup(Gendreau06ObjectiveFunction objFunc) {
+    ValSup(Gendreau06ObjectiveFunction objFunc, long unimprovedSecondsLimit) {
       objectiveFunction = objFunc;
+      usl = unimprovedSecondsLimit;
     }
 
     @Override
     public Solver get(long seed) {
-      return new Validator(seed, objectiveFunction);
+      return new Validator(seed, objectiveFunction, usl);
     }
   }
 
@@ -290,8 +301,9 @@ public class OptaplannerSolver implements Solver {
     final OptaplannerSolver solver;
     Gendreau06ObjectiveFunction objectiveFunction;
 
-    Validator(long seed, Gendreau06ObjectiveFunction objFunc) {
-      solver = new OptaplannerSolver(seed, true);
+    Validator(long seed, Gendreau06ObjectiveFunction objFunc,
+        long unimprovedSecondsLimit) {
+      solver = new OptaplannerSolver(seed, true, unimprovedSecondsLimit);
       objectiveFunction = objFunc;
     }
 

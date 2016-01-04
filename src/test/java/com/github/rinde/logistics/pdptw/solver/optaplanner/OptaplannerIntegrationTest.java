@@ -77,7 +77,8 @@ public class OptaplannerIntegrationTest {
         .withThreads(1)
         .addConfiguration(
           MASConfiguration.builder(Central
-              .solverConfiguration(OptaplannerSolver.validatedSupplier(30d)))
+              .solverConfiguration(
+                OptaplannerSolver.validatedSupplier(1L, 30d)))
               .addEventHandler(AddParcelEvent.class, new NamedParcelCreator())
               .build())
         .addScenarios(Gendreau06Parser.parser().addFile(new File(
