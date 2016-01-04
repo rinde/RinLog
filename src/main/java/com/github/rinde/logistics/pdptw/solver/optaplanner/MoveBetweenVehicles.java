@@ -51,13 +51,18 @@ public class MoveBetweenVehicles extends AbstractMove {
   static MoveOne createDelivery(MoveOne pickup, ParcelVisit delv,
       Visit delvToParent) {
 
+    // System.out.println("from");
+    // System.out.println(pickup.getOriginalPrev().getVehicle().printRoute());
+    // System.out.println("to");
+    // System.out.println(pickup.getToPrev().getVehicle().printRoute());
+
     final ParcelVisit parcelVisit = delv;
     final Visit toPrev = delvToParent;
     @Nullable
     ParcelVisit toNext = toPrev.getNextVisit();
     if (toPrev.equals(pickup.getSubject())) {// toNext != null &&
                                              // toNext.equals(parcelVisit)) {
-      System.out.println("yooo");
+      // System.out.println("yooo");
       toNext = pickup.getToNext();
     }
     Visit originalPrev = verifyNotNull(delv.getPreviousVisit());
@@ -85,7 +90,8 @@ public class MoveBetweenVehicles extends AbstractMove {
     planningValues = MoveBetweenVehicles.<Visit>nonNulls(
       pickup.getOriginalPrev(), pickup.getToPrev(), pickup.getSubject(),
       delvry.getOriginalPrev(), delvry.getToPrev(), delvry.getSubject());
-    System.out.println("MOVE CONSTRUCTOR " + Integer.toHexString(hashCode()));
+    // System.out.println(
+    // "MoveBetweenVehicles CONSTRUCTOR " + Integer.toHexString(hashCode()));
   }
 
   @SafeVarargs
@@ -140,15 +146,38 @@ public class MoveBetweenVehicles extends AbstractMove {
 
   @Override
   protected void doMoveOnGenuineVariables(ScoreDirector scoreDirector) {
-    System.out.println(" > DO MOVE " + Integer.toHexString(hashCode()));
-    // checkState(
-    // pickup.getOriginalPrev().equals(pickup.getSubject().getPreviousVisit()));
+    // System.out.println(" > DO MOVE " + Integer.toHexString(hashCode()));
+
+    // final PDPSolution sol = (PDPSolution) scoreDirector.getWorkingSolution();
+
+    // scoreDirector.
+
+    // final SolutionDescriptor solDesc =
+    // SolutionDescriptor.buildSolutionDescriptor(PDPSolution.class,
+    // ParcelVisit.class, Visit.class);
+    // final SolutionCloner<PDPSolution> cloner =
+    // new FieldAccessingSolutionCloner<>(solDesc);
+    // final PDPSolution original = cloner.cloneSolution(sol);
+    // System.out.println("created clone");
+
+    // final MoveBetweenVehicles undo = createUndoMove(scoreDirector);
+
+    // checkState(PDPSolution.equal(original, sol));
+    // System.out.println("compare");
 
     // System.out.println("apply move: pickup");
     pickup.execute(scoreDirector);
     // System.out.println("apply move: delivery");
     delvry.execute(scoreDirector);
+    // checkState(!PDPSolution.equal(original, sol));
     // System.out.println("apply move: done");
+
+    // undo.doMove(scoreDirector);
+    // checkState(PDPSolution.equal(original, sol));
+    //
+    // pickup.execute(scoreDirector);
+    // delvry.execute(scoreDirector);
+    // System.out.println(" >> MOVE DONE");
   }
 
   @Override
@@ -194,15 +223,12 @@ public class MoveBetweenVehicles extends AbstractMove {
     abstract ParcelVisit getOriginalNext();
 
     void execute(ScoreDirector scoreDirector) {
-      System.out.println("execute " + this);
+      // System.out.println("execute " + this);
 
       checkState(
         Objects.equals(getSubject().getPreviousVisit(), getOriginalPrev()));
       checkState(
         Objects.equals(getSubject().getNextVisit(), getOriginalNext()));
-
-      checkState(
-        Objects.equals(getToPrev().getNextVisit(), getToNext()));
 
       // remove from old position
       if (getOriginalNext() != null) {
@@ -220,11 +246,6 @@ public class MoveBetweenVehicles extends AbstractMove {
         getToNext().setPreviousVisit(getSubject());
         scoreDirector.afterVariableChanged(getToNext(), PREV_VISIT);
       }
-    }
-
-    MoveOne createUndo() {
-      return create(getSubject(), getOriginalPrev(), getOriginalNext(),
-        getToPrev(), getToNext());
     }
 
     static MoveOne create(ParcelVisit pv, Visit to) {

@@ -15,7 +15,10 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.math.RoundingMode;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -141,5 +144,49 @@ public class Vehicle implements Visit {
   @Override
   public String toString() {
     return getClass().getSimpleName() + Integer.toHexString(hashCode());
+  }
+
+  public String printRoute() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append(toString());
+    ParcelVisit next = getNextVisit();
+    while (next != null) {
+      sb.append("->").append(next);
+      next = next.getNextVisit();
+    }
+    return sb.toString();
+  }
+
+  static boolean problemFactsEqual(Vehicle lvehicle, Vehicle rvehicle) {
+    checkNotNull(lvehicle);
+    checkNotNull(rvehicle);
+
+    return Objects.equals(lvehicle.vehicle, rvehicle.vehicle)
+        && Objects.equals(lvehicle.endTime, rvehicle.endTime)
+        && Objects.equals(lvehicle.remainingServiceTime,
+          rvehicle.remainingServiceTime);
+  }
+
+  static boolean scheduleEqual(Vehicle lvehicle, Vehicle rvehicle) {
+    checkNotNull(lvehicle);
+    checkNotNull(rvehicle);
+
+    if (!Vehicle.problemFactsEqual(lvehicle, rvehicle)) {
+      return false;
+    }
+    @Nullable
+    ParcelVisit leftNext = lvehicle.getNextVisit();
+    @Nullable
+    ParcelVisit rightNext = rvehicle.getNextVisit();
+    while (true) {
+      if (leftNext == null || rightNext == null) {
+        return leftNext == null && rightNext == null;
+      }
+      if (!ParcelVisit.equalProblemFacts(leftNext, rightNext)) {
+        return false;
+      }
+      leftNext = leftNext.getNextVisit();
+      rightNext = rightNext.getNextVisit();
+    }
   }
 }

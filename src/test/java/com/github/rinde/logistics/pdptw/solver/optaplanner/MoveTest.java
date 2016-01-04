@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.domain.solution.descriptor.SolutionDescriptor;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 import org.optaplanner.core.impl.score.director.incremental.IncrementalScoreDirector;
@@ -92,6 +93,8 @@ public class MoveTest {
     final Vehicle vehicle1 = sol.vehicleList.get(1);
     final ScoreDirector scoreDirector = createScoreDirector();
     scoreDirector.setWorkingSolution(sol);
+    final HardSoftLongScore originalScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
 
     final MoveBetweenVehicles move = new MoveBetweenVehicles(pickupA, delivrA,
         vehicle1, pickupA);
@@ -109,12 +112,25 @@ public class MoveTest {
     assertThat(pickupB.getPreviousVisit()).isEqualTo(vehicle0);
     assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
 
+    final HardSoftLongScore incrChangedScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
+
+    scoreDirector.setWorkingSolution(sol);
+    final HardSoftLongScore directChangedScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
+
     undo.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
     assertThat(pickupB.getPreviousVisit()).isEqualTo(pickupA);
     assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupB);
     assertThat(delivrB.getPreviousVisit()).isEqualTo(delivrA);
 
+    final HardSoftLongScore scoreAfterUndo =
+      (HardSoftLongScore) scoreDirector.calculateScore();
+
+    assertThat(incrChangedScore).isNotEqualTo(originalScore);
+    assertThat(directChangedScore).isEqualTo(incrChangedScore);
+    assertThat(scoreAfterUndo).isEqualTo(originalScore);
   }
 
   @Test
@@ -132,6 +148,9 @@ public class MoveTest {
     final Vehicle vehicle1 = sol.vehicleList.get(1);
     final ScoreDirector scoreDirector = createScoreDirector();
     scoreDirector.setWorkingSolution(sol);
+
+    final HardSoftLongScore originalScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
 
     final MoveBetweenVehicles move = new MoveBetweenVehicles(pickupB, delivrB,
         vehicle1, delivrC);
@@ -152,6 +171,12 @@ public class MoveTest {
     assertThat(delivrB.getPreviousVisit()).isEqualTo(delivrC);
     assertThat(pickupC.getPreviousVisit()).isEqualTo(pickupB);
     assertThat(delivrC.getPreviousVisit()).isEqualTo(pickupC);
+    final HardSoftLongScore incrChangedScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
+
+    scoreDirector.setWorkingSolution(sol);
+    final HardSoftLongScore directChangedScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
 
     undo.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -160,6 +185,13 @@ public class MoveTest {
     assertThat(delivrB.getPreviousVisit()).isEqualTo(delivrA);
     assertThat(pickupC.getPreviousVisit()).isEqualTo(vehicle1);
     assertThat(delivrC.getPreviousVisit()).isEqualTo(pickupC);
+
+    final HardSoftLongScore afterUndoScore =
+      (HardSoftLongScore) scoreDirector.calculateScore();
+
+    assertThat(incrChangedScore).isNotEqualTo(originalScore);
+    assertThat(directChangedScore).isEqualTo(incrChangedScore);
+    assertThat(afterUndoScore).isEqualTo(originalScore);
   }
 
   @SafeVarargs

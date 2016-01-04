@@ -215,8 +215,8 @@ public class ScoreCalculator
       }
     }
     changes.clear();
-    System.out.println("***calculate score ***" + hardScore + "/" +
-        softScore);
+    // System.out.println("***calculate score ***" + hardScore + "/" +
+    // softScore);
     return HardSoftLongScore.valueOf(hardScore, softScore);
   }
 

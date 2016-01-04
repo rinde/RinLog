@@ -20,6 +20,7 @@ import static com.google.common.base.Verify.verifyNotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import org.optaplanner.core.impl.heuristic.move.Move;
@@ -46,13 +47,13 @@ public class MoveItFactory implements MoveIteratorFactory {
   @Override
   public Iterator<Move> createOriginalMoveIterator(
       ScoreDirector scoreDirector) {
+    System.out.println("createOriginalMoveIterator -- not supported");
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Iterator<Move> createRandomMoveIterator(ScoreDirector scoreDirector,
       Random workingRandom) {
-
     return new RandomIterator((PDPSolution) scoreDirector.getWorkingSolution(),
         workingRandom);
   }
@@ -60,8 +61,8 @@ public class MoveItFactory implements MoveIteratorFactory {
   static class RandomIterator extends AbstractIterator<Move> {
     final PDPSolution solution;
     final Random rng;
-    final List<ParcelVisit> deliveries;
-    List<Visit> allTargets;
+    final List<ParcelVisit> movablePickups;
+    final List<Visit> allTargets;
 
     RandomIterator(PDPSolution sol, Random r) {
       solution = sol;
@@ -71,26 +72,30 @@ public class MoveItFactory implements MoveIteratorFactory {
       allTargets.addAll(sol.parcelList);
       allTargets.addAll(sol.vehicleList);
 
-      deliveries = new ArrayList<>();
+      movablePickups = new ArrayList<>();
       for (final ParcelVisit pv : sol.parcelList) {
-        if (pv.getVisitType() == VisitType.DELIVER
+        if (pv.getVisitType() == VisitType.PICKUP
             && pv.getAssociation() != null
-            && pv.getVehicle().equals(pv.getAssociation())) {
-          deliveries.add(pv);
+            && pv.getVehicle() != null
+            && Objects.equals(pv.getVehicle(),
+              pv.getAssociation().getVehicle())) {
+          movablePickups.add(pv);
         }
       }
     }
 
     @Override
     protected Move computeNext() {
-      if (deliveries.isEmpty()) {
+      if (movablePickups.isEmpty()) {
         return endOfData();
       }
-      final ParcelVisit delivery =
-        deliveries.get(rng.nextInt(deliveries.size()));
-
-      final ParcelVisit pickup = verifyNotNull(delivery.getAssociation());
-      final Visit pickupTarget = allTargets.get(rng.nextInt(allTargets.size()));
+      final ParcelVisit pickup =
+        movablePickups.get(rng.nextInt(movablePickups.size()));
+      final ParcelVisit delivery = verifyNotNull(pickup.getAssociation());
+      Visit pickupTarget;
+      do {
+        pickupTarget = allTargets.get(rng.nextInt(allTargets.size()));
+      } while (Objects.equals(pickupTarget.getVehicle(), pickup.getVehicle()));
 
       // the delivery target can only be placed somewhere after the pickup
       // target (including the pickup itself)

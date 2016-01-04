@@ -16,6 +16,9 @@
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -172,5 +175,16 @@ public class ParcelVisit implements Visit {
   @Nullable
   public ParcelVisit getAssociation() {
     return associated;
+  }
+
+  static boolean equalProblemFacts(ParcelVisit lpv, ParcelVisit rpv) {
+    checkNotNull(lpv);
+    checkNotNull(rpv);
+    return Objects.equals(lpv.getVisitType(), rpv.getVisitType())
+        && Objects.equals(lpv.getParcel(), rpv.getParcel())
+        && Objects.equals(lpv.getPosition(), rpv.getPosition())
+        && Objects.equals(lpv.getServiceDuration(), rpv.getServiceDuration())
+        && Objects.equals(lpv.timeWindow, rpv.timeWindow)
+        && Objects.equals(lpv.latestStartTime, rpv.latestStartTime);
   }
 }

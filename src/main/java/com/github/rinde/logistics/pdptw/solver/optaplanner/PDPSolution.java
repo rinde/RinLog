@@ -15,6 +15,8 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -85,4 +87,31 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
     return sb.toString();
   }
 
+  public static boolean equal(PDPSolution lsol, PDPSolution rsol) {
+    checkNotNull(lsol);
+    checkNotNull(rsol);
+
+    if (lsol.parcelList.size() != rsol.parcelList.size()) {
+      return false;
+    }
+    if (lsol.vehicleList.size() != rsol.vehicleList.size()) {
+      return false;
+    }
+    if (lsol.startTime != rsol.startTime) {
+      return false;
+    }
+    for (int i = 0; i < lsol.parcelList.size(); i++) {
+      if (!ParcelVisit.equalProblemFacts(lsol.parcelList.get(i),
+        rsol.parcelList.get(i))) {
+        return false;
+      }
+    }
+    for (int i = 0; i < lsol.vehicleList.size(); i++) {
+      if (!Vehicle.scheduleEqual(lsol.vehicleList.get(i),
+        rsol.vehicleList.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
