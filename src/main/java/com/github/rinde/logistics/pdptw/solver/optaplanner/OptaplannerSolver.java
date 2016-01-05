@@ -119,7 +119,7 @@ public class OptaplannerSolver implements Solver {
 
     scoreCalculator.resetWorkingSolution(solution);
 
-    System.out.println(state);
+    // System.out.println(state);
     checkState(score.getHardScore() == 0,
       "Optaplanner didn't find a solution satisfying all hard constraints.");
     lastSoftScore = score.getSoftScore();
@@ -156,7 +156,7 @@ public class OptaplannerSolver implements Solver {
     return scoreCalculator.getOvertime();
   }
 
-  static PDPSolution convert(GlobalStateObject state) {
+  public static PDPSolution convert(GlobalStateObject state) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
     checkArgument(state.getDistUnit().equals(DISTANCE_UNIT));
@@ -230,14 +230,15 @@ public class OptaplannerSolver implements Solver {
     problem.parcelList = parcelList;
     problem.vehicleList = vehicleList;
 
-    System.out.println("**** INITIAL ****");
-    System.out.println(problem);
+    // System.out.println("**** INITIAL ****");
+    // System.out.println(problem);
 
     return problem;
   }
 
   static void initRoute(Vehicle vehicle, List<ParcelVisit> visits) {
     final Visit last = vehicle.getLastVisit();
+    // attach to tail
     Visit prev = last == null ? vehicle : last;
     for (final ParcelVisit pv : visits) {
       pv.setPreviousVisit(prev);

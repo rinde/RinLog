@@ -18,6 +18,7 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -28,15 +29,19 @@ import org.optaplanner.core.api.domain.variable.AnchorShadowVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 
+import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitStrengthComparator;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.ParcelDTO;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.util.TimeWindow;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  *
  * @author Rinde van Lon
  */
-@PlanningEntity
+@PlanningEntity(difficultyComparatorClass = VisitStrengthComparator.class)
 public class ParcelVisit implements Visit {
 
   // problem facts
@@ -58,6 +63,46 @@ public class ParcelVisit implements Visit {
   // helper variable
   @Nullable
   ParcelVisit associated;
+
+  // Difficulty should be implemented ascending: easy entities are lower,
+  // difficult entities are higher.
+  public static class VisitStrengthComparator implements Comparator<Visit> {
+
+    public VisitStrengthComparator() {}
+
+    @Override
+    public int compare(Visit o1, Visit o2) {
+
+      final boolean is1pv = o1 instanceof ParcelVisit;
+      final boolean is2pv = o2 instanceof ParcelVisit;
+
+      if (!is1pv && !is2pv) {
+        return 0;
+      } else if (!is1pv) {
+        return -1;
+      } else if (!is2pv) {
+        return 1;
+      }
+      // is1pv && is2pv
+      final ParcelDTO p1 = ((ParcelVisit) o1).getParcel().getDto();
+      final ParcelDTO p2 = ((ParcelVisit) o2).getParcel().getDto();
+
+      if (p1.equals(p2)) {
+        return 0;
+      }
+
+      return ComparisonChain.start()
+          // small time windows are more difficult, therefore: reverse ordering
+          .compare(
+            p1.getPickupTimeWindow().length()
+                + p1.getDeliveryTimeWindow().length(),
+            p2.getPickupTimeWindow().length()
+                + p2.getDeliveryTimeWindow().length(),
+            Ordering.natural().reverse())
+          .result();
+    }
+
+  }
 
   ParcelVisit() {}
 
@@ -89,8 +134,9 @@ public class ParcelVisit implements Visit {
   }
 
   @Nullable
-  @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
-  }, graphType = PlanningVariableGraphType.CHAINED)
+  @PlanningVariable(strengthComparatorClass = VisitStrengthComparator.class, valueRangeProviderRefs = {
+      "parcelRange",
+      "vehicleRange"}, graphType = PlanningVariableGraphType.CHAINED)
   // @Override
   public Visit getPreviousVisit() {
     return previousVisit;

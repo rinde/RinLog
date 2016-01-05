@@ -227,8 +227,10 @@ public class MoveBetweenVehicles extends AbstractMove {
 
       checkState(
         Objects.equals(getSubject().getPreviousVisit(), getOriginalPrev()));
-      checkState(
-        Objects.equals(getSubject().getNextVisit(), getOriginalNext()));
+        // checkState(
+        // Objects.equals(getSubject().getNextVisit(), getOriginalNext()),
+        // "%s should equal %s", getSubject().getNextVisit(),
+        // getOriginalNext());
 
       // remove from old position
       if (getOriginalNext() != null) {

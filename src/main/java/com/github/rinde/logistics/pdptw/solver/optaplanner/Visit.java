@@ -20,13 +20,14 @@ import javax.annotation.Nullable;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.InverseRelationShadowVariable;
 
+import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitStrengthComparator;
 import com.github.rinde.rinsim.geom.Point;
 
 /**
  *
  * @author Rinde van Lon
  */
-@PlanningEntity
+@PlanningEntity(difficultyComparatorClass = VisitStrengthComparator.class)
 public interface Visit {
 
   // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"

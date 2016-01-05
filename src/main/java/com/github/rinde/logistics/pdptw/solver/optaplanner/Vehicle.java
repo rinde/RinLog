@@ -22,8 +22,6 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import org.optaplanner.core.api.domain.entity.PlanningEntity;
-
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
@@ -35,7 +33,6 @@ import com.google.common.math.DoubleMath;
  *
  * @author Rinde van Lon
  */
-@PlanningEntity
 public class Vehicle implements Visit {
 
   // planning variables
