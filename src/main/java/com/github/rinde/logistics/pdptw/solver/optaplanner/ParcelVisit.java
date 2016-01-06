@@ -43,6 +43,9 @@ import com.google.common.collect.Ordering;
  */
 @PlanningEntity(difficultyComparatorClass = VisitStrengthComparator.class)
 public class ParcelVisit implements Visit {
+  // this variable should be the same value as the name of the field in this
+  // class
+  static final String PREV_VISIT = "previousVisit";
 
   // problem facts
   private Parcel parcel;
@@ -134,39 +137,41 @@ public class ParcelVisit implements Visit {
   }
 
   @Nullable
-  @PlanningVariable(strengthComparatorClass = VisitStrengthComparator.class, valueRangeProviderRefs = {
-      "parcelRange",
-      "vehicleRange"}, graphType = PlanningVariableGraphType.CHAINED)
-  // @Override
+  @PlanningVariable(strengthComparatorClass = VisitStrengthComparator.class,
+                    valueRangeProviderRefs = {
+                        PDPSolution.PARCEL_RANGE,
+                        PDPSolution.VEHICLE_RANGE
+                    },
+                    graphType = PlanningVariableGraphType.CHAINED)
   public Visit getPreviousVisit() {
     return previousVisit;
   }
-
-  // @Override
 
   public void setPreviousVisit(@Nullable Visit v) {
     previousVisit = v;
   }
 
   // @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
+  @Nullable
   @Override
   public ParcelVisit getNextVisit() {
     return nextVisit;
   }
 
   @Override
-  public void setNextVisit(ParcelVisit v) {
+  public void setNextVisit(@Nullable ParcelVisit v) {
     nextVisit = v;
   }
 
-  @AnchorShadowVariable(sourceVariableName = "previousVisit")
+  @AnchorShadowVariable(sourceVariableName = ParcelVisit.PREV_VISIT)
+  @Nullable
   @Override
   public Vehicle getVehicle() {
     return vehicle;
   }
 
   @Override
-  public void setVehicle(Vehicle v) {
+  public void setVehicle(@Nullable Vehicle v) {
     vehicle = v;
   }
 
@@ -206,6 +211,19 @@ public class ParcelVisit implements Visit {
       return this;
     }
     return nextVisit.getLastVisit();
+  }
+
+  public boolean isBefore(ParcelVisit pv) {
+    checkArgument(getVehicle() != null);
+    checkArgument(Objects.equals(getVehicle(), pv.getVehicle()));
+    ParcelVisit next = getNextVisit();
+    while (next != null) {
+      if (next.equals(pv)) {
+        return true;
+      }
+      next = next.getNextVisit();
+    }
+    return false;
   }
 
   /**

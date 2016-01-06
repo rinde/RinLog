@@ -63,7 +63,8 @@ public class MoveTest {
     final ScoreDirector scoreDirector = createScoreDirector();
     scoreDirector.setWorkingSolution(sol);
 
-    final MoveBetweenVehicles move = new MoveBetweenVehicles(pickupA, delivrA,
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupA, delivrA,
         vehicle1, pickupA);
 
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -74,6 +75,9 @@ public class MoveTest {
     move.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle1);
     assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+    System.out.println("----------");
+    System.out.println(vehicle0.printRoute());
+    System.out.println(vehicle1.printRoute());
 
     undo.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -96,7 +100,8 @@ public class MoveTest {
     final HardSoftLongScore originalScore =
       (HardSoftLongScore) scoreDirector.calculateScore();
 
-    final MoveBetweenVehicles move = new MoveBetweenVehicles(pickupA, delivrA,
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupA, delivrA,
         vehicle1, pickupA);
 
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -111,6 +116,11 @@ public class MoveTest {
     assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
     assertThat(pickupB.getPreviousVisit()).isEqualTo(vehicle0);
     assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    System.out.println("----------");
+    System.out.println(vehicle0.printRoute());
+    System.out.println(vehicle1.printRoute());
+
+    System.out.println("---------------------");
 
     final HardSoftLongScore incrChangedScore =
       (HardSoftLongScore) scoreDirector.calculateScore();
@@ -152,7 +162,8 @@ public class MoveTest {
     final HardSoftLongScore originalScore =
       (HardSoftLongScore) scoreDirector.calculateScore();
 
-    final MoveBetweenVehicles move = new MoveBetweenVehicles(pickupB, delivrB,
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupB, delivrB,
         vehicle1, delivrC);
 
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -192,6 +203,41 @@ public class MoveTest {
     assertThat(incrChangedScore).isNotEqualTo(originalScore);
     assertThat(directChangedScore).isEqualTo(incrChangedScore);
     assertThat(afterUndoScore).isEqualTo(originalScore);
+  }
+
+  @Test
+  public void reversedTest() {
+    final PDPSolution sol = create(vehicle(A, A), vehicle());
+
+    final ParcelVisit pickupA = sol.parcelList.get(0);
+    final ParcelVisit delivrA = sol.parcelList.get(1);
+
+    final Vehicle v0 = sol.vehicleList.get(0);
+    final Vehicle v1 = sol.vehicleList.get(1);
+
+    final ScoreDirector scoreDirector = createScoreDirector();
+    scoreDirector.setWorkingSolution(sol);
+
+    System.out.println(v0.printRoute());
+    System.out.println(v1.printRoute());
+    // reverse route
+    v0.setNextVisit(delivrA);
+    delivrA.setPreviousVisit(v0);
+    delivrA.setNextVisit(pickupA);
+    pickupA.setPreviousVisit(delivrA);
+    pickupA.setNextVisit(null);
+
+    System.out.println(v0.printRoute());
+    System.out.println(v1.printRoute());
+
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupA, delivrA, v1, v1);
+
+    move.doMove(scoreDirector);
+
+    System.out.println(v0.printRoute());
+    System.out.println(v1.printRoute());
+
   }
 
   @SafeVarargs

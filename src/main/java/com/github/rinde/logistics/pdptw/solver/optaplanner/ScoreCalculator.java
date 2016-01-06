@@ -33,6 +33,7 @@ import org.optaplanner.core.impl.score.director.incremental.AbstractIncrementalS
 import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
+import com.google.common.base.Strings;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 
@@ -120,10 +121,27 @@ public class ScoreCalculator
 
   }
 
+  static String asString(Object entity, String variableName) {
+    final StringBuilder sb = new StringBuilder()
+        .append(entity)
+        .append(" \tvariable: ")
+        .append(variableName)
+        .append(Strings.repeat(" ",
+          ParcelVisit.PREV_VISIT.length() - variableName.length()))
+        .append(" \tvalue: ");
+    if (variableName.equals(NEXT_VISIT)) {
+      sb.append(((Visit) entity).getNextVisit());
+    } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
+      sb.append(((ParcelVisit) entity).getPreviousVisit());
+    }
+    return sb.toString();
+  }
+
   @Override
   public void beforeVariableChanged(Object entity, String variableName) {
-    // System.out.println("beforeVariableChanged: " + entity + " " +
-    // variableName);
+    System.out
+        .println("beforeVariableChanged: " + asString(entity, variableName));
+
     // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
     // System.out.println(solution);
 
@@ -138,7 +156,7 @@ public class ScoreCalculator
         // remove(visit.getNextVisit());
         changes.put(visit.getVehicle(), visit.getNextVisit());
       }
-    } else if (variableName.equals(PREV_VISIT)) {
+    } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
 
       final ParcelVisit pv = (ParcelVisit) visit;
       if (pv.getPreviousVisit() == null) {
@@ -155,13 +173,12 @@ public class ScoreCalculator
   }
 
   static final String NEXT_VISIT = "nextVisit";
-  static final String PREV_VISIT = "previousVisit";
   static final String VEHICLE = "vehicle";
 
   @Override
   public void afterVariableChanged(Object entity, String variableName) {
-    // System.out.println("afterVariableChanged: " + entity + " " +
-    // variableName);
+    System.out
+        .println("afterVariableChanged : " + asString(entity, variableName));
     // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
     // System.out.println(solution);
 
@@ -175,7 +192,7 @@ public class ScoreCalculator
         // insert(visit.getNextVisit());
         changes.put(visit.getVehicle(), visit.getNextVisit());
       }
-    } else if (variableName.equals(PREV_VISIT)) {
+    } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
       final ParcelVisit pv = (ParcelVisit) visit;
 
       if (pv.getPreviousVisit() == null) {
@@ -190,6 +207,8 @@ public class ScoreCalculator
 
       changes.put(visit.getVehicle(), visit);
     }
+
+    // System.out.println(solution);
 
     // System.out.println("softScore: " + softScore);
   }

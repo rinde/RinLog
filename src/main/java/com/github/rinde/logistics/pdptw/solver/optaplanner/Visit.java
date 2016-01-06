@@ -37,7 +37,7 @@ public interface Visit {
   // void setPreviousVisit(Visit v);
 
   @Nullable
-  @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
+  @InverseRelationShadowVariable(sourceVariableName = ParcelVisit.PREV_VISIT)
   ParcelVisit getNextVisit();
 
   void setNextVisit(@Nullable ParcelVisit v);

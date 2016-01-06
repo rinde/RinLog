@@ -15,7 +15,7 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
-import static com.github.rinde.logistics.pdptw.solver.optaplanner.ScoreCalculator.PREV_VISIT;
+import static com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.PREV_VISIT;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verifyNotNull;
 
@@ -42,11 +42,26 @@ public class MoveBetweenVehicles extends AbstractMove {
   final ImmutableList<Visit> planningEntities;
   final ImmutableList<Visit> planningValues;
 
-  MoveBetweenVehicles(ParcelVisit pick, ParcelVisit delv, Visit pickToPrev,
-      Visit delvToPrev) {
-    this(MoveOne.create(pick, pickToPrev),
-        createDelivery(MoveOne.create(pick, pickToPrev), delv, delvToPrev));
+  static MoveBetweenVehicles create(ParcelVisit pick, ParcelVisit delv,
+      Visit pickToPrev, Visit delvToPrev) {
+
+    if (pick.isBefore(delv)) {
+      // 'normal' situation
+      final MoveOne pickupMove = MoveOne.create(pick, pickToPrev);
+      return new MoveBetweenVehicles(pickupMove,
+          createDelivery(pickupMove, delv, delvToPrev));
+    }
+    // reversed situation
+    final MoveOne deliveryMove = MoveOne.create(delv, delvToPrev);
+    return new MoveBetweenVehicles(deliveryMove,
+        createDelivery(deliveryMove, pick, pickToPrev));
   }
+
+  // MoveBetweenVehicles(ParcelVisit pick, ParcelVisit delv, Visit pickToPrev,
+  // Visit delvToPrev) {
+  // this(MoveOne.create(pick, pickToPrev),
+  // createDelivery(MoveOne.create(pick, pickToPrev), delv, delvToPrev));
+  // }
 
   static MoveOne createDelivery(MoveOne pickup, ParcelVisit delv,
       Visit delvToParent) {
@@ -165,12 +180,12 @@ public class MoveBetweenVehicles extends AbstractMove {
     // checkState(PDPSolution.equal(original, sol));
     // System.out.println("compare");
 
-    // System.out.println("apply move: pickup");
+    System.out.println("apply move: pickup");
     pickup.execute(scoreDirector);
-    // System.out.println("apply move: delivery");
+    System.out.println("apply move: delivery");
     delvry.execute(scoreDirector);
     // checkState(!PDPSolution.equal(original, sol));
-    // System.out.println("apply move: done");
+    System.out.println("apply move: done");
 
     // undo.doMove(scoreDirector);
     // checkState(PDPSolution.equal(original, sol));
@@ -225,21 +240,21 @@ public class MoveBetweenVehicles extends AbstractMove {
     void execute(ScoreDirector scoreDirector) {
       // System.out.println("execute " + this);
 
+      System.out.println("before: " + getSubject().getVehicle().printRoute());
+      System.out.println(this);
+      System.out.println(" > " + getSubject());
       checkState(
         Objects.equals(getSubject().getPreviousVisit(), getOriginalPrev()));
-        // checkState(
-        // Objects.equals(getSubject().getNextVisit(), getOriginalNext()),
-        // "%s should equal %s", getSubject().getNextVisit(),
-        // getOriginalNext());
+      checkState(
+        Objects.equals(getSubject().getNextVisit(), getOriginalNext()),
+        "%s should equal %s", getSubject().getNextVisit(),
+        getOriginalNext());
 
-      // remove from old position
       if (getOriginalNext() != null) {
         scoreDirector.beforeVariableChanged(getOriginalNext(), PREV_VISIT);
         getOriginalNext().setPreviousVisit(getOriginalPrev());
         scoreDirector.afterVariableChanged(getOriginalNext(), PREV_VISIT);
       }
-
-      // add in new position
       scoreDirector.beforeVariableChanged(getSubject(), PREV_VISIT);
       getSubject().setPreviousVisit(getToPrev());
       scoreDirector.afterVariableChanged(getSubject(), PREV_VISIT);
@@ -248,6 +263,8 @@ public class MoveBetweenVehicles extends AbstractMove {
         getToNext().setPreviousVisit(getSubject());
         scoreDirector.afterVariableChanged(getToNext(), PREV_VISIT);
       }
+
+      System.out.println("after: " + getSubject().getVehicle().printRoute());
     }
 
     static MoveOne create(ParcelVisit pv, Visit to) {

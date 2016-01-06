@@ -110,8 +110,8 @@ public class MoveItFactory implements MoveIteratorFactory {
       final ParcelVisit deliverTarget =
         options.get(rng.nextInt(options.size()));
 
-      return new MoveBetweenVehicles(pickup, delivery, pickupTarget,
-          deliverTarget);
+      return MoveBetweenVehicles.create(pickup, delivery, pickupTarget,
+        deliverTarget);
     }
   }
 
