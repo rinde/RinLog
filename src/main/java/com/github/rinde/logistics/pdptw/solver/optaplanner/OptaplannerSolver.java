@@ -183,8 +183,9 @@ public class OptaplannerSolver implements Solver {
     boolean firstVehicle = true;
 
     final List<Vehicle> vehicleList = new ArrayList<>();
-    for (final VehicleStateObject vso : state.getVehicles()) {
-      final Vehicle vehicle = new Vehicle(vso);
+    for (int i = 0; i < state.getVehicles().size(); i++) {
+      final VehicleStateObject vso = state.getVehicles().get(i);
+      final Vehicle vehicle = new Vehicle(vso, i);
       vehicleList.add(vehicle);
 
       final List<ParcelVisit> visits = new ArrayList<>();

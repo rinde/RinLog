@@ -47,18 +47,21 @@ public class Vehicle implements Visit {
   private final VehicleStateObject vehicle;
   private final long endTime;
   private final long remainingServiceTime;
+  private final int index;
 
   Vehicle() {
     vehicle = null;
     endTime = -1;
     remainingServiceTime = -1;
+    index = -1;
   }
 
-  Vehicle(VehicleStateObject vso) {
+  Vehicle(VehicleStateObject vso, int ind) {
     vehicle = vso;
     endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
     remainingServiceTime = vso.getRemainingServiceTime() > 0
         ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
+    index = ind;
   }
 
   // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
@@ -140,7 +143,7 @@ public class Vehicle implements Visit {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + Integer.toHexString(hashCode());
+    return getClass().getSimpleName() + Integer.toHexString(index);
   }
 
   public String printRoute() {

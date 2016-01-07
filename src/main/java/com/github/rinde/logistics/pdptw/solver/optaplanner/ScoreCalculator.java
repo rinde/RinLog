@@ -133,20 +133,24 @@ public class ScoreCalculator
       sb.append(((Visit) entity).getNextVisit());
     } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
       sb.append(((ParcelVisit) entity).getPreviousVisit());
+    } else if (variableName.equals(VEHICLE)) {
+      sb.append(((ParcelVisit) entity).getVehicle());
     }
     return sb.toString();
   }
 
   @Override
   public void beforeVariableChanged(Object entity, String variableName) {
-    System.out
-        .println("beforeVariableChanged: " + asString(entity, variableName));
+    // System.out
+    // .println("beforeVariableChanged: " + asString(entity, variableName));
 
     // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
     // System.out.println(solution);
 
     final Visit visit = (Visit) entity;
-
+    if (visit.getVehicle() == null) {
+      return;
+    }
     if (variableName.equals(NEXT_VISIT)) {
       if (visit.getNextVisit() == null) {
         // we can safely ignore this
@@ -177,12 +181,15 @@ public class ScoreCalculator
 
   @Override
   public void afterVariableChanged(Object entity, String variableName) {
-    System.out
-        .println("afterVariableChanged : " + asString(entity, variableName));
+    // System.out
+    // .println("afterVariableChanged : " + asString(entity, variableName));
     // System.out.println(" > nextVisit:" + ((Visit) entity).getNextVisit());
     // System.out.println(solution);
 
     final Visit visit = (Visit) entity;
+    if (visit.getVehicle() == null) {
+      return;
+    }
     if (variableName.equals(NEXT_VISIT)) {
       if (visit.getNextVisit() == null) {
         // we can ignore this

@@ -25,6 +25,7 @@ import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.geom.Point;
+import com.google.common.collect.ImmutableList;
 
 /**
  *
@@ -46,6 +47,7 @@ public class ScoreCalculatorTest {
             .setVehicleDTO(VehicleDTO.builder()
                 .speed(1d)
                 .build())
+            .setRoute(ImmutableList.<Parcel>of())
             .build())
         .build();
 
@@ -56,13 +58,14 @@ public class ScoreCalculatorTest {
     final Score score = sc.calculateScore();
     System.out.println(score);
 
-    sc.beforeVariableChanged(sol.vehicleList.get(0), "previousVisit");
+    final ParcelVisit subject = sol.vehicleList.get(0).getNextVisit();
+    sc.beforeVariableChanged(subject, ParcelVisit.PREV_VISIT);
 
     sol.vehicleList.get(0).getNextVisit().setPreviousVisit(null);
     sol.vehicleList.get(0).getNextVisit().setVehicle(null);
     sol.vehicleList.get(0).setNextVisit(null);
 
-    sc.afterVariableChanged(sol.vehicleList.get(0), "previousVisit");
+    sc.afterVariableChanged(subject, ParcelVisit.PREV_VISIT);
 
     final Score score3 = sc.calculateScore();
     System.out.println(score3);

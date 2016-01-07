@@ -75,9 +75,6 @@ public class MoveTest {
     move.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle1);
     assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
-    System.out.println("----------");
-    System.out.println(vehicle0.printRoute());
-    System.out.println(vehicle1.printRoute());
 
     undo.doMove(scoreDirector);
     assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
@@ -116,11 +113,6 @@ public class MoveTest {
     assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
     assertThat(pickupB.getPreviousVisit()).isEqualTo(vehicle0);
     assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
-    System.out.println("----------");
-    System.out.println(vehicle0.printRoute());
-    System.out.println(vehicle1.printRoute());
-
-    System.out.println("---------------------");
 
     final HardSoftLongScore incrChangedScore =
       (HardSoftLongScore) scoreDirector.calculateScore();
@@ -218,8 +210,6 @@ public class MoveTest {
     final ScoreDirector scoreDirector = createScoreDirector();
     scoreDirector.setWorkingSolution(sol);
 
-    System.out.println(v0.printRoute());
-    System.out.println(v1.printRoute());
     // reverse route
     v0.setNextVisit(delivrA);
     delivrA.setPreviousVisit(v0);
@@ -227,17 +217,162 @@ public class MoveTest {
     pickupA.setPreviousVisit(delivrA);
     pickupA.setNextVisit(null);
 
-    System.out.println(v0.printRoute());
-    System.out.println(v1.printRoute());
+    // route is now:
+    // v0 -> DELIVER-A -> PICKUP-A
+    // v1
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
 
     final MoveBetweenVehicles move =
       MoveBetweenVehicles.create(pickupA, delivrA, v1, v1);
+    final MoveBetweenVehicles undoMove = move.createUndoMove(scoreDirector);
 
     move.doMove(scoreDirector);
 
-    System.out.println(v0.printRoute());
-    System.out.println(v1.printRoute());
+    // route is now:
+    // v0 ->
+    // v1 -> PICKUP-A -> DELIVER-A
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(v1);
+    assertThat(v0.getNextVisit()).isNull();
 
+    undoMove.doMove(scoreDirector);
+    // route is now:
+    // v0 -> DELIVER-A -> PICKUP-A
+    // v1
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
+  }
+
+  @Test
+  public void reversedTest2() {
+    final PDPSolution sol = create(vehicle(A, B, B, A, C, C), vehicle(D, D));
+
+    final ParcelVisit pickupA = sol.parcelList.get(0);
+    final ParcelVisit delivrA = sol.parcelList.get(1);
+    final ParcelVisit pickupB = sol.parcelList.get(2);
+    final ParcelVisit delivrB = sol.parcelList.get(3);
+    final ParcelVisit pickupC = sol.parcelList.get(4);
+    final ParcelVisit delivrC = sol.parcelList.get(5);
+    final ParcelVisit pickupD = sol.parcelList.get(6);
+    final ParcelVisit delivrD = sol.parcelList.get(7);
+
+    final Vehicle v0 = sol.vehicleList.get(0);
+    final Vehicle v1 = sol.vehicleList.get(1);
+    final ScoreDirector scoreDirector = createScoreDirector();
+    scoreDirector.setWorkingSolution(sol);
+
+    // reverse route
+    v0.setNextVisit(delivrA);
+    delivrA.setPreviousVisit(v0);
+    delivrA.setNextVisit(pickupB);
+    pickupB.setPreviousVisit(delivrA);
+    pickupA.setPreviousVisit(delivrB);
+    delivrB.setNextVisit(pickupA);
+    pickupC.setPreviousVisit(pickupA);
+    pickupA.setNextVisit(pickupC);
+
+    // route is now:
+    // v0 -> DELIVER-A -> PICKUP-B -> DELIVER-B -> PICKUP-A->PICKUP-C->DELIVR-C
+    // v1 -> PICKUP-D -> DELIVER-D
+    assertThat(delivrC.getPreviousVisit()).isEqualTo(pickupC);
+    assertThat(pickupC.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrB);
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
+    assertThat(delivrD.getPreviousVisit()).isEqualTo(pickupD);
+    assertThat(pickupD.getPreviousVisit()).isEqualTo(v1);
+
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupA, delivrA, v1, delivrD);
+    final MoveBetweenVehicles undoMove = move.createUndoMove(scoreDirector);
+
+    move.doMove(scoreDirector);
+
+    // route is now:
+    // v0 -> PICKUP-B -> DELIVER-B -> PICKUP-C -> DELIVR-C
+    // v1 -> PICKUP-A -> PICKUP-D -> DELIVER-D -> DELIVER-A
+    assertThat(delivrC.getPreviousVisit()).isEqualTo(pickupC);
+    assertThat(pickupC.getPreviousVisit()).isEqualTo(delivrB);
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(v0);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(delivrD);
+    assertThat(delivrD.getPreviousVisit()).isEqualTo(pickupD);
+    assertThat(pickupD.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(v1);
+
+    undoMove.doMove(scoreDirector);
+
+    // route is now:
+    // v0 -> DELIVER-A -> PICKUP-B -> DELIVER-B -> PICKUP-A->PICKUP-C->DELIVR-C
+    // v1 -> PICKUP-D -> DELIVER-D
+    assertThat(delivrC.getPreviousVisit()).isEqualTo(pickupC);
+    assertThat(pickupC.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrB);
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
+    assertThat(delivrD.getPreviousVisit()).isEqualTo(pickupD);
+    assertThat(pickupD.getPreviousVisit()).isEqualTo(v1);
+  }
+
+  /**
+   * Special case where the pickup and delivery of a parcel occur reversed in
+   * the route and are connected (i.e. adjacent to each other in the route),
+   * additionally there is a tail of parcels in the original route.
+   */
+  @Test
+  public void testConnectedReversedWithTail() {
+    final PDPSolution sol = create(vehicle(A, A, B, B), vehicle());
+
+    final ParcelVisit pickupA = sol.parcelList.get(0);
+    final ParcelVisit delivrA = sol.parcelList.get(1);
+    final ParcelVisit pickupB = sol.parcelList.get(2);
+    final ParcelVisit delivrB = sol.parcelList.get(3);
+
+    final Vehicle v0 = sol.vehicleList.get(0);
+    final Vehicle v1 = sol.vehicleList.get(1);
+    final ScoreDirector scoreDirector = createScoreDirector();
+    scoreDirector.setWorkingSolution(sol);
+
+    v0.setNextVisit(delivrA);
+    delivrA.setPreviousVisit(v0);
+    delivrA.setNextVisit(pickupA);
+    pickupA.setPreviousVisit(delivrA);
+    pickupA.setNextVisit(pickupB);
+    pickupB.setPreviousVisit(pickupA);
+
+    // reversed and connected A with tail B, route:
+    // v0 -> DELIVER-A -> PICKUP-A -> PICKUP-B -> DELIVER-B
+    // v1
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
+
+    final MoveBetweenVehicles move =
+      MoveBetweenVehicles.create(pickupA, delivrA, v1, v1);
+    final MoveBetweenVehicles undoMove = move.createUndoMove(scoreDirector);
+
+    move.doMove(scoreDirector);
+
+    // route:
+    // v0 -> PICKUP-B -> DELIVER-B
+    // v1 -> PICKUP-A -> DELIVER-A
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(v0);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(v1);
+
+    undoMove.doMove(scoreDirector);
+    // route:
+    // v0 -> DELIVER-A -> PICKUP-A -> PICKUP-B -> DELIVER-B
+    // v1
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(delivrA);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(v0);
   }
 
   @SafeVarargs
