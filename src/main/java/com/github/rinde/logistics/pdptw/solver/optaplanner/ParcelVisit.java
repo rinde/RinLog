@@ -226,9 +226,6 @@ public class ParcelVisit implements Visit {
     return false;
   }
 
-  /**
-   * @param delivery
-   */
   public void setAssociation(ParcelVisit pv) {
     checkArgument(pv.getParcel().equals(getParcel()));
     checkArgument(pv.getVisitType() != getVisitType());
