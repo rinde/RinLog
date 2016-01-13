@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
-	<!-- Define the model -->
-	<!-- <solutionClass>org.optaplanner.examples.nqueens.domain.NQueens</solutionClass> 
-		<entityClass>org.optaplanner.examples.nqueens.domain.Queen</entityClass> -->
-	<!-- Define the score function -->
-	<!-- <scoreDirectorFactory> <scoreDefinitionType>SIMPLE</scoreDefinitionType> 
-		<scoreDrl>org/optaplanner/examples/nqueens/solver/nQueensScoreRules.drl</scoreDrl> 
-		</scoreDirectorFactory> -->
-	<!-- Configure the optimization algorithm(s) -->
-	<!-- <termination> ... </termination> <constructionHeuristic> ... </constructionHeuristic> -->
-
-
+	<constructionHeuristic>
+		<constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+	</constructionHeuristic>
 	<localSearch>
 		<unionMoveSelector>
 			<moveIteratorFactory>
@@ -27,3 +19,47 @@
 		</unionMoveSelector>
 	</localSearch>
 </solver>
+<!-- 
+<solver>
+  <environmentMode>REPRODUCIBLE</environmentMode>
+  <randomType>MERSENNE_TWISTER</randomType>
+  <solutionClass>com.github.rinde.logistics.pdptw.solver.optaplanner.PDPSolution</solutionClass>
+  <entityClass>com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit</entityClass>
+  <entityClass>com.github.rinde.logistics.pdptw.solver.optaplanner.Visit</entityClass>
+  <scoreDirectorFactory>
+    <scoreDefinitionType>HARD_SOFT_LONG</scoreDefinitionType>
+    <incrementalScoreCalculatorClass>com.github.rinde.logistics.pdptw.solver.optaplanner.ScoreCalculator</incrementalScoreCalculatorClass>
+  </scoreDirectorFactory>
+  <termination>
+    <unimprovedMillisecondsSpentLimit>5000</unimprovedMillisecondsSpentLimit>
+  </termination>
+  <constructionHeuristic>
+    <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+  </constructionHeuristic>
+  <localSearch>
+    <unionMoveSelector>
+      <moveIteratorFactory>
+        <moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.MoveItFactory</moveIteratorFactoryClass>
+      </moveIteratorFactory>
+      <changeMoveSelector>
+        <filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.ChangeFilter</filterClass>
+      </changeMoveSelector>
+      <changeMoveSelector>
+        <entitySelector>
+          <filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.EntityFilter</filterClass>
+        </entitySelector>
+      </changeMoveSelector>
+    </unionMoveSelector>
+    <acceptor>
+      <simulatedAnnealingStartingTemperature>2hard/999999999999soft</simulatedAnnealingStartingTemperature>
+    </acceptor>
+  </localSearch>
+  <localSearch>
+    <acceptor>
+      <entityTabuRatio>0.01</entityTabuRatio>
+    </acceptor>
+    <forager>
+      <acceptedCountLimit>500</acceptedCountLimit>
+    </forager>
+  </localSearch>
+</solver> -->

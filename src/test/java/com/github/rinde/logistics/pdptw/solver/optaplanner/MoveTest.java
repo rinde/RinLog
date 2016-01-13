@@ -395,7 +395,7 @@ public class MoveTest {
           .setRoute(v)
           .build());
     }
-    return OptaplannerSolver.convert(b.build());
+    return OptaplannerSolvers.convert(b.build());
   }
 
   static ImmutableList<Parcel> vehicle(Parcel... route) {

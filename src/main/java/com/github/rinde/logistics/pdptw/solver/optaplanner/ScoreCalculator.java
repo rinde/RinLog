@@ -15,7 +15,6 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import java.util.Collection;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.score.director.incremental.AbstractIncrementalScoreCalculator;
 
@@ -233,7 +231,7 @@ public class ScoreCalculator
   }
 
   @Override
-  public Score calculateScore() {
+  public HardSoftLongScore calculateScore() {
     if (!changes.isEmpty()) {
       for (final Entry<Vehicle, Collection<Visit>> entry : changes.asMap()
           .entrySet()) {
@@ -338,9 +336,9 @@ public class ScoreCalculator
 
     final ParcelVisit lastStop = v.getLastVisit();
 
-    if (v.getRemainingServiceTime() > 0) {
-      checkState(lastStop != null);
-    }
+    // if (v.getRemainingServiceTime() > 0) {
+    // checkState(lastStop != null);
+    // }
 
     final Point fromPos =
       lastStop == null ? v.getPosition() : lastStop.getPosition();

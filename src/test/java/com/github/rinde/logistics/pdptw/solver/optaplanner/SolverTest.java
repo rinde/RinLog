@@ -19,7 +19,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Test;
 
-import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolver.Validator;
+import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolvers.OptaplannerSolver;
+import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolvers.Validator;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.central.Solvers;
@@ -35,35 +36,69 @@ import com.google.common.collect.ImmutableList;
 public class SolverTest {
 
   @Test
-  public void test() throws InterruptedException {
+  public void test() {
     final OptaplannerSolver optaplannerSolver =
-      ((Validator) OptaplannerSolver.builder()
-          .setValidated(true)
-          .setUnimprovedMsLimit(2L)
-          .setObjectiveFunction(Gendreau06ObjectiveFunction.instance())
+      ((Validator) OptaplannerSolvers.builder()
+          .withValidated(true)
+          .withUnimprovedMsLimit(10L)
+          .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
           .buildSolver()
           .get(123L)).solver;
 
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(
           Parcel.builder(new Point(0, 0), new Point(2, 0)).build())
+        .addAvailableParcel(
+          Parcel.builder(new Point(3, 0), new Point(2, 0)).build())
         .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
             .setLocation(new Point(5, 5))
             .setRoute(ImmutableList.<Parcel>of())
             .build())
         .build();
 
-    final ImmutableList<ImmutableList<Parcel>> schedule =
-      optaplannerSolver.solve(gso);
-    final double optaPlannerCost = optaplannerSolver.getSoftScore() / -1000000d;
+    compare(optaplannerSolver, gso);
+  }
+
+  @Test
+  public void testPartiallyLoadedParcel() {
+    final Parcel A = Parcel.builder(new Point(5, 5), new Point(2, 0))
+        .serviceDuration(180000L)
+        .build();
+
+    final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+        .addAvailableParcel(A)
+        .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+            .setLocation(new Point(5, 5))
+            .setRoute(ImmutableList.<Parcel>of(A, A))
+            .setRemainingServiceTime(120000L)
+            .setDestination(A)
+            .build())
+        .build();
+
+    final OptaplannerSolver optaplannerSolver =
+      ((Validator) OptaplannerSolvers.builder()
+          .withValidated(true)
+          .withUnimprovedMsLimit(10L)
+          .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
+          .buildSolver()
+          .get(123L)).solver;
+
+    compare(optaplannerSolver, gso);
+  }
+
+  static void compare(OptaplannerSolver solv, GlobalStateObject gso) {
+    ImmutableList<ImmutableList<Parcel>> schedule;
+    try {
+      schedule = solv.solve(gso);
+    } catch (final InterruptedException e) {
+      throw new IllegalStateException(e);
+    }
+    final double optaPlannerCost = solv.getSoftScore() / -1000000d;
 
     final double rinSimCost = Gendreau06ObjectiveFunction.instance(50d)
         .computeCost(Solvers.computeStats(gso, schedule)) * 60000d;
 
     assertThat(optaPlannerCost).isWithin(.0001).of(rinSimCost);
-
-    // TODO cases that are currently not covered:
-    // - partially (un)loaded parcel
   }
 
 }

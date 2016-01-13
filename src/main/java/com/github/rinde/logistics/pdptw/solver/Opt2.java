@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verifyNotNull;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
 import javax.annotation.CheckReturnValue;
@@ -35,6 +34,7 @@ import com.github.rinde.opt.localsearch.Swaps;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -329,7 +329,7 @@ public final class Opt2 {
       lastSnapshot = snapshot;
       currentFuture = Optional.of(
         scheduler.get().getSharedExecutor().submit(
-          new SolverComputer(solver, snapshot)));
+          Solvers.createSolverCallable(solver, snapshot)));
 
       Futures.addCallback(currentFuture.get(),
         new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
@@ -377,22 +377,6 @@ public final class Opt2 {
     public void notify(ImmutableList<ImmutableList<Parcel>> schedule,
         double objectiveValue) {
       scheduler.get().updateSchedule(verifyNotNull(lastSnapshot), schedule);
-    }
-  }
-
-  static class SolverComputer
-      implements Callable<ImmutableList<ImmutableList<Parcel>>> {
-    final Solver solver;
-    final GlobalStateObject snapshot;
-
-    SolverComputer(Solver sol, GlobalStateObject snap) {
-      solver = sol;
-      snapshot = snap;
-    }
-
-    @Override
-    public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
-      return solver.solve(snapshot);
     }
   }
 }

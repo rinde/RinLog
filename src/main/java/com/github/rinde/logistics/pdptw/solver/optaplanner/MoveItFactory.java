@@ -40,7 +40,9 @@ public class MoveItFactory implements MoveIteratorFactory {
   public long getSize(ScoreDirector scoreDirector) {
 
     final PDPSolution sol = (PDPSolution) scoreDirector.getWorkingSolution();
-
+    if (sol.vehicleList.size() <= 1) {
+      return 0;
+    }
     return sol.parcelList.size() + sol.vehicleList.size();
   }
 
@@ -86,7 +88,7 @@ public class MoveItFactory implements MoveIteratorFactory {
 
     @Override
     protected Move computeNext() {
-      if (movablePickups.isEmpty()) {
+      if (movablePickups.isEmpty() || solution.vehicleList.size() <= 1) {
         return endOfData();
       }
       final ParcelVisit pickup =

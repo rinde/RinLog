@@ -18,13 +18,17 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verifyNotNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import javax.measure.quantity.Duration;
 import javax.measure.quantity.Length;
 import javax.measure.quantity.Velocity;
@@ -34,6 +38,8 @@ import javax.measure.unit.Unit;
 
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.api.solver.event.BestSolutionChangedEvent;
+import org.optaplanner.core.api.solver.event.SolverEventListener;
 import org.optaplanner.core.config.score.definition.ScoreDefinitionType;
 import org.optaplanner.core.config.score.director.ScoreDirectorFactoryConfig;
 import org.optaplanner.core.config.solver.EnvironmentMode;
@@ -57,111 +63,29 @@ import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  *
  * @author Rinde van Lon
  */
-public class OptaplannerSolver implements Solver {
+public final class OptaplannerSolvers {
   static final Unit<Duration> TIME_UNIT = SI.MILLI(SI.SECOND);
   static final Unit<Velocity> SPEED_UNIT = NonSI.KILOMETERS_PER_HOUR;
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
 
-  private final org.optaplanner.core.api.solver.Solver solver;
-  private long lastSoftScore;
-  PDPSolution lastSolution;
-  final ScoreCalculator scoreCalculator;
+  private OptaplannerSolvers() {}
 
-  OptaplannerSolver(Builder builder, long seed) {
-    solver = createOptaplannerSolver(builder, seed);
-    scoreCalculator = new ScoreCalculator();
+  @CheckReturnValue
+  public static Builder builder() {
+    return Builder.defaultInstance();
   }
 
-  @Override
-  public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
-      throws InterruptedException {
-
-    final PDPSolution problem = convert(state);
-
-    solver.solve(problem);
-
-    lastSolution = (PDPSolution) solver.getBestSolution();
-
-    final HardSoftLongScore score = lastSolution.getScore();
-
-    // System.out.println(state);
-    checkState(score.getHardScore() == 0,
-      "Optaplanner didn't find a solution satisfying all hard constraints.");
-    lastSoftScore = score.getSoftScore();
-
-    return toSchedule(lastSolution);
-  }
-
-  static org.optaplanner.core.api.solver.Solver createOptaplannerSolver(
-      Builder builder, long seed) {
-    final SolverFactory factory = SolverFactory.createFromXmlResource(
-      builder.getSolverXmlResource());
-    final SolverConfig config = factory.getSolverConfig();
-    config.setEntityClassList(
-      ImmutableList.<Class<?>>of(
-        ParcelVisit.class,
-        Visit.class));
-    config.setSolutionClass(PDPSolution.class);
-
-    final TerminationConfig terminationConfig = new TerminationConfig();
-    terminationConfig
-        .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
-    config.setTerminationConfig(terminationConfig);
-
-    final ScoreDirectorFactoryConfig scoreConfig =
-      new ScoreDirectorFactoryConfig();
-    scoreConfig.setScoreDefinitionType(ScoreDefinitionType.HARD_SOFT_LONG);
-    scoreConfig.setIncrementalScoreCalculatorClass(ScoreCalculator.class);
-    config.setScoreDirectorFactoryConfig(scoreConfig);
-
-    config.setRandomSeed(seed);
-    config.setRandomType(RandomType.MERSENNE_TWISTER);
-    config.setEnvironmentMode(
-      builder.isValidated() ? EnvironmentMode.FULL_ASSERT
-          : EnvironmentMode.REPRODUCIBLE);
-
-    return factory.buildSolver();
-  }
-
-  static ImmutableList<ImmutableList<Parcel>> toSchedule(PDPSolution solution) {
-    final ImmutableList.Builder<ImmutableList<Parcel>> scheduleBuilder =
-      ImmutableList.builder();
-    for (final Vehicle v : solution.vehicleList) {
-      final ImmutableList.Builder<Parcel> routeBuilder =
-        ImmutableList.builder();
-      ParcelVisit pv = v.getNextVisit();
-      while (pv != null) {
-        routeBuilder.add(pv.getParcel());
-        pv = pv.getNextVisit();
-      }
-      scheduleBuilder.add(routeBuilder.build());
-    }
-    return scheduleBuilder.build();
-  }
-
-  @VisibleForTesting
-  long getSoftScore() {
-    return lastSoftScore;
-  }
-
-  long getTardiness() {
-    return scoreCalculator.getTardiness();
-  }
-
-  long getTravelTime() {
-    return scoreCalculator.getTravelTime();
-  }
-
-  long getOvertime() {
-    return scoreCalculator.getOvertime();
-  }
-
+  @CheckReturnValue
   public static PDPSolution convert(GlobalStateObject state) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
@@ -243,6 +167,53 @@ public class OptaplannerSolver implements Solver {
     return problem;
   }
 
+  static org.optaplanner.core.api.solver.Solver createOptaplannerSolver(
+      Builder builder, long seed) {
+    final SolverFactory factory = SolverFactory.createFromXmlResource(
+      builder.getSolverXmlResource());
+    final SolverConfig config = factory.getSolverConfig();
+    config.setEntityClassList(
+      ImmutableList.<Class<?>>of(
+        ParcelVisit.class,
+        Visit.class));
+    config.setSolutionClass(PDPSolution.class);
+
+    final TerminationConfig terminationConfig = new TerminationConfig();
+    terminationConfig
+        .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
+    config.setTerminationConfig(terminationConfig);
+
+    final ScoreDirectorFactoryConfig scoreConfig =
+      new ScoreDirectorFactoryConfig();
+    scoreConfig.setScoreDefinitionType(ScoreDefinitionType.HARD_SOFT_LONG);
+    scoreConfig.setIncrementalScoreCalculatorClass(ScoreCalculator.class);
+    config.setScoreDirectorFactoryConfig(scoreConfig);
+
+    config.setRandomSeed(seed);
+    config.setRandomType(RandomType.MERSENNE_TWISTER);
+    config.setEnvironmentMode(
+      builder.isValidated() ? EnvironmentMode.FULL_ASSERT
+          : EnvironmentMode.REPRODUCIBLE);
+
+    return factory.buildSolver();
+  }
+
+  static ImmutableList<ImmutableList<Parcel>> toSchedule(PDPSolution solution) {
+    final ImmutableList.Builder<ImmutableList<Parcel>> scheduleBuilder =
+      ImmutableList.builder();
+    for (final Vehicle v : solution.vehicleList) {
+      final ImmutableList.Builder<Parcel> routeBuilder =
+        ImmutableList.builder();
+      ParcelVisit pv = v.getNextVisit();
+      while (pv != null) {
+        routeBuilder.add(pv.getParcel());
+        pv = pv.getNextVisit();
+      }
+      scheduleBuilder.add(routeBuilder.build());
+    }
+    return scheduleBuilder.build();
+  }
+
   static void initRoute(Vehicle vehicle, List<ParcelVisit> visits) {
     final Visit last = vehicle.getLastVisit();
     // attach to tail
@@ -255,65 +226,13 @@ public class OptaplannerSolver implements Solver {
     }
   }
 
-  // public static StochasticSupplier<Solver> supplier(
-  // long unimprovedSecondsLimit) {
-  // return new Sup(unimprovedSecondsLimit);
-  // }
-  //
-  // public static StochasticSupplier<Solver> validatedSupplier(
-  // long unimprovedSecondsLimit,
-  // double vehicleSpeedKmH) {
-  // return new ValSup(Gendreau06ObjectiveFunction.instance(vehicleSpeedKmH),
-  // unimprovedSecondsLimit);
-  // }
-  //
-  // static OptaplannerSolver instance() {
-  // return new OptaplannerSolver(123, false, 1);
-  // }
-  //
-  // static Solver validatedInstance(long seed,
-  // Gendreau06ObjectiveFunction objFunc, long unimprovedSecondsLimit) {
-  // return new Validator(seed, objFunc, unimprovedSecondsLimit);
-  // }
-
-  // static class Sup implements StochasticSupplier<Solver> {
-  //
-  // long usl;
-  //
-  // Sup(long unimprovedSecondsLimit) {
-  // usl = unimprovedSecondsLimit;
-  // }
-  //
-  // @Override
-  // public Solver get(long seed) {
-  // return new OptaplannerSolver(seed, false, usl);
-  // }
-  // }
-  //
-  // static class ValSup implements StochasticSupplier<Solver> {
-  // final Gendreau06ObjectiveFunction objectiveFunction;
-  // long usl;
-  //
-  // ValSup(Gendreau06ObjectiveFunction objFunc, long unimprovedSecondsLimit) {
-  // objectiveFunction = objFunc;
-  // usl = unimprovedSecondsLimit;
-  // }
-  //
-  // @Override
-  // public Solver get(long seed) {
-  // return new Validator(seed, objectiveFunction, usl);
-  // }
-  // }
-
-  public static Builder builder() {
-    return Builder.defaultInstance();
-  }
-
   @AutoValue
   public abstract static class Builder {
 
     static final String DEFAULT_SOLVER_XML_RESOURCE =
       "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml";
+
+    Builder() {}
 
     abstract boolean isValidated();
 
@@ -323,30 +242,36 @@ public class OptaplannerSolver implements Solver {
 
     abstract String getSolverXmlResource();
 
-    public Builder setValidated(boolean validate) {
+    @CheckReturnValue
+    public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
         getUnimprovedMsLimit(), getSolverXmlResource());
     }
 
-    public Builder setObjectiveFunction(Gendreau06ObjectiveFunction func) {
+    @CheckReturnValue
+    public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
         getSolverXmlResource());
     }
 
-    public Builder setUnimprovedMsLimit(long ms) {
+    @CheckReturnValue
+    public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms,
         getSolverXmlResource());
     }
 
-    public Builder setSolverXmlResource(String solverXmlResource) {
+    @CheckReturnValue
+    public Builder withSolverXmlResource(String solverXmlResource) {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), solverXmlResource);
     }
 
+    @CheckReturnValue
     public StochasticSupplier<Solver> buildSolver() {
       return new SimulatedTimeSupplier(this);
     }
 
+    @CheckReturnValue
     public StochasticSupplier<RealtimeSolver> buildRealtimeSolver() {
       return new RealtimeSupplier(this);
     }
@@ -358,43 +283,148 @@ public class OptaplannerSolver implements Solver {
 
     static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
         long sec, String resource) {
-      return new AutoValue_OptaplannerSolver_Builder(validate, func, sec,
+      return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
           resource);
     }
   }
 
-  static class RTSolver implements RealtimeSolver {
+  static class OptaplannerSolver implements Solver {
+    private final org.optaplanner.core.api.solver.Solver solver;
+    private long lastSoftScore;
+    @Nullable
+    PDPSolution lastSolution;
+    final ScoreCalculator scoreCalculator;
 
-    @Override
-    public void init(Scheduler scheduler) {
-      // TODO Auto-generated method stub
-
+    OptaplannerSolver(Builder builder, long seed) {
+      solver = createOptaplannerSolver(builder, seed);
+      scoreCalculator = new ScoreCalculator();
+      lastSolution = null;
     }
 
     @Override
-    public void problemChanged(GlobalStateObject snapshot) {
-      // TODO Auto-generated method stub
+    public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
+        throws InterruptedException {
+      final PDPSolution problem = convert(state);
+      solver.solve(problem);
 
+      final PDPSolution solution = (PDPSolution) solver.getBestSolution();
+      lastSolution = solution;
+
+      final HardSoftLongScore score = solution.getScore();
+
+      checkState(score.getHardScore() == 0,
+        "Optaplanner didn't find a solution satisfying all hard constraints.");
+      lastSoftScore = score.getSoftScore();
+      return toSchedule(solution);
+    }
+
+    void addEventListener(SolverEventListener<PDPSolution> listener) {
+      solver.addEventListener(listener);
+    }
+
+    boolean isSolving() {
+      return solver.isSolving();
+    }
+
+    void terminateEarly() {
+      solver.terminateEarly();
+    }
+
+    @VisibleForTesting
+    long getSoftScore() {
+      return lastSoftScore;
+    }
+  }
+
+  static class OptaplannerRTSolver implements RealtimeSolver {
+    final OptaplannerSolver solver;
+    Optional<Scheduler> scheduler;
+    @Nullable
+    GlobalStateObject lastSnapshot;
+
+    OptaplannerRTSolver(Builder b, long seed) {
+      solver = new OptaplannerSolver(b, seed);
+      scheduler = Optional.absent();
     }
 
     @Override
-    public void receiveSnapshot(GlobalStateObject snapshot) {
-      // TODO Auto-generated method stub
+    public void init(final Scheduler sched) {
+      checkState(!scheduler.isPresent(),
+        "Solver can be initialized only once.");
+      scheduler = Optional.of(sched);
 
+      solver.addEventListener(new SolverEventListener<PDPSolution>() {
+        @Override
+        public void bestSolutionChanged(
+            @SuppressWarnings("null") BestSolutionChangedEvent<PDPSolution> event) {
+          if (event.isNewBestSolutionInitialized()
+              && event.getNewBestSolution().getScore().getHardScore() == 0) {
+            final ImmutableList<ImmutableList<Parcel>> schedule =
+              toSchedule(event.getNewBestSolution());
+            sched.updateSchedule(verifyNotNull(lastSnapshot), schedule);
+          }
+        }
+      });
     }
+
+    @Override
+    public void problemChanged(final GlobalStateObject snapshot) {
+      checkState(scheduler.isPresent());
+      cancel();
+      lastSnapshot = snapshot;
+
+      final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
+        scheduler.get().getSharedExecutor()
+            .submit(Solvers.createSolverCallable(solver, snapshot));
+
+      Futures.addCallback(future,
+        new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
+
+          @Override
+          public void onSuccess(
+              @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+            if (result == null) {
+              scheduler.get().reportException(
+                new IllegalArgumentException("Solver.solve(..) must return a "
+                    + "non-null result. Solver: " + solver));
+            } else {
+              scheduler.get().updateSchedule(snapshot, result);
+              scheduler.get().doneForNow();
+            }
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            if (t instanceof CancellationException) {
+              return;
+            }
+            scheduler.get().reportException(t);
+          }
+        });
+    }
+
+    @Override
+    public void receiveSnapshot(GlobalStateObject snapshot) {}
 
     @Override
     public void cancel() {
-      // TODO Auto-generated method stub
-
+      if (isComputing()) {
+        solver.terminateEarly();
+        while (solver.isSolving()) {
+          try {
+            Thread.sleep(5L);
+          } catch (final InterruptedException e) {
+            // stop waiting upon interrupt
+            break;
+          }
+        }
+      }
     }
 
     @Override
     public boolean isComputing() {
-      // TODO Auto-generated method stub
-      return false;
+      return solver.isSolving();
     }
-
   }
 
   static class SimulatedTimeSupplier implements StochasticSupplier<Solver> {
@@ -422,8 +452,7 @@ public class OptaplannerSolver implements Solver {
 
     @Override
     public RealtimeSolver get(long seed) {
-      // TODO Auto-generated method stub
-      return null;
+      return new OptaplannerRTSolver(builder, seed);
     }
   }
 
@@ -457,17 +486,20 @@ public class OptaplannerSolver implements Solver {
       final double cost = builder.getObjectiveFunction().computeCost(stats)
           * 60000000000d;
 
-      solver.scoreCalculator.resetWorkingSolution(solver.lastSolution);
+      final ScoreCalculator sc = solver.scoreCalculator;
+
+      sc.resetWorkingSolution(solver.lastSolution);
 
       System.out.println(" === RinSim ===");
       System.out.println(
         builder.getObjectiveFunction().printHumanReadableFormat(stats));
       System.out.println(" === Optaplanner ===");
       System.out
-          .println("Travel time: " + solver.getTravelTime() / 60000000000d);
-      System.out.println("Tardiness: " + solver.getTardiness() / 60000000000d);
-      System.out.println("Overtime: " + solver.getOvertime() / 60000000000d);
-      System.out.println("Total: " + solver.getSoftScore() / -60000000000d);
+          .println("Travel time: " + sc.getTravelTime() / 60000000000d);
+      System.out.println("Tardiness: " + sc.getTardiness() / 60000000000d);
+      System.out.println("Overtime: " + sc.getOvertime() / 60000000000d);
+      System.out.println(
+        "Total: " + sc.calculateScore().getSoftScore() / -60000000000d);
 
       // optaplanner has nanosecond precision
       final double optaplannerCost = solver.getSoftScore() * -1d;

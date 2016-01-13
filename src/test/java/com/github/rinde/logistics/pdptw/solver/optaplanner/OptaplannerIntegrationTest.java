@@ -20,14 +20,19 @@ import java.io.File;
 import org.junit.Test;
 
 import com.github.rinde.rinsim.central.Central;
+import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.experiment.Experiment;
+import com.github.rinde.rinsim.experiment.ExperimentResults;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
+import com.github.rinde.rinsim.experiment.PostProcessors;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.RouteRenderer;
+import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.pdptw.common.TimeLinePanel;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
 import com.github.rinde.rinsim.ui.View;
+import com.github.rinde.rinsim.ui.renderers.PDPModelRenderer;
 import com.github.rinde.rinsim.ui.renderers.PlaneRoadModelRenderer;
 import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 
@@ -38,17 +43,17 @@ import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 public class OptaplannerIntegrationTest {
 
   @Test
-  public void test() {
+  public void testSimulatedTime() {
     Experiment.build(Gendreau06ObjectiveFunction.instance())
         .withThreads(1)
         .addConfiguration(
           MASConfiguration.builder(Central
               .solverConfiguration(
-                OptaplannerSolver.builder()
-                    .setValidated(true)
-                    .setObjectiveFunction(
+                OptaplannerSolvers.builder()
+                    .withValidated(true)
+                    .withObjectiveFunction(
                       Gendreau06ObjectiveFunction.instance(30d))
-                    .setUnimprovedMsLimit(1L)
+                    .withUnimprovedMsLimit(1L)
                     .buildSolver()))
               .addEventHandler(AddParcelEvent.class,
                 AddParcelEvent.namedHandler())
@@ -65,5 +70,50 @@ public class OptaplannerIntegrationTest {
             .withAutoPlay())
         .showGui(false)
         .perform();
+  }
+
+  @Test
+  public void testRealtime() {
+
+    final ExperimentResults results =
+      Experiment.build(Gendreau06ObjectiveFunction.instance())
+          .withThreads(1)
+          .addConfiguration(
+            MASConfiguration.builder(
+              RtCentral.solverConfiguration(
+                OptaplannerSolvers.builder()
+                    .withValidated(true)
+                    .withObjectiveFunction(
+                      Gendreau06ObjectiveFunction.instance())
+                    .withUnimprovedMsLimit(5000L)
+                    .buildRealtimeSolver(),
+                ""))
+                .addEventHandler(AddParcelEvent.class,
+                  AddParcelEvent.namedHandler())
+                .build())
+          .addScenarios(
+            Gendreau06Parser.parser()
+                .addFile(
+                  new File("files/scenarios/gendreau06/req_rapide_1_240_24"))
+                .realtime()
+                .setNumParcels(5)
+                .parse())
+          .usePostProcessor(PostProcessors.statisticsPostProcessor())
+          .showGui(View.builder()
+              .with(PlaneRoadModelRenderer.builder())
+              .with(PDPModelRenderer.builder().withDestinationLines())
+              // .with(RoadUserRenderer.builder().withToStringLabel())
+              .with(RouteRenderer.builder())
+              .with(TimeLinePanel.builder())
+              .withSpeedUp(30)
+              .withAutoPlay())
+          .showGui(false)
+          .perform();
+
+    final StatisticsDTO stats =
+      (StatisticsDTO) results.getResults().iterator().next().getResultObject();
+
+    System.out.println(
+      Gendreau06ObjectiveFunction.instance().printHumanReadableFormat(stats));
   }
 }
