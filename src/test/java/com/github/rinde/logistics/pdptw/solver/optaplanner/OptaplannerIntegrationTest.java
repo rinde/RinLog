@@ -39,13 +39,17 @@ public class OptaplannerIntegrationTest {
 
   @Test
   public void test() {
-
     Experiment.build(Gendreau06ObjectiveFunction.instance())
         .withThreads(1)
         .addConfiguration(
           MASConfiguration.builder(Central
               .solverConfiguration(
-                OptaplannerSolver.validatedSupplier(1L, 30d)))
+                OptaplannerSolver.builder()
+                    .setValidated(true)
+                    .setObjectiveFunction(
+                      Gendreau06ObjectiveFunction.instance(30d))
+                    .setUnimprovedMsLimit(1L)
+                    .buildSolver()))
               .addEventHandler(AddParcelEvent.class,
                 AddParcelEvent.namedHandler())
               .build())
@@ -59,9 +63,7 @@ public class OptaplannerIntegrationTest {
             .with(RouteRenderer.builder())
             .with(TimeLinePanel.builder())
             .withAutoPlay())
-        .showGui(true)
+        .showGui(false)
         .perform();
-
   }
-
 }

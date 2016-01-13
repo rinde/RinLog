@@ -15,8 +15,11 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import org.junit.Test;
 
+import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolver.Validator;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.central.Solvers;
@@ -33,8 +36,13 @@ public class SolverTest {
 
   @Test
   public void test() throws InterruptedException {
-
-    final OptaplannerSolver s = new OptaplannerSolver(123, true, 1);
+    final OptaplannerSolver optaplannerSolver =
+      ((Validator) OptaplannerSolver.builder()
+          .setValidated(true)
+          .setUnimprovedMsLimit(2L)
+          .setObjectiveFunction(Gendreau06ObjectiveFunction.instance())
+          .buildSolver()
+          .get(123L)).solver;
 
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
         .addAvailableParcel(
@@ -45,22 +53,16 @@ public class SolverTest {
             .build())
         .build();
 
-    // final StatisticsDTO stats = Solvers.computeStats(gso, null);
+    final ImmutableList<ImmutableList<Parcel>> schedule =
+      optaplannerSolver.solve(gso);
+    final double optaPlannerCost = optaplannerSolver.getSoftScore() / -1000000d;
 
-    // final double cost =
-    // Gendreau06ObjectiveFunction.instance(50d).computeCost(stats);
-    // System.out.println(cost * 60000);
+    final double rinSimCost = Gendreau06ObjectiveFunction.instance(50d)
+        .computeCost(Solvers.computeStats(gso, schedule)) * 60000d;
 
-    final ImmutableList<ImmutableList<Parcel>> schedule = s.solve(gso);
-    System.out.println(s.getSoftScore());
-    System.out.println(schedule);
+    assertThat(optaPlannerCost).isWithin(.0001).of(rinSimCost);
 
-    final double cost = Gendreau06ObjectiveFunction.instance(50d)
-        .computeCost(Solvers.computeStats(gso, schedule));
-    System.out.println("cost: " + cost * 60000d);
-    // TODO create integration test that verifies score
-
-    // cases that are currently not covered:
+    // TODO cases that are currently not covered:
     // - partially (un)loaded parcel
   }
 
