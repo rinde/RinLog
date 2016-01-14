@@ -36,6 +36,10 @@ import javax.measure.unit.NonSI;
 import javax.measure.unit.SI;
 import javax.measure.unit.Unit;
 
+import org.optaplanner.benchmark.api.PlannerBenchmark;
+import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
+import org.optaplanner.benchmark.impl.PlannerBenchmarkRunner;
+import org.optaplanner.benchmark.impl.result.SolverBenchmarkResult;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.optaplanner.core.api.solver.event.BestSolutionChangedEvent;
@@ -65,6 +69,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -83,6 +88,25 @@ public final class OptaplannerSolvers {
   @CheckReturnValue
   public static Builder builder() {
     return Builder.defaultInstance();
+  }
+
+  public static Map<String, SolverConfig> getConfigsFromBenchmark(
+      String xmlLocation) {
+    final PlannerBenchmarkFactory plannerBenchmarkFactory =
+      PlannerBenchmarkFactory.createFromFreemarkerXmlResource(xmlLocation);
+    final PlannerBenchmark plannerBenchmark =
+      plannerBenchmarkFactory.buildPlannerBenchmark();
+
+    final PlannerBenchmarkRunner pbr =
+      (PlannerBenchmarkRunner) plannerBenchmark;
+
+    final ImmutableMap.Builder<String, SolverConfig> builder =
+      ImmutableMap.builder();
+    for (final SolverBenchmarkResult sbr : pbr.getPlannerBenchmarkResult()
+        .getSolverBenchmarkResultList()) {
+      builder.put(sbr.getName().replaceAll(" ", "-"), sbr.getSolverConfig());
+    }
+    return builder.build();
   }
 
   @CheckReturnValue
@@ -169,8 +193,15 @@ public final class OptaplannerSolvers {
 
   static org.optaplanner.core.api.solver.Solver createOptaplannerSolver(
       Builder builder, long seed) {
-    final SolverFactory factory = SolverFactory.createFromXmlResource(
-      builder.getSolverXmlResource());
+
+    final SolverFactory factory;
+    if (builder.getSolverConfig() != null) {
+      factory = SolverFactory.createEmpty();
+      factory.getSolverConfig().inherit(builder.getSolverConfig());
+    } else {
+      factory =
+        SolverFactory.createFromXmlResource(builder.getSolverXmlResource());
+    }
     final SolverConfig config = factory.getSolverConfig();
     config.setEntityClassList(
       ImmutableList.<Class<?>>of(
@@ -242,28 +273,38 @@ public final class OptaplannerSolvers {
 
     abstract String getSolverXmlResource();
 
+    @Nullable
+    abstract SolverConfig getSolverConfig();
+
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource());
+        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
-        getSolverXmlResource());
+        getSolverXmlResource(), getSolverConfig());
     }
 
     @CheckReturnValue
     public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms,
-        getSolverXmlResource());
+        getSolverXmlResource(), getSolverConfig());
     }
 
     @CheckReturnValue
     public Builder withSolverXmlResource(String solverXmlResource) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), solverXmlResource);
+        getUnimprovedMsLimit(), solverXmlResource, getSolverConfig());
+    }
+
+    // takes precedence over xml
+    @CheckReturnValue
+    public Builder withSolverConfig(SolverConfig solverConfig) {
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getSolverXmlResource(), solverConfig);
     }
 
     @CheckReturnValue
@@ -278,13 +319,13 @@ public final class OptaplannerSolvers {
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), 1L,
-        DEFAULT_SOLVER_XML_RESOURCE);
+        DEFAULT_SOLVER_XML_RESOURCE, null);
     }
 
     static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
-        long sec, String resource) {
+        long sec, String resource, @Nullable SolverConfig config) {
       return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
-          resource);
+          resource, config);
     }
   }
 
@@ -441,6 +482,11 @@ public final class OptaplannerSolvers {
       }
       return new OptaplannerSolver(builder, seed);
     }
+
+    @Override
+    public String toString() {
+      return "OptaplannerST";
+    }
   }
 
   static class RealtimeSupplier implements StochasticSupplier<RealtimeSolver> {
@@ -453,6 +499,11 @@ public final class OptaplannerSolvers {
     @Override
     public RealtimeSolver get(long seed) {
       return new OptaplannerRTSolver(builder, seed);
+    }
+
+    @Override
+    public String toString() {
+      return "OptaplannerRT";
     }
   }
 
