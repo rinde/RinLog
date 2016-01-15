@@ -42,6 +42,7 @@ public class SolverTest {
           .withValidated(true)
           .withUnimprovedMsLimit(10L)
           .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
+          .withName("test")
           .buildSolver()
           .get(123L)).solver;
 
@@ -79,6 +80,7 @@ public class SolverTest {
       ((Validator) OptaplannerSolvers.builder()
           .withValidated(true)
           .withUnimprovedMsLimit(10L)
+          .withName("test")
           .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
           .buildSolver()
           .get(123L)).solver;
