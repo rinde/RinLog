@@ -50,6 +50,8 @@ import org.optaplanner.core.config.solver.EnvironmentMode;
 import org.optaplanner.core.config.solver.SolverConfig;
 import org.optaplanner.core.config.solver.random.RandomType;
 import org.optaplanner.core.config.solver.termination.TerminationConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.central.GlobalStateObject;
@@ -79,6 +81,9 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Rinde van Lon
  */
 public final class OptaplannerSolvers {
+  static final Logger LOGGER =
+    LoggerFactory.getLogger(OptaplannerSolvers.class);
+
   static final Unit<Duration> TIME_UNIT = SI.MILLI(SI.SECOND);
   static final Unit<Velocity> SPEED_UNIT = NonSI.KILOMETERS_PER_HOUR;
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
@@ -276,61 +281,82 @@ public final class OptaplannerSolvers {
     @Nullable
     abstract SolverConfig getSolverConfig();
 
+    @Nullable
+    abstract String getName();
+
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig());
+        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig(),
+        getName());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
-        getSolverXmlResource(), getSolverConfig());
+        getSolverXmlResource(), getSolverConfig(), getName());
     }
 
     @CheckReturnValue
     public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms,
-        getSolverXmlResource(), getSolverConfig());
+        getSolverXmlResource(), getSolverConfig(), getName());
     }
 
     @CheckReturnValue
     public Builder withSolverXmlResource(String solverXmlResource) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), solverXmlResource, getSolverConfig());
+        getUnimprovedMsLimit(), solverXmlResource, getSolverConfig(),
+        getName());
     }
 
     // takes precedence over xml
     @CheckReturnValue
     public Builder withSolverConfig(SolverConfig solverConfig) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource(), solverConfig);
+        getUnimprovedMsLimit(), getSolverXmlResource(), solverConfig,
+        getName());
+    }
+
+    // mandatory, used to identify solver in logs/gui
+    public Builder withName(String name) {
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig(),
+        name);
     }
 
     @CheckReturnValue
     public StochasticSupplier<Solver> buildSolver() {
+      checkPreconditions();
       return new SimulatedTimeSupplier(this);
     }
 
     @CheckReturnValue
     public StochasticSupplier<RealtimeSolver> buildRealtimeSolver() {
+      checkPreconditions();
       return new RealtimeSupplier(this);
+    }
+
+    void checkPreconditions() {
+      checkArgument(getName() != null);
     }
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), 1L,
-        DEFAULT_SOLVER_XML_RESOURCE, null);
+        DEFAULT_SOLVER_XML_RESOURCE, null, null);
     }
 
     static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
-        long sec, String resource, @Nullable SolverConfig config) {
+        long sec, String resource, @Nullable SolverConfig config,
+        @Nullable String name) {
       return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
-          resource, config);
+          resource, config, name);
     }
   }
 
   static class OptaplannerSolver implements Solver {
     private final org.optaplanner.core.api.solver.Solver solver;
+    private final String name;
     private long lastSoftScore;
     @Nullable
     PDPSolution lastSolution;
@@ -340,6 +366,7 @@ public final class OptaplannerSolvers {
       solver = createOptaplannerSolver(builder, seed);
       scoreCalculator = new ScoreCalculator();
       lastSolution = null;
+      name = "Optaplanner-" + verifyNotNull(builder.getName());
     }
 
     @Override
@@ -367,6 +394,10 @@ public final class OptaplannerSolvers {
       return solver.isSolving();
     }
 
+    boolean isTerminateEarly() {
+      return solver.isTerminateEarly();
+    }
+
     void terminateEarly() {
       solver.terminateEarly();
     }
@@ -375,9 +406,15 @@ public final class OptaplannerSolvers {
     long getSoftScore() {
       return lastSoftScore;
     }
+
+    @Override
+    public String toString() {
+      return name;
+    }
   }
 
   static class OptaplannerRTSolver implements RealtimeSolver {
+    private final String name;
     final OptaplannerSolver solver;
     Optional<Scheduler> scheduler;
     @Nullable
@@ -386,10 +423,12 @@ public final class OptaplannerSolvers {
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);
       scheduler = Optional.absent();
+      name = "OptaplannerRT-" + verifyNotNull(b.getName());
     }
 
     @Override
     public void init(final Scheduler sched) {
+      LOGGER.trace("OptaplannerRTSolver.init: {}", name);
       checkState(!scheduler.isPresent(),
         "Solver can be initialized only once.");
       scheduler = Optional.of(sched);
@@ -402,6 +441,9 @@ public final class OptaplannerSolvers {
               && event.getNewBestSolution().getScore().getHardScore() == 0) {
             final ImmutableList<ImmutableList<Parcel>> schedule =
               toSchedule(event.getNewBestSolution());
+
+            LOGGER.info("Found new best solution, update schedule. {}",
+              solver.isSolving());
             sched.updateSchedule(verifyNotNull(lastSnapshot), schedule);
           }
         }
@@ -414,6 +456,7 @@ public final class OptaplannerSolvers {
       cancel();
       lastSnapshot = snapshot;
 
+      LOGGER.info("start rt solver");
       final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
         scheduler.get().getSharedExecutor()
             .submit(Solvers.createSolverCallable(solver, snapshot));
@@ -429,8 +472,12 @@ public final class OptaplannerSolvers {
                 new IllegalArgumentException("Solver.solve(..) must return a "
                     + "non-null result. Solver: " + solver));
             } else {
+              LOGGER.info("onSuccess, update schedule");
               scheduler.get().updateSchedule(snapshot, result);
-              scheduler.get().doneForNow();
+              if (!solver.isTerminateEarly()) {
+                LOGGER.info("doneForNow");
+                scheduler.get().doneForNow();
+              }
             }
           }
 
@@ -450,6 +497,7 @@ public final class OptaplannerSolvers {
     @Override
     public void cancel() {
       if (isComputing()) {
+        LOGGER.info("Terminate early");
         solver.terminateEarly();
         while (solver.isSolving()) {
           try {
@@ -459,12 +507,18 @@ public final class OptaplannerSolvers {
             break;
           }
         }
+        LOGGER.info("Solver terminated early.");
       }
     }
 
     @Override
     public boolean isComputing() {
       return solver.isSolving();
+    }
+
+    @Override
+    public String toString() {
+      return name;
     }
   }
 
