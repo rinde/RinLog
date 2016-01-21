@@ -492,7 +492,36 @@ public final class OptaplannerSolvers {
     }
 
     @Override
-    public void receiveSnapshot(GlobalStateObject snapshot) {}
+    public void receiveSnapshot(GlobalStateObject snapshot) {
+      // this is the snapshot the solver is currently using
+      final GlobalStateObject last = lastSnapshot;
+      if (last == null) {
+        return;
+      }
+      // if something significant happens -> restart solver
+      boolean significantChangeDetected = false;
+      for (int i = 0; i < snapshot.getVehicles().size(); i++) {
+        // when a vehicle has a destination, it has committed to perform a
+        // specific service operation, this has implications for the schedule:
+        // this specific order can no longer be exchanged with other vehicles.
+        // Therefore, when this is detected we want to restart the solver such
+        // that it won't waste time trying to optimize based on outdated
+        // assumptions. Note that we are only interested in events where a
+        // vehicle takes upon a *new* commitment (not when it is finished with
+        // an old commitment).
+        if (snapshot.getVehicles().get(i).getDestination().isPresent()
+            && !last.getVehicles().get(i).getDestination()
+                .equals(snapshot.getVehicles().get(i).getDestination())) {
+          significantChangeDetected = true;
+          break;
+        }
+      }
+      if (significantChangeDetected) {
+        LOGGER.info(
+          "Vehicle destination commitment Change detected -> restart solver.");
+        problemChanged(snapshot);
+      }
+    }
 
     @Override
     public void cancel() {
