@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
 import javax.annotation.CheckReturnValue;
@@ -372,17 +373,30 @@ public final class OptaplannerSolvers {
     @Override
     public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
         throws InterruptedException {
+      final ImmutableList<ImmutableList<Parcel>> sol = doSolve(state);
+
+      checkState(sol != null,
+        "Optaplanner didn't find a solution satisfying all hard constraints.");
+
+      final PDPSolution solution = (PDPSolution) solver.getBestSolution();
+      final HardSoftLongScore score = solution.getScore();
+      lastSolution = solution;
+      lastSoftScore = score.getSoftScore();
+      return toSchedule(solution);
+    }
+
+    // actual solving, returns null when no valid solution was found
+    @Nullable
+    public ImmutableList<ImmutableList<Parcel>> doSolve(GlobalStateObject state)
+        throws InterruptedException {
       final PDPSolution problem = convert(state);
       solver.solve(problem);
 
       final PDPSolution solution = (PDPSolution) solver.getBestSolution();
-      lastSolution = solution;
-
       final HardSoftLongScore score = solution.getScore();
-
-      checkState(score.getHardScore() == 0,
-        "Optaplanner didn't find a solution satisfying all hard constraints.");
-      lastSoftScore = score.getSoftScore();
+      if (score.getHardScore() != 0) {
+        return null;
+      }
       return toSchedule(solution);
     }
 
@@ -450,6 +464,25 @@ public final class OptaplannerSolvers {
       });
     }
 
+    static class OptaplannerCallable
+        implements Callable<ImmutableList<ImmutableList<Parcel>>> {
+
+      final OptaplannerSolver solver;
+      final GlobalStateObject state;
+
+      OptaplannerCallable(OptaplannerSolver solv, GlobalStateObject st) {
+        solver = solv;
+        state = st;
+      }
+
+      @Nullable
+      @Override
+      public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
+        return solver.doSolve(state);
+      }
+
+    }
+
     @Override
     public void problemChanged(final GlobalStateObject snapshot) {
       checkState(scheduler.isPresent());
@@ -468,9 +501,15 @@ public final class OptaplannerSolvers {
           public void onSuccess(
               @Nullable ImmutableList<ImmutableList<Parcel>> result) {
             if (result == null) {
-              scheduler.get().reportException(
-                new IllegalArgumentException("Solver.solve(..) must return a "
-                    + "non-null result. Solver: " + solver));
+              if (solver.isTerminateEarly()) {
+                LOGGER.info(
+                  "Solver was terminated early and didn't have enough time to "
+                      + "find a valid solution.");
+              } else {
+                scheduler.get().reportException(
+                  new IllegalArgumentException("Solver.solve(..) must return a "
+                      + "non-null result. Solver: " + solver));
+              }
             } else {
               LOGGER.info("onSuccess, update schedule");
               scheduler.get().updateSchedule(snapshot, result);
