@@ -43,7 +43,7 @@ public class SolverTest {
           .withUnimprovedMsLimit(10L)
           .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
           .withName("test")
-          .buildSolver()
+          .buildSolverSupplier()
           .get(123L)).solver;
 
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
@@ -82,7 +82,7 @@ public class SolverTest {
           .withUnimprovedMsLimit(10L)
           .withName("test")
           .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
-          .buildSolver()
+          .buildSolverSupplier()
           .get(123L)).solver;
 
     compare(optaplannerSolver, gso);

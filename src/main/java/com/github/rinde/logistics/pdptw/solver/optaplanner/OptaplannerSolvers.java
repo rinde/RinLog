@@ -327,13 +327,13 @@ public final class OptaplannerSolvers {
     }
 
     @CheckReturnValue
-    public StochasticSupplier<Solver> buildSolver() {
+    public StochasticSupplier<Solver> buildSolverSupplier() {
       checkPreconditions();
       return new SimulatedTimeSupplier(this);
     }
 
     @CheckReturnValue
-    public StochasticSupplier<RealtimeSolver> buildRealtimeSolver() {
+    public StochasticSupplier<RealtimeSolver> buildRealtimeSolverSupplier() {
       checkPreconditions();
       return new RealtimeSupplier(this);
     }

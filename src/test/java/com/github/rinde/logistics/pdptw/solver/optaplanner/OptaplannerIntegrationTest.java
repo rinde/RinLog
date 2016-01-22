@@ -55,7 +55,7 @@ public class OptaplannerIntegrationTest {
                       Gendreau06ObjectiveFunction.instance(30d))
                     .withUnimprovedMsLimit(1L)
                     .withName("test")
-                    .buildSolver()))
+                    .buildSolverSupplier()))
               .addEventHandler(AddParcelEvent.class,
                 AddParcelEvent.namedHandler())
               .build())
@@ -88,7 +88,7 @@ public class OptaplannerIntegrationTest {
                       Gendreau06ObjectiveFunction.instance())
                     .withUnimprovedMsLimit(5000L)
                     .withName("test")
-                    .buildRealtimeSolver(),
+                    .buildRealtimeSolverSupplier(),
                 ""))
                 .addEventHandler(AddParcelEvent.class,
                   AddParcelEvent.namedHandler())
