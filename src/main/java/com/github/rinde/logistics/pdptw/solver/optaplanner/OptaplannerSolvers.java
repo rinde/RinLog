@@ -464,25 +464,6 @@ public final class OptaplannerSolvers {
       });
     }
 
-    static class OptaplannerCallable
-        implements Callable<ImmutableList<ImmutableList<Parcel>>> {
-
-      final OptaplannerSolver solver;
-      final GlobalStateObject state;
-
-      OptaplannerCallable(OptaplannerSolver solv, GlobalStateObject st) {
-        solver = solv;
-        state = st;
-      }
-
-      @Nullable
-      @Override
-      public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
-        return solver.doSolve(state);
-      }
-
-    }
-
     @Override
     public void problemChanged(final GlobalStateObject snapshot) {
       checkState(scheduler.isPresent());
@@ -492,7 +473,7 @@ public final class OptaplannerSolvers {
       LOGGER.info("start rt solver");
       final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
         scheduler.get().getSharedExecutor()
-            .submit(Solvers.createSolverCallable(solver, snapshot));
+            .submit(new OptaplannerCallable(solver, snapshot));
 
       Futures.addCallback(future,
         new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
@@ -588,6 +569,25 @@ public final class OptaplannerSolvers {
     public String toString() {
       return name;
     }
+  }
+
+  static class OptaplannerCallable
+      implements Callable<ImmutableList<ImmutableList<Parcel>>> {
+
+    final OptaplannerSolver solver;
+    final GlobalStateObject state;
+
+    OptaplannerCallable(OptaplannerSolver solv, GlobalStateObject st) {
+      solver = solv;
+      state = st;
+    }
+
+    @Nullable
+    @Override
+    public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
+      return solver.doSolve(state);
+    }
+
   }
 
   static class SimulatedTimeSupplier implements StochasticSupplier<Solver> {
