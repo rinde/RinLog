@@ -51,7 +51,6 @@
 		<rinsim.version>4.1.0-SNAPSHOT</rinsim.version>
 		<sonar.language>java</sonar.language>
 		<reference.version>1.0.0</reference.version>
-		<gc.args>-Xloggc:gc.log -XX:+PrintGCApplicationStoppedTime</gc.args>
 	</properties>
 
 	<build>
@@ -64,7 +63,6 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.19</version>
 					<configuration>
-						<argLine>${gc.args}</argLine>
 						<systemPropertyVariables>
 							<jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
 						</systemPropertyVariables>
