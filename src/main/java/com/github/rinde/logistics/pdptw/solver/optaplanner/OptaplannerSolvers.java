@@ -18,6 +18,7 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verify;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import java.util.ArrayList;
@@ -585,6 +586,7 @@ public final class OptaplannerSolvers {
     @Nullable
     @Override
     public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
+      verify(!solver.isSolving(), "Solver is already solving, this is a bug.");
       return solver.doSolve(state);
     }
 
