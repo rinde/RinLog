@@ -466,7 +466,7 @@ public final class OptaplannerSolvers {
     }
 
     @Override
-    public void problemChanged(final GlobalStateObject snapshot) {
+    public synchronized void problemChanged(final GlobalStateObject snapshot) {
       checkState(scheduler.isPresent());
       cancel();
       lastSnapshot = snapshot;
@@ -545,7 +545,7 @@ public final class OptaplannerSolvers {
     }
 
     @Override
-    public void cancel() {
+    public synchronized void cancel() {
       if (isComputing()) {
         LOGGER.info("Terminate early");
         solver.terminateEarly();
@@ -562,7 +562,7 @@ public final class OptaplannerSolvers {
     }
 
     @Override
-    public boolean isComputing() {
+    public synchronized boolean isComputing() {
       return solver.isSolving();
     }
 
