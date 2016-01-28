@@ -102,7 +102,7 @@ public class RtSolverBidder
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
       final Parcel parcel, final long time) {
-    LOGGER.trace("callForBids {} {} {}", auctioneer, parcel, time);
+    LOGGER.trace("receive callForBids {} {} {}", auctioneer, parcel, time);
     cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
     parcelAuctioneers.put(parcel, auctioneer);
 
@@ -121,10 +121,10 @@ public class RtSolverBidder
     ((Truck) vehicle.get()).getEventAPI().addListener(new Listener() {
       @Override
       public void handleEvent(Event e) {
+        LOGGER.trace("{} Route change -> reauction", vehicle.get());
         reauction();
       }
-    },
-      Truck.TruckEvent.ROUTE_CHANGE);
+    }, Truck.TruckEvent.ROUTE_CHANGE);
   }
 
   @Override
@@ -138,6 +138,8 @@ public class RtSolverBidder
       lastAuctionWinTime = time;
     } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
         && !assignedParcels.isEmpty()) {
+      LOGGER.trace("{} We haven't won an auction for a while -> reauction",
+        this);
       // we haven't won an auction for a while
       reauction();
     }
@@ -208,7 +210,8 @@ public class RtSolverBidder
         final double cost =
           objectiveFunction.computeCost(Solvers.computeStats(state, schedule));
 
-        LOGGER.trace("baseline {}, newcost {}", baseline, cost);
+        LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
+          baseline, cost);
 
         final double bidValue =
           bidFunction.computeBidValue(currentRoute.size() + 2, cost - baseline);
@@ -272,11 +275,13 @@ public class RtSolverBidder
     checkArgument(auctioneer.getWinner().equals(this));
   }
 
+  @SuppressWarnings({"null", "unused"})
   void reauction() {
     if (assignedParcels.isEmpty()) {
       return;
     }
-
+    LOGGER.trace("{} Considering a reauction, assignedParcels: {}.", this,
+      assignedParcels.size());
     final ImmutableList<Parcel> currentRoute = ImmutableList
         .copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
@@ -335,6 +340,7 @@ public class RtSolverBidder
           && !reauctioning.get()
           && !toSwap.equals(lastReceivedParcel)) {
         reauctioning.set(true);
+        LOGGER.trace("Found most expensive parcel for reauction: {}.", toSwap);
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
         // parcelAuctioneers
         // .entrySet()) {
@@ -349,6 +355,7 @@ public class RtSolverBidder
           baseline - lowestCost);
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
           toSwap, bidValue);
+
         auct.auctionParcel(this, state.getTime(), initialBid,
           new Listener() {
             @Override

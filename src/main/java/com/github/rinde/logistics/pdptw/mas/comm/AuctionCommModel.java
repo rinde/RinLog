@@ -286,6 +286,9 @@ public class AuctionCommModel<T extends Bid<T>>
           // end of auction, choose winner
           final T winningBid = Collections.min(bids);
           LOGGER.trace("Winning bid : {}", winningBid);
+          if (initiator.isPresent()) {
+            LOGGER.trace(" > reference bid {}", bids.iterator().next());
+          }
 
           winner = Optional.of(winningBid.getBidder());
 
@@ -338,6 +341,7 @@ public class AuctionCommModel<T extends Bid<T>>
         T bidToBeat, Listener cb) {
       LOGGER.trace("*** Start RE-auction at {} for {}. Prev auctions: {} ***",
         time, parcel, auctions);
+      LOGGER.trace(" > base line bid: {}", bidToBeat);
       checkRealtime();
 
       checkNotNull(currentOwner);
