@@ -211,10 +211,14 @@ public class Truck
   public void setSimulator(SimulatorAPI api) {
     try {
       api.register(communicator);
-    } catch (final IllegalArgumentException e) {}
+    } catch (final IllegalArgumentException e) {
+      // may not be supported
+    }
     try {
       api.register(routePlanner);
-    } catch (final IllegalArgumentException e) {}
+    } catch (final IllegalArgumentException e) {
+      // may not be supported
+    }
   }
 
   @Override

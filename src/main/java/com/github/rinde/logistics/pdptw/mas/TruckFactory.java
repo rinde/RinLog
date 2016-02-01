@@ -55,7 +55,7 @@ public interface TruckFactory
   boolean getLazyComputation();
 
   @AutoValue
-  public abstract static class DefaultTruckFactory implements TruckFactory {
+  abstract class DefaultTruckFactory implements TruckFactory {
 
     private static final long serialVersionUID = -5872180422731872369L;
 
@@ -79,7 +79,7 @@ public interface TruckFactory
     }
   }
 
-  public static class Builder {
+  class Builder {
     @Nullable
     StochasticSupplier<? extends RoutePlanner> routePlanner;
     @Nullable

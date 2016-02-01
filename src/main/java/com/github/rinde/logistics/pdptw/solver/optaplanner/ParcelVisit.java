@@ -47,14 +47,6 @@ public class ParcelVisit implements Visit {
   // class
   static final String PREV_VISIT = "previousVisit";
 
-  // problem facts
-  private Parcel parcel;
-  private VisitType visitType;
-  private Point position;
-  private TimeWindow timeWindow;
-  private long serviceDuration;
-  private long latestStartTime;
-
   // planning variables
   Visit previousVisit;
 
@@ -67,45 +59,13 @@ public class ParcelVisit implements Visit {
   @Nullable
   ParcelVisit associated;
 
-  // Difficulty should be implemented ascending: easy entities are lower,
-  // difficult entities are higher.
-  public static class VisitStrengthComparator implements Comparator<Visit> {
-
-    public VisitStrengthComparator() {}
-
-    @Override
-    public int compare(Visit o1, Visit o2) {
-
-      final boolean is1pv = o1 instanceof ParcelVisit;
-      final boolean is2pv = o2 instanceof ParcelVisit;
-
-      if (!is1pv && !is2pv) {
-        return 0;
-      } else if (!is1pv) {
-        return -1;
-      } else if (!is2pv) {
-        return 1;
-      }
-      // is1pv && is2pv
-      final ParcelDTO p1 = ((ParcelVisit) o1).getParcel().getDto();
-      final ParcelDTO p2 = ((ParcelVisit) o2).getParcel().getDto();
-
-      if (p1.equals(p2)) {
-        return 0;
-      }
-
-      return ComparisonChain.start()
-          // small time windows are more difficult, therefore: reverse ordering
-          .compare(
-            p1.getPickupTimeWindow().length()
-                + p1.getDeliveryTimeWindow().length(),
-            p2.getPickupTimeWindow().length()
-                + p2.getDeliveryTimeWindow().length(),
-            Ordering.natural().reverse())
-          .result();
-    }
-
-  }
+  // problem facts
+  private Parcel parcel;
+  private VisitType visitType;
+  private Point position;
+  private TimeWindow timeWindow;
+  private long serviceDuration;
+  private long latestStartTime;
 
   ParcelVisit() {}
 
@@ -122,10 +82,6 @@ public class ParcelVisit implements Visit {
       serviceDuration = Util.msToNs(parcel.getPickupDuration());
     }
     latestStartTime = timeWindow.end() - serviceDuration;
-  }
-
-  enum VisitType {
-    PICKUP, DELIVER;
   }
 
   public Parcel getParcel() {
@@ -247,5 +203,49 @@ public class ParcelVisit implements Visit {
         && Objects.equals(lpv.getServiceDuration(), rpv.getServiceDuration())
         && Objects.equals(lpv.timeWindow, rpv.timeWindow)
         && Objects.equals(lpv.latestStartTime, rpv.latestStartTime);
+  }
+
+  enum VisitType {
+    PICKUP, DELIVER;
+  }
+
+  // Difficulty should be implemented ascending: easy entities are lower,
+  // difficult entities are higher.
+  public static class VisitStrengthComparator implements Comparator<Visit> {
+
+    public VisitStrengthComparator() {}
+
+    @Override
+    public int compare(Visit o1, Visit o2) {
+
+      final boolean is1pv = o1 instanceof ParcelVisit;
+      final boolean is2pv = o2 instanceof ParcelVisit;
+
+      if (!is1pv && !is2pv) {
+        return 0;
+      } else if (!is1pv) {
+        return -1;
+      } else if (!is2pv) {
+        return 1;
+      }
+      // is1pv && is2pv
+      final ParcelDTO p1 = ((ParcelVisit) o1).getParcel().getDto();
+      final ParcelDTO p2 = ((ParcelVisit) o2).getParcel().getDto();
+
+      if (p1.equals(p2)) {
+        return 0;
+      }
+
+      return ComparisonChain.start()
+          // small time windows are more difficult, therefore: reverse ordering
+          .compare(
+            p1.getPickupTimeWindow().length()
+                + p1.getDeliveryTimeWindow().length(),
+            p2.getPickupTimeWindow().length()
+                + p2.getDeliveryTimeWindow().length(),
+            Ordering.natural().reverse())
+          .result();
+    }
+
   }
 }

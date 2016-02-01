@@ -30,7 +30,7 @@ import com.github.rinde.rinsim.central.arrays.SolutionObject;
 /**
  * This class contains a heuristic implementation of the solver interface.
  * @author Tony Wauters
- * 
+ *
  */
 public class HeuristicSolver implements SingleVehicleArraysSolver {
 
@@ -40,12 +40,12 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
 
   private final RandomGenerator rand;
 
-  public HeuristicSolver(RandomGenerator rand) {
-    this.rand = rand;
+  public HeuristicSolver(RandomGenerator r) {
+    rand = r;
   }
 
   /**
-   * Heuristic implementation of the solver interface method
+   * Heuristic implementation of the solver interface method.
    */
   @Override
   public SolutionObject solve(int[][] travelTime, int[] releaseDates,
@@ -77,8 +77,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     final int laListSize = 2000;
     final int maxIterations = 100000;
     final SolutionObject bestSol = performLateAcceptance(travelTime,
-        releaseDates, dueDates, servicePairs, serviceTime, pickupToDeliveryMap,
-        deliveryToPickupMap, laListSize, maxIterations);
+      releaseDates, dueDates, servicePairs, serviceTime, pickupToDeliveryMap,
+      deliveryToPickupMap, laListSize, maxIterations);
 
     // ADDED BY RINDE TO CONFORM TO CHANGED SOLUTION OBJECT SPEC
     // SEE SolutionObject.arrivalTimes
@@ -101,9 +101,9 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     final int n = releaseDates.length;
 
     final List<Integer> perm0 = generateFeasibleRandomPermutation(n,
-        servicePairs);
+      servicePairs);
     final SolutionObject sol0 = construct(intListToArray(perm0), travelTime,
-        releaseDates, dueDates, servicePairs, serviceTime);
+      releaseDates, dueDates, servicePairs, serviceTime);
 
     boolean improved = true;
 
@@ -134,13 +134,13 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
 
           newPerm.add(j, el);
           final SolutionObject newSol = construct(intListToArray(newPerm),
-              travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+            travelTime, releaseDates, dueDates, servicePairs, serviceTime);
           if (newSol.objectiveValue < bestSol.objectiveValue) {
             bestSol = newSol;
             bestPerm = newPerm;
             improved = true;
             if (DEBUG) {
-              System.out.println("Found new best solution with objective: "
+              System.out.println("Found new best solution with objective : "
                   + newSol.objectiveValue);
             }
           }
@@ -159,7 +159,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
           final int el = newPerm.remove(i);
           newPerm.add(j, el);
           final SolutionObject newSol = construct(intListToArray(newPerm),
-              travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+            travelTime, releaseDates, dueDates, servicePairs, serviceTime);
           if (newSol.objectiveValue < bestSol.objectiveValue) {
             bestSol = newSol;
             bestPerm = newPerm;
@@ -185,9 +185,9 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     final int n = releaseDates.length;
 
     final List<Integer> perm0 = generateFeasibleRandomPermutation(n,
-        servicePairs);
+      servicePairs);
     final SolutionObject sol0 = construct(intListToArray(perm0), travelTime,
-        releaseDates, dueDates, servicePairs, serviceTime);
+      releaseDates, dueDates, servicePairs, serviceTime);
 
     List<Integer> current = new ArrayList<Integer>(perm0);
     int currentObj = sol0.objectiveValue;
@@ -264,7 +264,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
       }
 
       final SolutionObject newSol = construct(intListToArray(newPerm),
-          travelTime, releaseDates, dueDates, servicePairs, serviceTime);
+        travelTime, releaseDates, dueDates, servicePairs, serviceTime);
       if (newSol.objectiveValue <= laList[it % L]) {
         // accept
         current = newPerm;
@@ -275,7 +275,8 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
           bestSol = newSol;
           bestPerm = newPerm;
           // if (DEBUG)
-          // System.out.println("Found new best solution with objective: "+newSol.objectiveValue);
+          // System.out.println("Found new best solution with objective:
+          // "+newSol.objectiveValue);
         }
 
       }
@@ -333,7 +334,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
 
   /**
    * Constructive heuristic, builds a solution from a given permutation
-   * 
+   *
    * @param permutation
    * @param travelTime
    * @param releaseDates
@@ -357,7 +358,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     for (int i = 1; i < n; i++) {
       final int next = permutation[i];
       arrivalTimes[next] = Math.max(previousT + travelTime[previous][next],
-          releaseDates[next]);
+        releaseDates[next]);
       totalTravelTime += travelTime[previous][next];
 
       previousT = arrivalTimes[next] + serviceTime[next];

@@ -77,10 +77,10 @@ public class NegotiatingBidder extends SolverBidder {
     FIRST_DESTINATION_POSITION;
   }
 
+  Optional<SimSolverBuilder> simSolvBuilder;
   private final Solver negotiationSolver;
   private final int negotiators;
   private final SelectNegotiatorsHeuristic heuristic;
-  Optional<SimSolverBuilder> simSolvBuilder;
 
   /**
    * Create a new instance.
@@ -109,7 +109,8 @@ public class NegotiatingBidder extends SolverBidder {
 
     checkState(
       pos.size() >= negotiators,
-      "There are not enough vehicles in the system to hold a %s-party negotiation, there are only %s vehicle(s).",
+      "There are not enough vehicles in the system to hold a %s-party "
+          + "negotiation, there are only %s vehicle(s).",
       negotiators, pos.size());
     Collections.sort(pos, TRUCK_DIST_COMPARATOR);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,

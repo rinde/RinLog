@@ -21,10 +21,13 @@ import com.github.rinde.rinsim.util.TimeWindow;
  *
  * @author Rinde van Lon
  */
-class Util {
+final class Util {
+  private static final long MS_TO_NS = 1000000L;
+
+  private Util() {}
 
   static long msToNs(long duration) {
-    return duration * 1000000L;
+    return duration * MS_TO_NS;
   }
 
   static TimeWindow msToNs(TimeWindow tw) {

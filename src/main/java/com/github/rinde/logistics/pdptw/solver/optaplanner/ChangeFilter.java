@@ -25,6 +25,8 @@ import org.optaplanner.core.impl.score.director.ScoreDirector;
  */
 public class ChangeFilter implements SelectionFilter<ChangeMove> {
 
+  public ChangeFilter() {}
+
   // TODO precedence constraint
 
   @Override

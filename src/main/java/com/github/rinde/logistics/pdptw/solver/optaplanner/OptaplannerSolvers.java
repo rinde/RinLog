@@ -358,12 +358,13 @@ public final class OptaplannerSolvers {
   }
 
   static class OptaplannerSolver implements Solver {
-    private final org.optaplanner.core.api.solver.Solver solver;
-    private final String name;
-    private long lastSoftScore;
     @Nullable
     PDPSolution lastSolution;
     final ScoreCalculator scoreCalculator;
+
+    private final org.optaplanner.core.api.solver.Solver solver;
+    private final String name;
+    private long lastSoftScore;
 
     OptaplannerSolver(Builder builder, long seed) {
       solver = createOptaplannerSolver(builder, seed);
@@ -430,12 +431,12 @@ public final class OptaplannerSolvers {
   }
 
   static class OptaplannerRTSolver implements RealtimeSolver {
-    private final String name;
     final OptaplannerSolver solver;
     final AtomicBoolean permissionToRun;
     Optional<Scheduler> scheduler;
     @Nullable
     GlobalStateObject lastSnapshot;
+    private final String name;
 
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);

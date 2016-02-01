@@ -67,7 +67,7 @@ public final class Opt2 {
   static final Logger LOGGER =
     LoggerFactory.getLogger(Opt2.class);
 
-  Opt2() {}
+  private Opt2() {}
 
   public static Builder builder() {
     return Builder.create(null, null, false);
@@ -125,7 +125,7 @@ public final class Opt2 {
 
     @CheckReturnValue
     StochasticSupplier<Solver> buildSolverSupplier(
-        final @Nullable ProgressListener<Parcel> progressListener) {
+        @Nullable final ProgressListener<Parcel> progressListener) {
       final ObjectiveFunction objFunc = objFunc();
       checkArgument(objFunc != null,
         "An objective function must be defined.");

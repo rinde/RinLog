@@ -48,9 +48,9 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     implements RtSolverUser {
 
   Deque<Parcel> route;
-  private final RealtimeSolver solver;
-  Optional<RtSimSolver> simSolver;
   Optional<PDPRoadModel> pdpRoadModel;
+  Optional<RtSimSolver> simSolver;
+  private final RealtimeSolver solver;
 
   RtSolverRoutePlanner(RealtimeSolver s) {
     route = newLinkedList();

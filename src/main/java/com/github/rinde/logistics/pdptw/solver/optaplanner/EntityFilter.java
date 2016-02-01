@@ -24,6 +24,8 @@ import org.optaplanner.core.impl.score.director.ScoreDirector;
  */
 public class EntityFilter implements SelectionFilter<Visit> {
 
+  public EntityFilter() {}
+
   @Override
   public boolean accept(ScoreDirector scoreDirector, Visit selection) {
     if (selection.getVehicle().equals(selection)

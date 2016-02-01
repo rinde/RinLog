@@ -36,7 +36,7 @@ public interface Communicator {
   /**
    * Event type for {@link Communicator}.
    */
-  public enum CommunicatorEventType {
+  enum CommunicatorEventType {
     /**
      * Indicates that the communicator received information indicating an
      * environment change which caused the task assignment to change.

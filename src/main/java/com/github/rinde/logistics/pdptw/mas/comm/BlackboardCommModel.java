@@ -116,10 +116,12 @@ public class BlackboardCommModel extends AbstractCommModel<BlackboardUser> {
    */
   @AutoValue
   public static class Builder extends
-    AbstractModelBuilder<BlackboardCommModel, BlackboardUser> implements
-    Serializable {
+      AbstractModelBuilder<BlackboardCommModel, BlackboardUser> implements
+      Serializable {
 
     private static final long serialVersionUID = 7935679222838329436L;
+
+    Builder() {}
 
     @Override
     public BlackboardCommModel build(DependencyProvider dependencyProvider) {

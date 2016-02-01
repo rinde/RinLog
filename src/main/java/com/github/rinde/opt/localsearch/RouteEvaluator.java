@@ -19,10 +19,10 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Implementations of this interface should assign a cost value to a route.
- * 
+ *
+ * @author Rinde van Lon
  * @param <C> The context type.
  * @param <T> The generic type of a route.
- * @author Rinde van Lon 
  */
 public interface RouteEvaluator<C, T> {
 

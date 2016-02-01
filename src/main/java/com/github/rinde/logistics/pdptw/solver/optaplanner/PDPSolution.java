@@ -35,9 +35,6 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   static final String PARCEL_RANGE = "parcelRange";
   static final String VEHICLE_RANGE = "vehicleRange";
 
-  // problem facts
-  private long startTime;
-
   @PlanningEntityCollectionProperty
   @ValueRangeProvider(id = PARCEL_RANGE)
   List<ParcelVisit> parcelList;
@@ -47,6 +44,8 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   List<Vehicle> vehicleList;
 
   HardSoftLongScore score;
+
+  private long startTime;
 
   PDPSolution() {}
 

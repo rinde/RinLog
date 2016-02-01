@@ -71,7 +71,6 @@ public class RtSolverBidder
   // 5 minutes
   private static final long MAX_LOSING_TIME = 5 * 60 * 1000;
 
-  private final RealtimeSolver solver;
   final ObjectiveFunction objectiveFunction;
   Optional<RtSimSolver> solverHandle;
   final Queue<CallForBids> cfbQueue;
@@ -82,8 +81,9 @@ public class RtSolverBidder
   AtomicBoolean computing;
 
   final BidFunction bidFunction;
-
   long lastAuctionWinTime;
+
+  private final RealtimeSolver solver;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
       BidFunction bidFunc) {
@@ -188,7 +188,7 @@ public class RtSolverBidder
     final EventAPI ev = solverHandle.get().getEventAPI();
     final RtSolverBidder bidder = this;
     currentListener = new Listener() {
-      boolean exec = false;
+      boolean exec;
 
       @Override
       public void handleEvent(Event e) {
@@ -230,37 +230,6 @@ public class RtSolverBidder
     LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
       parcels);
     solverHandle.get().solve(state);
-  }
-
-  public interface BidFunction {
-    double computeBidValue(int numLocations, double additionalCost);
-  }
-
-  public enum BidFunctions implements BidFunction {
-    PLAIN {
-      @Override
-      public double computeBidValue(int numLocations, double additionalCost) {
-        return additionalCost;
-      }
-    },
-    BALANCED {
-      @Override
-      public double computeBidValue(int numLocations, double additionalCost) {
-        return additionalCost + numLocations * additionalCost;
-      }
-    },
-    BALANCED_LOW {
-      @Override
-      public double computeBidValue(int numLocations, double additionalCost) {
-        return additionalCost + numLocations / 10d * additionalCost;
-      }
-    },
-    BALANCED_HIGH {
-      @Override
-      public double computeBidValue(int numLocations, double additionalCost) {
-        return additionalCost + 10d * numLocations * additionalCost;
-      }
-    }
   }
 
   @SuppressWarnings("unused")
@@ -414,8 +383,43 @@ public class RtSolverBidder
         bidFunction);
   }
 
+  public interface BidFunction {
+    double computeBidValue(int numLocations, double additionalCost);
+  }
+
+  public enum BidFunctions implements BidFunction {
+
+    PLAIN {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return additionalCost;
+      }
+    },
+    BALANCED {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return additionalCost + numLocations * additionalCost;
+      }
+    },
+    BALANCED_LOW {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return additionalCost + numLocations / MUL * additionalCost;
+      }
+    },
+    BALANCED_HIGH {
+      @Override
+      public double computeBidValue(int numLocations, double additionalCost) {
+        return additionalCost + MUL * numLocations * additionalCost;
+      }
+    };
+    static final double MUL = 10d;
+  }
+
   @AutoValue
   abstract static class CallForBids {
+
+    CallForBids() {}
 
     abstract Auctioneer<DoubleBid> getAuctioneer();
 
@@ -431,6 +435,8 @@ public class RtSolverBidder
 
   @AutoValue
   abstract static class Sup implements StochasticSupplier<RtSolverBidder> {
+
+    Sup() {}
 
     abstract ObjectiveFunction getObjectiveFunction();
 

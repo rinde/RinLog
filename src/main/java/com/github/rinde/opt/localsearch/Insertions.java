@@ -139,8 +139,9 @@ public final class Insertions {
       item = t;
     }
 
+    @Nullable
     @Override
-    public @Nullable ImmutableList<T> apply(@Nullable IntList input) {
+    public ImmutableList<T> apply(@Nullable IntList input) {
       return insert(originalList, checkNotNull(input), item);
     }
   }
@@ -149,7 +150,7 @@ public final class Insertions {
     private final int[] insertionPositions;
     private final int originalListSize;
     private final long length;
-    private int index = 0;
+    private int index;
 
     InsertionIndexGenerator(int numOfInsertions, int listSize, int startIndex) {
       checkArgument(startIndex <= listSize,

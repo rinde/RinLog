@@ -331,11 +331,13 @@ public final class Swaps {
           - newRouteA.size();
       checkArgument(
         itemCount > 0,
-        "The item (%s) is not in row %s, hence it cannot be swapped to another row.",
+        "The item (%s) is not in row %s, hence it cannot be swapped to another "
+            + "row.",
         swap.item(), swap.fromRow());
       checkArgument(
         itemCount == swap.toIndices().size(),
-        "The number of occurences in the fromRow (%s) should equal the number of insertion indices (%s).",
+        "The number of occurences in the fromRow (%s) should equal the number "
+            + "of insertion indices (%s).",
         itemCount, swap.toIndices().size());
 
       final double newCostA = computeCost(s, swap.fromRow(), newRouteA, cache);
@@ -446,7 +448,7 @@ public final class Swaps {
   /**
    * Finds all indices of item in the specified list.
    * @param list The list.
-   * @param item
+   * @param item The item.
    * @return A list of indices.
    */
   static <T> IntList indices(List<T> list, T item) {
@@ -511,8 +513,9 @@ public final class Swaps {
       toRow = to;
     }
 
+    @Nullable
     @Override
-    public @Nullable Swap<T> apply(@Nullable IntList input) {
+    public Swap<T> apply(@Nullable IntList input) {
       return Swap.create(item, fromRow, toRow, checkNotNull(input));
     }
   }

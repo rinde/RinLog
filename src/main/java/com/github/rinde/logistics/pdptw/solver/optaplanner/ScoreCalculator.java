@@ -45,6 +45,9 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 public class ScoreCalculator
     extends AbstractIncrementalScoreCalculator<PDPSolution> {
 
+  static final String NEXT_VISIT = "nextVisit";
+  static final String VEHICLE = "vehicle";
+
   long hardScore;
   long softScore;
 
@@ -65,6 +68,8 @@ public class ScoreCalculator
   PDPSolution solution;
 
   Set<ParcelVisit> unplannedParcelVisits;
+
+  public ScoreCalculator() {}
 
   @Override
   public void resetWorkingSolution(PDPSolution workingSolution) {
@@ -173,9 +178,6 @@ public class ScoreCalculator
     }
     // System.out.println("softScore: " + softScore);
   }
-
-  static final String NEXT_VISIT = "nextVisit";
-  static final String VEHICLE = "vehicle";
 
   @Override
   public void afterVariableChanged(Object entity, String variableName) {

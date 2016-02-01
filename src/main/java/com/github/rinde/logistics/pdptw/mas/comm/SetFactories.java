@@ -24,11 +24,7 @@ import java.util.Set;
  * @author Rinde van Lon
  */
 public final class SetFactories {
-  SetFactories() {}
-
-  public interface SetFactory {
-    <V> Set<V> create();
-  }
+  private SetFactories() {}
 
   public static SetFactory linkedHashSet() {
     return DefaultFactories.LINKED_HASH_SET;
@@ -36,6 +32,10 @@ public final class SetFactories {
 
   public static SetFactory synchronizedFactory(SetFactory factory) {
     return new SynchronizedSetFactory(factory);
+  }
+
+  public interface SetFactory {
+    <V> Set<V> create();
   }
 
   enum DefaultFactories implements SetFactory {

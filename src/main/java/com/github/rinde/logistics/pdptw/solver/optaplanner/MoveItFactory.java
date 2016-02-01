@@ -36,6 +36,8 @@ import com.google.common.collect.AbstractIterator;
  */
 public class MoveItFactory implements MoveIteratorFactory {
 
+  public MoveItFactory() {}
+
   @Override
   public long getSize(ScoreDirector scoreDirector) {
 

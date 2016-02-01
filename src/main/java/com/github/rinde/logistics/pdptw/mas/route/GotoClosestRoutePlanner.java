@@ -118,6 +118,9 @@ public class GotoClosestRoutePlanner extends AbstractRoutePlanner {
   }
 
   class ClosestDistanceComparator implements Comparator<Parcel> {
+
+    ClosestDistanceComparator() {}
+
     @Override
     public int compare(@Nullable Parcel arg0,
         @Nullable Parcel arg1) {
