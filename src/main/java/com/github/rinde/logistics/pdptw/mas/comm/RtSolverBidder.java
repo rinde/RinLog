@@ -321,7 +321,7 @@ public class RtSolverBidder
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
 
         final double bidValue = bidFunction.computeBidValue(currentRoute.size(),
-          baseline - lowestCost);
+          lowestCost - baseline);
         final DoubleBid initialBid = DoubleBid.create(state.getTime(), this,
           toSwap, bidValue);
 

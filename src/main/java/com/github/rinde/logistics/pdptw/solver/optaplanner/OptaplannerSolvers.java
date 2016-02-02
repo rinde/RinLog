@@ -75,6 +75,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -101,7 +102,7 @@ public final class OptaplannerSolvers {
     return Builder.defaultInstance();
   }
 
-  public static Map<String, SolverConfig> getConfigsFromBenchmark(
+  public static ImmutableMap<String, SolverConfig> getConfigsFromBenchmark(
       String xmlLocation) {
     final PlannerBenchmarkFactory plannerBenchmarkFactory =
       PlannerBenchmarkFactory.createFromFreemarkerXmlResource(xmlLocation);
@@ -118,6 +119,10 @@ public final class OptaplannerSolvers {
       builder.put(sbr.getName().replaceAll(" ", "-"), sbr.getSolverConfig());
     }
     return builder.build();
+  }
+
+  public static OptaplannerFactory getFactoryFromBenchmark(String xmlLocation) {
+    return new OptaplannerSolversFactory(xmlLocation);
   }
 
   @CheckReturnValue
@@ -357,6 +362,50 @@ public final class OptaplannerSolvers {
         @Nullable String name) {
       return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
         resource, config, name);
+    }
+  }
+
+  /**
+   * Factory for instantiating Optaplanner solvers. See
+   * {@link OptaplannerSolvers#getFactoryFromBenchmark(String)} for obtaining an
+   * instance.
+   * @author Rinde van Lon
+   */
+  public interface OptaplannerFactory {
+    /**
+     * Create an optaplanner solver.
+     * @param unimprovedMs Maximum interval of time (in ms) the solver will run
+     *          without finding an improving solution.
+     * @param nm The name of the solver.
+     * @return A supplier that will construct the specified solver.
+     * @throws IllegalArgumentException if a solver with the specified name does
+     *           not exist in the factory.
+     */
+    StochasticSupplier<RealtimeSolver> create(long unimprovedMs, String nm);
+
+    ImmutableSet<String> getAvailableSolvers();
+  }
+
+  static class OptaplannerSolversFactory implements OptaplannerFactory {
+    final ImmutableMap<String, SolverConfig> configs;
+
+    OptaplannerSolversFactory(String xmlLocation) {
+      configs = getConfigsFromBenchmark(xmlLocation);
+    }
+
+    @Override
+    public StochasticSupplier<RealtimeSolver> create(long ms, String nm) {
+      checkArgument(configs.containsKey(nm));
+      return builder()
+        .withUnimprovedMsLimit(ms)
+        .withSolverConfig(configs.get(nm))
+        .withName(nm)
+        .buildRealtimeSolverSupplier();
+    }
+
+    @Override
+    public ImmutableSet<String> getAvailableSolvers() {
+      return configs.keySet();
     }
   }
 

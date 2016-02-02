@@ -53,7 +53,7 @@ import com.google.common.base.Optional;
 public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
     implements TickListener {
-  private static final long MAX_AUCTION_DURATION = 5 * 60 * 1000L;
+  private static final long MAX_AUCTION_DURATION_MS = 5 * 60 * 1000L;
 
   final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
   final AuctionStopCondition<T> stopCondition;
@@ -146,7 +146,7 @@ public class AuctionCommModel<T extends Bid<T>>
         "Clock must be in real-time mode, but is in %s mode.",
         clock.getClockMode());
       // make sure we stay in rt
-      LOGGER.info("check real time -> switch to real time");
+      LOGGER.debug("check real time -> switch to real time");
       clock.switchToRealTime();
     }
   }
@@ -269,9 +269,10 @@ public class AuctionCommModel<T extends Bid<T>>
       }
 
       synchronized (bids) {
-        if (time - auctionStartTime > MAX_AUCTION_DURATION) {
+        if (time - auctionStartTime > MAX_AUCTION_DURATION_MS) {
           throw new IllegalStateException(
-            "Auction duration exceeded threshold.");
+            "Auction duration exceeded threshold of " + MAX_AUCTION_DURATION_MS
+              + " ms.");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
@@ -294,18 +295,23 @@ public class AuctionCommModel<T extends Bid<T>>
 
           if (initiator.isPresent()
             && winningBid.getBidder().equals(initiator.get())) {
+            LOGGER.info("Auction for {} had no success.", parcel);
             unsuccessfulAuctions++;
             // nothing changes
             initiator = Optional.absent();
           } else {
             boolean success = true;
             if (initiator.isPresent()) {
+              LOGGER.info("Release {} from {}.", parcel, initiator.get());
               success = initiator.get().releaseParcel(parcel);
               initiator = Optional.absent();
             }
             // if parcel could not be released, the parcel will not be
             // transferred (the auction will complete without effect)
             if (success) {
+              LOGGER.info(
+                "Auction completed successfully, transfer {} to {}.",
+                parcel, winner.get());
               winner.get().receiveParcel(this, parcel, auctionStartTime);
             } else {
               failedAuctions++;
@@ -314,7 +320,7 @@ public class AuctionCommModel<T extends Bid<T>>
           if (clock != null) {
             // this is called to prevent the clock from switching to simulated
             // time because the winner also needs to do some computation itself.
-            LOGGER.info("end of auction -> switch to real time");
+            LOGGER.debug("end of auction -> switch to real time");
             clock.switchToRealTime();
           }
 
