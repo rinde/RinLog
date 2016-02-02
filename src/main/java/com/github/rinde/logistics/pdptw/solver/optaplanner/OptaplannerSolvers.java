@@ -91,6 +91,9 @@ public final class OptaplannerSolvers {
   static final Unit<Velocity> SPEED_UNIT = NonSI.KILOMETERS_PER_HOUR;
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
 
+  // this part of a while loop
+  static final long WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS = 5L;
+
   private OptaplannerSolvers() {}
 
   @CheckReturnValue
@@ -571,8 +574,9 @@ public final class OptaplannerSolvers {
         solver.terminateEarly();
         while (solver.isSolving()) {
           try {
-            Thread.sleep(5L);
+            Thread.sleep(WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS);
           } catch (final InterruptedException e) {
+            LOGGER.warn("Interrupt while waiting for solver termination.");
             // stop waiting upon interrupt
             break;
           }
@@ -652,6 +656,11 @@ public final class OptaplannerSolvers {
   }
 
   static class Validator implements Solver {
+
+    static final double MAX_SPEED_DIFF = .001;
+    static final double SIXTY_SEC_IN_NS = 60000000000d;
+    static final double TEN_SEC_IN_NS = 10000000000d;
+
     final OptaplannerSolver solver;
     Builder builder;
 
@@ -663,9 +672,8 @@ public final class OptaplannerSolvers {
     @Override
     public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
         throws InterruptedException {
-      checkState(
-        Math.abs(state.getVehicles().get(0).getDto().getSpeed() -
-          builder.getObjectiveFunction().getVehicleSpeed()) < 0.001);
+      checkState(Math.abs(state.getVehicles().get(0).getDto().getSpeed()
+        - builder.getObjectiveFunction().getVehicleSpeed()) < MAX_SPEED_DIFF);
 
       final ImmutableList<ImmutableList<Parcel>> schedule = solver.solve(state);
 
@@ -679,7 +687,7 @@ public final class OptaplannerSolvers {
 
       // convert cost to nanosecond precision
       final double cost = builder.getObjectiveFunction().computeCost(stats)
-        * 60000000000d;
+        * SIXTY_SEC_IN_NS;
 
       final ScoreCalculator sc = solver.scoreCalculator;
 
@@ -690,19 +698,18 @@ public final class OptaplannerSolvers {
         builder.getObjectiveFunction().printHumanReadableFormat(stats));
       System.out.println(" === Optaplanner ===");
       System.out
-        .println("Travel time: " + sc.getTravelTime() / 60000000000d);
-      System.out.println("Tardiness: " + sc.getTardiness() / 60000000000d);
-      System.out.println("Overtime: " + sc.getOvertime() / 60000000000d);
+        .println("Travel time: " + sc.getTravelTime() / SIXTY_SEC_IN_NS);
+      System.out.println("Tardiness: " + sc.getTardiness() / SIXTY_SEC_IN_NS);
+      System.out.println("Overtime: " + sc.getOvertime() / SIXTY_SEC_IN_NS);
       System.out.println(
-        "Total: " + sc.calculateScore().getSoftScore() / -60000000000d);
+        "Total: " + sc.calculateScore().getSoftScore() / -SIXTY_SEC_IN_NS);
 
       // optaplanner has nanosecond precision
       final double optaplannerCost = solver.getSoftScore() * -1d;
 
       final double difference = Math.abs(cost - optaplannerCost);
       // max 10 nanosecond deviation is allowed
-      checkState(
-        difference < 10000000000d,
+      checkState(difference < TEN_SEC_IN_NS,
         "ObjectiveFunction cost (%s) must be equal to Optaplanner cost (%s),"
           + " the difference is %s.",
         cost, optaplannerCost, difference);

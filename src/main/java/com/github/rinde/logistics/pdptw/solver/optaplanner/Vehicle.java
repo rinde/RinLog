@@ -34,7 +34,7 @@ import com.google.common.math.DoubleMath;
  * @author Rinde van Lon
  */
 public class Vehicle implements Visit {
-
+  static final double H_TO_NS = 3600000000000d;
   // planning variables
   @Nullable
   final Visit previousVisit = null;
@@ -137,7 +137,7 @@ public class Vehicle implements Visit {
 
     final double travelTimeH = distKM / speedKMH;
     // convert to nanoseconds
-    return DoubleMath.roundToLong(travelTimeH * 3600000000000d,
+    return DoubleMath.roundToLong(travelTimeH * H_TO_NS,
       RoundingMode.HALF_DOWN);
   }
 
