@@ -54,7 +54,7 @@ import com.google.common.collect.ImmutableList;
 public class DiversionTruckIntegrationTest {
 
   static final ObjectiveFunction GENDREAU_OBJ_FUNC = Gendreau06ObjectiveFunction
-      .instance();
+    .instance();
 
   final MASConfiguration config;
   final ObjectiveFunction objectiveFunction;
@@ -72,38 +72,38 @@ public class DiversionTruckIntegrationTest {
 
     final ImmutableList<StochasticSupplier<? extends RoutePlanner>> routePlanners =
       ImmutableList
-          .<StochasticSupplier<? extends RoutePlanner>>of(
-            GotoClosestRoutePlanner.supplier(),
-            RandomRoutePlanner.supplier(),
-            SolverRoutePlanner.supplier(RandomSolver.supplier()));
+        .<StochasticSupplier<? extends RoutePlanner>>of(
+          GotoClosestRoutePlanner.supplier(),
+          RandomRoutePlanner.supplier(),
+          SolverRoutePlanner.supplier(RandomSolver.supplier()));
 
     final ImmutableList<StochasticSupplier<? extends Communicator>> communicators =
       ImmutableList
-          .<StochasticSupplier<? extends Communicator>>of(SolverBidder
-              .supplier(GENDREAU_OBJ_FUNC, RandomSolver.supplier()));
+        .<StochasticSupplier<? extends Communicator>>of(SolverBidder
+          .supplier(GENDREAU_OBJ_FUNC, RandomSolver.supplier()));
 
     final ImmutableList<Integer> numTrucks = ImmutableList
-        .of(1, 2, 3, 4, 5, 10, 15);
+      .of(1, 2, 3, 4, 5, 10, 15);
 
     final List<Object[]> configs = newArrayList();
     for (final StochasticSupplier<? extends RoutePlanner> rp : routePlanners) {
       for (final StochasticSupplier<? extends Communicator> cm : communicators) {
         for (final int i : numTrucks) {
           configs.add(new Object[] {
-              MASConfiguration.pdptwBuilder()
-                  .addEventHandler(AddVehicleEvent.class,
-                    DefaultTruckFactory.builder()
-                        .setRoutePlanner(rp)
-                        .setCommunicator(cm)
-                        .build())
-                  .addModel(AuctionCommModel.builder(DoubleBid.class))
-                  .addModel(SolverModel.builder())
-                  .build(),
+            MASConfiguration.pdptwBuilder()
+              .addEventHandler(AddVehicleEvent.class,
+                DefaultTruckFactory.builder()
+                  .setRoutePlanner(rp)
+                  .setCommunicator(cm)
+                  .build())
+              .addModel(AuctionCommModel.builder(DoubleBid.class))
+              .addModel(SolverModel.builder())
+              .build(),
 
-              // new TruckConfiguration(rp, cm,
-              // ImmutableList.of(AuctionCommModel
-              // .supplier())),
-              GENDREAU_OBJ_FUNC, i});
+            // new TruckConfiguration(rp, cm,
+            // ImmutableList.of(AuctionCommModel
+            // .supplier())),
+            GENDREAU_OBJ_FUNC, i});
         }
       }
     }
@@ -113,27 +113,27 @@ public class DiversionTruckIntegrationTest {
   @Test
   public void integration() {
     final Gendreau06Scenario scen = Gendreau06Parser.parse(new File(
-        "files/scenarios/gendreau06/req_rapide_1_240_24"));
+      "files/scenarios/gendreau06/req_rapide_1_240_24"));
 
     final ImmutableList<AddParcelEvent> events = FluentIterable
-        .from(scen.getEvents())
-        .filter(AddParcelEvent.class)
-        .limit(100)
-        .toList();
+      .from(scen.getEvents())
+      .filter(AddParcelEvent.class)
+      .limit(100)
+      .toList();
 
     final List<Gendreau06Scenario> onlineScenarios = Gendreau06Parser
-        .parser()
-        .allowDiversion()
-        .setNumVehicles(numTrucks)
-        .addFile(events, "req_rapide_1_240_24")
-        .filter(GendreauProblemClass.SHORT_LOW_FREQ)
-        .parse();
+      .parser()
+      .allowDiversion()
+      .setNumVehicles(numTrucks)
+      .addFile(events, "req_rapide_1_240_24")
+      .filter(GendreauProblemClass.SHORT_LOW_FREQ)
+      .parse();
 
     final Experiment.Builder builder = Experiment.build(objectiveFunction)
-        .withRandomSeed(123)
-        .repeat(1)
-        .withThreads(1)
-        .addScenarios(onlineScenarios);
+      .withRandomSeed(123)
+      .repeat(1)
+      .withThreads(1)
+      .addScenarios(onlineScenarios);
 
     builder.addConfiguration(config);
     builder.perform();

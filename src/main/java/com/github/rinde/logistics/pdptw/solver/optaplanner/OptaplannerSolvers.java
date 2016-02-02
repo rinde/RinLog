@@ -111,7 +111,7 @@ public final class OptaplannerSolvers {
     final ImmutableMap.Builder<String, SolverConfig> builder =
       ImmutableMap.builder();
     for (final SolverBenchmarkResult sbr : pbr.getPlannerBenchmarkResult()
-        .getSolverBenchmarkResultList()) {
+      .getSolverBenchmarkResultList()) {
       builder.put(sbr.getName().replaceAll(" ", "-"), sbr.getSolverConfig());
     }
     return builder.build();
@@ -219,7 +219,7 @@ public final class OptaplannerSolvers {
 
     final TerminationConfig terminationConfig = new TerminationConfig();
     terminationConfig
-        .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
+      .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
     config.setTerminationConfig(terminationConfig);
 
     final ScoreDirectorFactoryConfig scoreConfig =
@@ -232,7 +232,7 @@ public final class OptaplannerSolvers {
     config.setRandomType(RandomType.MERSENNE_TWISTER);
     config.setEnvironmentMode(
       builder.isValidated() ? EnvironmentMode.FULL_ASSERT
-          : EnvironmentMode.REPRODUCIBLE);
+        : EnvironmentMode.REPRODUCIBLE);
 
     return factory.buildSolver();
   }
@@ -353,7 +353,7 @@ public final class OptaplannerSolvers {
         long sec, String resource, @Nullable SolverConfig config,
         @Nullable String name) {
       return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
-          resource, config, name);
+        resource, config, name);
     }
   }
 
@@ -457,7 +457,7 @@ public final class OptaplannerSolvers {
         public void bestSolutionChanged(
             @SuppressWarnings("null") BestSolutionChangedEvent<PDPSolution> event) {
           if (event.isNewBestSolutionInitialized()
-              && event.getNewBestSolution().getScore().getHardScore() == 0) {
+            && event.getNewBestSolution().getScore().getHardScore() == 0) {
             final ImmutableList<ImmutableList<Parcel>> schedule =
               toSchedule(event.getNewBestSolution());
 
@@ -494,8 +494,8 @@ public final class OptaplannerSolvers {
         // vehicle takes upon a *new* commitment (not when it is finished with
         // an old commitment).
         if (snapshot.getVehicles().get(i).getDestination().isPresent()
-            && !last.getVehicles().get(i).getDestination()
-                .equals(snapshot.getVehicles().get(i).getDestination())) {
+          && !last.getVehicles().get(i).getDestination()
+            .equals(snapshot.getVehicles().get(i).getDestination())) {
           significantChangeDetected = true;
           break;
         }
@@ -524,7 +524,7 @@ public final class OptaplannerSolvers {
       LOGGER.info("Start RT Optaplanner Solver");
       final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
         scheduler.get().getSharedExecutor()
-            .submit(new OptaplannerCallable(solver, snapshot));
+          .submit(new OptaplannerCallable(solver, snapshot));
 
       Futures.addCallback(future,
         new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
@@ -536,11 +536,11 @@ public final class OptaplannerSolvers {
               if (solver.isTerminateEarly()) {
                 LOGGER.info(
                   "Solver was terminated early and didn't have enough time to "
-                      + "find a valid solution.");
+                    + "find a valid solution.");
               } else {
                 scheduler.get().reportException(
                   new IllegalArgumentException("Solver.solve(..) must return a "
-                      + "non-null result. Solver: " + solver));
+                    + "non-null result. Solver: " + solver));
               }
             } else {
               LOGGER.info("Computations stopped, update schedule.");
@@ -665,7 +665,7 @@ public final class OptaplannerSolvers {
         throws InterruptedException {
       checkState(
         Math.abs(state.getVehicles().get(0).getDto().getSpeed() -
-            builder.getObjectiveFunction().getVehicleSpeed()) < 0.001);
+          builder.getObjectiveFunction().getVehicleSpeed()) < 0.001);
 
       final ImmutableList<ImmutableList<Parcel>> schedule = solver.solve(state);
 
@@ -679,7 +679,7 @@ public final class OptaplannerSolvers {
 
       // convert cost to nanosecond precision
       final double cost = builder.getObjectiveFunction().computeCost(stats)
-          * 60000000000d;
+        * 60000000000d;
 
       final ScoreCalculator sc = solver.scoreCalculator;
 
@@ -690,7 +690,7 @@ public final class OptaplannerSolvers {
         builder.getObjectiveFunction().printHumanReadableFormat(stats));
       System.out.println(" === Optaplanner ===");
       System.out
-          .println("Travel time: " + sc.getTravelTime() / 60000000000d);
+        .println("Travel time: " + sc.getTravelTime() / 60000000000d);
       System.out.println("Tardiness: " + sc.getTardiness() / 60000000000d);
       System.out.println("Overtime: " + sc.getOvertime() / 60000000000d);
       System.out.println(
@@ -704,7 +704,7 @@ public final class OptaplannerSolvers {
       checkState(
         difference < 10000000000d,
         "ObjectiveFunction cost (%s) must be equal to Optaplanner cost (%s),"
-            + " the difference is %s.",
+          + " the difference is %s.",
         cost, optaplannerCost, difference);
 
       return schedule;

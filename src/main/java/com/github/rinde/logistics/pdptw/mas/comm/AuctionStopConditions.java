@@ -81,9 +81,9 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
-          .append(".or(")
-          .append(Joiner.on(",").join(conditions).toString())
-          .append(")").toString();
+        .append(".or(")
+        .append(Joiner.on(",").join(conditions).toString())
+        .append(")").toString();
     }
   }
 
@@ -111,9 +111,9 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
-          .append(".and(")
-          .append(Joiner.on(",").join(conditions).toString())
-          .append(")").toString();
+        .append(".and(")
+        .append(Joiner.on(",").join(conditions).toString())
+        .append(")").toString();
     }
   }
 
@@ -135,7 +135,7 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return AuctionStopConditions.class.getSimpleName()
-          + ".maxAuctionDuration(" + maxAuctionDuration + ")";
+        + ".maxAuctionDuration(" + maxAuctionDuration + ")";
     }
   }
 
@@ -157,7 +157,7 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return AuctionStopConditions.class.getSimpleName() + ".atLeastNumBids("
-          + numBidders + ")";
+        + numBidders + ")";
     }
   }
 

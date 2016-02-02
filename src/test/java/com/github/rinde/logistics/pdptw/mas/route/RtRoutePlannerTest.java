@@ -81,32 +81,32 @@ public class RtRoutePlannerTest {
   @Before
   public void setUp() {
     scenario = Scenario.builder()
-        .addEvent(AddDepotEvent.create(-1, new Point(5, 5)))
-        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
-            .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
-        .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
-            .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
-        .addEvent(AddParcelEvent.create(
-          Parcel.builder(new Point(0, 0), new Point(1, 0))
-              .orderAnnounceTime(300)
-              .pickupTimeWindow(TimeWindow.create(300, 3000))
-              .buildDTO()))
-        .addEvent(AddParcelEvent.create(
-          Parcel.builder(new Point(0, 0), new Point(1, 0))
-              .orderAnnounceTime(1500)
-              .pickupTimeWindow(TimeWindow.create(1500, 30000))
-              .buildDTO()))
-        .addEvent(AddParcelEvent.create(
-          Parcel.builder(new Point(1, 1), new Point(2, 2))
-              .orderAnnounceTime(1500)
-              .pickupTimeWindow(TimeWindow.create(1500, 30000))
-              .buildDTO()))
-        .addEvent(TimeOutEvent.create(1500))
-        .addModel(PDPRoadModel.builder(RoadModelBuilders.plane()))
-        .addModel(DefaultPDPModel.builder())
-        .addModel(TimeModel.builder().withRealTime().withTickLength(100L))
-        .setStopCondition(StopConditions.limitedTime(60000))
-        .build();
+      .addEvent(AddDepotEvent.create(-1, new Point(5, 5)))
+      .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
+        .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
+      .addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
+        .availabilityTimeWindow(TimeWindow.create(0, 1500)).build()))
+      .addEvent(AddParcelEvent.create(
+        Parcel.builder(new Point(0, 0), new Point(1, 0))
+          .orderAnnounceTime(300)
+          .pickupTimeWindow(TimeWindow.create(300, 3000))
+          .buildDTO()))
+      .addEvent(AddParcelEvent.create(
+        Parcel.builder(new Point(0, 0), new Point(1, 0))
+          .orderAnnounceTime(1500)
+          .pickupTimeWindow(TimeWindow.create(1500, 30000))
+          .buildDTO()))
+      .addEvent(AddParcelEvent.create(
+        Parcel.builder(new Point(1, 1), new Point(2, 2))
+          .orderAnnounceTime(1500)
+          .pickupTimeWindow(TimeWindow.create(1500, 30000))
+          .buildDTO()))
+      .addEvent(TimeOutEvent.create(1500))
+      .addModel(PDPRoadModel.builder(RoadModelBuilders.plane()))
+      .addModel(DefaultPDPModel.builder())
+      .addModel(TimeModel.builder().withRealTime().withTickLength(100L))
+      .setStopCondition(StopConditions.limitedTime(60000))
+      .build();
   }
 
   @Test
@@ -117,59 +117,59 @@ public class RtRoutePlannerTest {
         SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
 
     Experiment.build(objFunc)
-        .addScenario(scenario)
-        .withThreads(1)
-        .addConfiguration(MASConfiguration.pdptwBuilder()
-            .addModel(RtSolverModel.builder())
-            .addModel(AuctionCommModel.builder(DoubleBid.class))
-            .addModel(AuctionCommModelLogger.builder())
-            .addEventHandler(AddVehicleEvent.class,
-              DefaultTruckFactory.builder()
-                  .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
-                  .setCommunicator(
-                    RtSolverBidder.supplier(objFunc, rtSolverSup,
-                      RtSolverBidder.BidFunctions.PLAIN))
-                  .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
-                  .setLazyComputation(false)
-                  .build())
+      .addScenario(scenario)
+      .withThreads(1)
+      .addConfiguration(MASConfiguration.pdptwBuilder()
+        .addModel(RtSolverModel.builder())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
+        .addModel(AuctionCommModelLogger.builder())
+        .addEventHandler(AddVehicleEvent.class,
+          DefaultTruckFactory.builder()
+            .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
+            .setCommunicator(
+              RtSolverBidder.supplier(objFunc, rtSolverSup,
+                RtSolverBidder.BidFunctions.PLAIN))
+            .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
+            .setLazyComputation(false)
             .build())
-        .usePostProcessor(new PostProcessor<Object>() {
-          @Override
-          public Object collectResults(Simulator sim, SimArgs args) {
-            final AuctionCommModelLogger logger =
-              sim.getModelProvider().getModel(AuctionCommModelLogger.class);
+        .build())
+      .usePostProcessor(new PostProcessor<Object>() {
+        @Override
+        public Object collectResults(Simulator sim, SimArgs args) {
+          final AuctionCommModelLogger logger =
+            sim.getModelProvider().getModel(AuctionCommModelLogger.class);
 
-            System.out.println(logger.events);
-            assertThat(logger.events.keySet().size()).isEqualTo(3);
-            for (final Entry<Parcel, Collection<Enum<?>>> entry : logger.events
-                .asMap().entrySet()) {
+          System.out.println(logger.events);
+          assertThat(logger.events.keySet().size()).isEqualTo(3);
+          for (final Entry<Parcel, Collection<Enum<?>>> entry : logger.events
+            .asMap().entrySet()) {
 
-              assertThat(entry.getValue())
-                  .containsExactly(AuctionCommModel.EventType.START_AUCTION,
-                    AuctionCommModel.EventType.FINISH_AUCTION)
-                  .inOrder();
+            assertThat(entry.getValue())
+              .containsExactly(AuctionCommModel.EventType.START_AUCTION,
+                AuctionCommModel.EventType.FINISH_AUCTION)
+              .inOrder();
 
-            }
-
-            final RoadModel rm =
-              sim.getModelProvider().getModel(RoadModel.class);
-
-            final Set<Truck> trucks = rm.getObjectsOfType(Truck.class);
-
-            for (final Truck t : trucks) {
-              System.out.println(t.getRoute());
-            }
-
-            return new Object();
           }
 
-          @Override
-          public FailureStrategy handleFailure(
-              Exception e, Simulator sim, SimArgs args) {
-            return FailureStrategy.ABORT_EXPERIMENT_RUN;
+          final RoadModel rm =
+            sim.getModelProvider().getModel(RoadModel.class);
+
+          final Set<Truck> trucks = rm.getObjectsOfType(Truck.class);
+
+          for (final Truck t : trucks) {
+            System.out.println(t.getRoute());
           }
-        })
-        .perform();
+
+          return new Object();
+        }
+
+        @Override
+        public FailureStrategy handleFailure(
+            Exception e, Simulator sim, SimArgs args) {
+          return FailureStrategy.ABORT_EXPERIMENT_RUN;
+        }
+      })
+      .perform();
   }
 
   static class AuctionCommModelLogger extends AbstractModelVoid {

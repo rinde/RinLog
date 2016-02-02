@@ -59,7 +59,7 @@ public class MoveItFactory implements MoveIteratorFactory {
   public Iterator<Move> createRandomMoveIterator(ScoreDirector scoreDirector,
       Random workingRandom) {
     return new RandomIterator((PDPSolution) scoreDirector.getWorkingSolution(),
-        workingRandom);
+      workingRandom);
   }
 
   static class RandomIterator extends AbstractIterator<Move> {
@@ -79,10 +79,10 @@ public class MoveItFactory implements MoveIteratorFactory {
       movablePickups = new ArrayList<>();
       for (final ParcelVisit pv : sol.parcelList) {
         if (pv.getVisitType() == VisitType.PICKUP
-            && pv.getAssociation() != null
-            && pv.getVehicle() != null
-            && Objects.equals(pv.getVehicle(),
-              pv.getAssociation().getVehicle())) {
+          && pv.getAssociation() != null
+          && pv.getVehicle() != null
+          && Objects.equals(pv.getVehicle(),
+            pv.getAssociation().getVehicle())) {
           movablePickups.add(pv);
         }
       }

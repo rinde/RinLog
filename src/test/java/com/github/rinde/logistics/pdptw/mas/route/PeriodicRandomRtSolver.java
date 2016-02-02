@@ -73,8 +73,8 @@ public class PeriodicRandomRtSolver implements RealtimeSolver {
         @Override
         public Thread newThread(@Nullable Runnable r) {
           return new Thread(r,
-              Thread.currentThread().getName() + "-"
-                  + PeriodicRandomRtSolver.class.getSimpleName());
+            Thread.currentThread().getName() + "-"
+              + PeriodicRandomRtSolver.class.getSimpleName());
         }
       }));
 

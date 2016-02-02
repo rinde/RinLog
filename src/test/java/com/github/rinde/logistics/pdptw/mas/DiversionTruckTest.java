@@ -77,18 +77,18 @@ public class DiversionTruckTest {
   public void setUp() {
 
     sim = Simulator
-        .builder()
-        .addModel(
-          PDPRoadModel.builder(
-            RoadModelBuilders.plane()
-                .withMinPoint(new Point(0, 0))
-                .withMaxPoint(new Point(5, 5))
-                .withMaxSpeed(50d))
-              .withAllowVehicleDiversion(true))
-        .addModel(
-          DefaultPDPModel.builder().withTimeWindowPolicy(
-            TimeWindowPolicies.TARDY_ALLOWED))
-        .build();
+      .builder()
+      .addModel(
+        PDPRoadModel.builder(
+          RoadModelBuilders.plane()
+            .withMinPoint(new Point(0, 0))
+            .withMaxPoint(new Point(5, 5))
+            .withMaxSpeed(50d))
+          .withAllowVehicleDiversion(true))
+      .addModel(
+        DefaultPDPModel.builder().withTimeWindowPolicy(
+          TimeWindowPolicies.TARDY_ALLOWED))
+      .build();
     final Depot dp = new Depot(new Point(2, 2));
 
     rm = sim.getModelProvider().getModel(PDPRoadModel.class);
@@ -96,18 +96,18 @@ public class DiversionTruckTest {
 
     sim.register(dp);
     p1 = new Parcel(Parcel.builder(new Point(1, 1), new Point(2, 2))
-        .buildDTO());
+      .buildDTO());
     p2 = new Parcel(Parcel.builder(new Point(2, 4), new Point(1, 2))
-        .buildDTO());
+      .buildDTO());
     p3 = new Parcel(Parcel
-        .builder(new Point(.99, 0), new Point(1, 2))
-        .pickupTimeWindow(
-          TimeWindow.create((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000))
-        .buildDTO());
+      .builder(new Point(.99, 0), new Point(1, 2))
+      .pickupTimeWindow(
+        TimeWindow.create((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000))
+      .buildDTO());
     p4 = new Parcel(Parcel.builder(new Point(0, 0), new Point(1, 2))
-        .buildDTO());
+      .buildDTO());
     p5 = new Parcel(Parcel.builder(new Point(2, 0), new Point(1, 2))
-        .pickupDuration(1001).buildDTO());
+      .pickupDuration(1001).buildDTO());
     sim.register(p1);
     sim.register(p2);
     sim.register(p3);
@@ -118,14 +118,14 @@ public class DiversionTruckTest {
     when(routePlanner.getEventAPI()).thenReturn(mock(EventAPI.class));
     communicator = mock(Communicator.class);
     final VehicleDTO dto = VehicleDTO.builder()
-        .startPosition(new Point(0, 0))
-        .speed(30d)
-        .capacity(100)
-        .availabilityTimeWindow(TimeWindow.always())
-        .build();
+      .startPosition(new Point(0, 0))
+      .speed(30d)
+      .capacity(100)
+      .availabilityTimeWindow(TimeWindow.always())
+      .build();
 
     truck = new TestTruck(dto, routePlanner, communicator,
-        RouteFollowingVehicle.nopAdjuster(), true);
+      RouteFollowingVehicle.nopAdjuster(), true);
     sim.register(truck);
     routePlannerGotoNowhere();
     assertEquals(truck.waitState(), truck.getState());
@@ -415,7 +415,7 @@ public class DiversionTruckTest {
     assertEquals(truck.waitState(), truck.getState());
 
     while (truck.waitState().equals(truck.getState())
-        || truck.gotoState().equals(truck.getState())) {
+      || truck.gotoState().equals(truck.getState())) {
       sim.tick();
     }
     assertEquals(truck.waitForServiceState(), truck.getState());

@@ -104,13 +104,13 @@ public class NegotiatingBidder extends SolverBidder {
   private List<Truck> findTrucks() {
     final Point reference = convertToPos((Truck) vehicle.get());
     final List<TruckDist> pos = newArrayList(Collections2.transform(roadModel
-        .get().getObjectsOfType(Truck.class),
+      .get().getObjectsOfType(Truck.class),
       new ToTruckDistFunc(reference)));
 
     checkState(
       pos.size() >= negotiators,
       "There are not enough vehicles in the system to hold a %s-party "
-          + "negotiation, there are only %s vehicle(s).",
+        + "negotiation, there are only %s vehicle(s).",
       negotiators, pos.size());
     Collections.sort(pos, TRUCK_DIST_COMPARATOR);
     final List<Truck> trucks = newArrayList(Lists.transform(pos,
@@ -128,7 +128,7 @@ public class NegotiatingBidder extends SolverBidder {
   Point convertToPos(Truck t) {
     Point p;
     if (t.getRoute().isEmpty()
-        || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
+      || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
       p = roadModel.get().getPosition(t);
     } else {
       final Parcel firstDestination = t.getRoute().iterator().next();
@@ -162,17 +162,17 @@ public class NegotiatingBidder extends SolverBidder {
 
     final ImmutableList.Builder<ImmutableList<Parcel>> currentRoutes =
       ImmutableList
-          .<ImmutableList<Parcel>>builder();
+        .<ImmutableList<Parcel>>builder();
     for (final Truck t : trucks) {
       currentRoutes.add(ImmutableList.copyOf(t.getRoute()));
     }
 
     final SimSolver sol = simSolvBuilder.get()
-        .setVehicles(trucks)
-        .build(negotiationSolver);
+      .setVehicles(trucks)
+      .build(negotiationSolver);
     final List<Queue<Parcel>> routes = sol.solve(SolveArgs.create()
-        .useCurrentRoutes(currentRoutes.build())
-        .useParcels(availableParcels));
+      .useCurrentRoutes(currentRoutes.build())
+      .useParcels(availableParcels));
 
     final List<Parcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
@@ -180,13 +180,13 @@ public class NegotiatingBidder extends SolverBidder {
       ((SolverRoutePlanner) trucks.get(i).getRoutePlanner()).changeRoute(route);
       trucks.get(i).setRoute(route);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-          .clear();
+        .clear();
 
       final Set<Parcel> newAssignedParcels = newLinkedHashSet(route);
       newAssignedParcels.retainAll(ps);
       list.addAll(newAssignedParcels);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels
-          .addAll(newAssignedParcels);
+        .addAll(newAssignedParcels);
 
       final List<Parcel> l = newArrayList(route);
       checkArgument(!newAssignedParcels.retainAll(route), "", l,
@@ -226,7 +226,7 @@ public class NegotiatingBidder extends SolverBidder {
       @Override
       public NegotiatingBidder get(long seed) {
         return new NegotiatingBidder(objFunc, bidderSolverSupplier.get(seed),
-            negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
+          negoSolverSupplier.get(seed), numOfNegotiators, heuristic);
       }
 
       @Override

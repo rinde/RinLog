@@ -21,7 +21,7 @@ import com.github.rinde.rinsim.util.StochasticSuppliers;
 
 /**
  * {@link Bidder} implementation that adds some methods for easier testing.
- * @author Rinde van Lon 
+ * @author Rinde van Lon
  */
 public class TestBidder extends RandomBidder {
 
@@ -38,11 +38,12 @@ public class TestBidder extends RandomBidder {
   public void removeAll() {
     assignedParcels.clear();
     eventDispatcher
-        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+      .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   /**
-   * @return A {@link StochasticSupplier} that supplies {@link RandomBidder} instances.
+   * @return A {@link StochasticSupplier} that supplies {@link RandomBidder}
+   *         instances.
    */
   public static StochasticSupplier<RandomBidder> supplier() {
     return new StochasticSuppliers.AbstractStochasticSupplier<RandomBidder>() {

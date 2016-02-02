@@ -59,7 +59,7 @@ public class CheapestInsertionHeuristic implements Solver {
   static ImmutableList<ImmutableList<Parcel>> createSchedule(
       GlobalStateObject state) {
     final ImmutableList.Builder<ImmutableList<Parcel>> b = ImmutableList
-        .builder();
+      .builder();
     for (final VehicleStateObject vso : state.getVehicles()) {
       if (vso.getRoute().isPresent()) {
         b.add(vso.getRoute().get());
@@ -95,10 +95,10 @@ public class CheapestInsertionHeuristic implements Solver {
 
       for (int i = 0; i < state.getVehicles().size(); i++) {
         final int startIndex = state.getVehicles().get(i).getDestination()
-            .isPresent() ? 1 : 0;
+          .isPresent() ? 1 : 0;
 
         final Iterator<ImmutableList<Parcel>> insertions = Insertions
-            .insertionsIterator(schedule.get(i), p, startIndex, 2);
+          .insertionsIterator(schedule.get(i), p, startIndex, 2);
 
         while (insertions.hasNext()) {
           if (Thread.interrupted()) {
@@ -107,7 +107,7 @@ public class CheapestInsertionHeuristic implements Solver {
 
           final ImmutableList<Parcel> r = insertions.next();
           final double absCost = objectiveFunction.computeCost(Solvers
-              .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
+            .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
 
           final double insertionCost = absCost - costs.get(i);
           if (insertionCost < cheapestInsertion) {
@@ -128,7 +128,7 @@ public class CheapestInsertionHeuristic implements Solver {
   static ImmutableList<Double> modifyCosts(ImmutableList<Double> costs,
       double newCost, int index) {
     return ImmutableList.<Double>builder().addAll(costs.subList(0, index))
-        .add(newCost).addAll(costs.subList(index + 1, costs.size())).build();
+      .add(newCost).addAll(costs.subList(index + 1, costs.size())).build();
   }
 
   // replaces one route
@@ -139,7 +139,7 @@ public class CheapestInsertionHeuristic implements Solver {
       "Vehicle index must be >= 0 && < %s, it is %s.",
       originalSchedule.size(), vehicleIndex);
     final ImmutableList.Builder<ImmutableList<T>> builder = ImmutableList
-        .builder();
+      .builder();
     builder.addAll(originalSchedule.subList(0, vehicleIndex));
     builder.add(vehicleSchedule);
     builder.addAll(originalSchedule.subList(vehicleIndex + 1,
@@ -150,7 +150,7 @@ public class CheapestInsertionHeuristic implements Solver {
   static <T> ImmutableList<ImmutableList<T>> createEmptySchedule(
       int numVehicles) {
     final ImmutableList.Builder<ImmutableList<T>> builder = ImmutableList
-        .builder();
+      .builder();
     for (int i = 0; i < numVehicles; i++) {
       builder.add(ImmutableList.<T>of());
     }

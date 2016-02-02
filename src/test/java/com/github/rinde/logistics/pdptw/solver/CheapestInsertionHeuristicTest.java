@@ -47,17 +47,17 @@ public class CheapestInsertionHeuristicTest {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     // try test in RinLog?
     final ExperimentResults er = Experiment
-        .build(objFunc)
-        .addScenario(
-          Gendreau06Parser.parse(new File(
-              "files/scenarios/gendreau06/req_rapide_1_240_24")))
-        .addConfiguration(
-          Central.solverConfiguration(SolverValidator
-              .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
-        .repeat(3)
-        .withThreads(3)
-        .usePostProcessor(PostProcessors.statisticsPostProcessor())
-        .perform();
+      .build(objFunc)
+      .addScenario(
+        Gendreau06Parser.parse(new File(
+          "files/scenarios/gendreau06/req_rapide_1_240_24")))
+      .addConfiguration(
+        Central.solverConfiguration(SolverValidator
+          .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
+      .repeat(3)
+      .withThreads(3)
+      .usePostProcessor(PostProcessors.statisticsPostProcessor())
+      .perform();
     for (int i = 0; i < er.getResults().size(); i++) {
       assertEquals(979.898336,
         objFunc.computeCost(

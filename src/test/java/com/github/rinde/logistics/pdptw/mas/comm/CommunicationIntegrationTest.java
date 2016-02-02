@@ -74,8 +74,8 @@ public class CommunicationIntegrationTest implements TickListener {
   public void test() {
     problem = ExperimentTestUtil.init(
       Gendreau06Parser.parser()
-          .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
-          .parse().get(0),
+        .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
+        .parse().get(0),
       configuration, 123,
       false);
 
@@ -91,55 +91,55 @@ public class CommunicationIntegrationTest implements TickListener {
   public static Collection<Object[]> configs() {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     return asList(new Object[][] {
-        {MASConfiguration.pdptwBuilder()
-            .addEventHandler(AddVehicleEvent.class,
-              DefaultTruckFactory.builder()
-                  .setRoutePlanner(RandomRoutePlanner.supplier())
-                  .setCommunicator(RandomBidder.supplier())
-                  .build())
-            .addModel(AuctionCommModel.builder(DoubleBid.class))
-            .addModel(CommTestModel.builder())
-            .build()},
-        {MASConfiguration.pdptwBuilder()
-            .addEventHandler(AddVehicleEvent.class,
-              DefaultTruckFactory.builder()
-                  .setRoutePlanner(RandomRoutePlanner.supplier())
-                  .setCommunicator(
-                    SolverBidder.supplier(objFunc, RandomSolver.supplier()))
-                  .build())
-            .addModel(AuctionCommModel.builder(DoubleBid.class))
-            .addModel(CommTestModel.builder())
-            .addModel(SolverModel.builder())
-            .build()},
-        {MASConfiguration
-            .pdptwBuilder()
-            .addEventHandler(AddVehicleEvent.class,
-              DefaultTruckFactory.builder()
-                  .setRoutePlanner(GotoClosestRoutePlanner.supplier())
-                  .setCommunicator(BlackboardUser.supplier())
-                  .build())
-            .addModel(BlackboardCommModel.builder())
-            .addModel(CommTestModel.builder())
-            .build()},
+      {MASConfiguration.pdptwBuilder()
+        .addEventHandler(AddVehicleEvent.class,
+          DefaultTruckFactory.builder()
+            .setRoutePlanner(RandomRoutePlanner.supplier())
+            .setCommunicator(RandomBidder.supplier())
+            .build())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
+        .addModel(CommTestModel.builder())
+        .build()},
+      {MASConfiguration.pdptwBuilder()
+        .addEventHandler(AddVehicleEvent.class,
+          DefaultTruckFactory.builder()
+            .setRoutePlanner(RandomRoutePlanner.supplier())
+            .setCommunicator(
+              SolverBidder.supplier(objFunc, RandomSolver.supplier()))
+            .build())
+        .addModel(AuctionCommModel.builder(DoubleBid.class))
+        .addModel(CommTestModel.builder())
+        .addModel(SolverModel.builder())
+        .build()},
+      {MASConfiguration
+        .pdptwBuilder()
+        .addEventHandler(AddVehicleEvent.class,
+          DefaultTruckFactory.builder()
+            .setRoutePlanner(GotoClosestRoutePlanner.supplier())
+            .setCommunicator(BlackboardUser.supplier())
+            .build())
+        .addModel(BlackboardCommModel.builder())
+        .addModel(CommTestModel.builder())
+        .build()},
     });
   }
 
   @Override
   public void tick(TimeLapse timeLapse) {
     final Optional<PDPModel> pdpModel = Optional.fromNullable(problem
-        .getModelProvider().getModel(PDPModel.class));
+      .getModelProvider().getModel(PDPModel.class));
 
     final Optional<CommTestModel> commTestModel = Optional.fromNullable(problem
-        .getModelProvider().getModel(CommTestModel.class));
+      .getModelProvider().getModel(CommTestModel.class));
 
     for (final Communicator c : commTestModel.get().communicators) {
       assertTrue(
         "The communicator may only return parcels which are not yet picked up",
         pdpModel
-            .get()
-            .getParcels(ParcelState.ANNOUNCED, ParcelState.AVAILABLE,
-              ParcelState.PICKING_UP)
-            .containsAll(c.getParcels()));
+          .get()
+          .getParcels(ParcelState.ANNOUNCED, ParcelState.AVAILABLE,
+            ParcelState.PICKING_UP)
+          .containsAll(c.getParcels()));
     }
   }
 

@@ -132,7 +132,7 @@ public final class Opt2 {
 
       final StochasticSupplier<Solver> deleg = solverSup();
       final StochasticSupplier<Solver> delegate = deleg != null
-          ? deleg : CheapestInsertionHeuristic.supplier(objFunc);
+        ? deleg : CheapestInsertionHeuristic.supplier(objFunc);
 
       final boolean dfs = deptFirstSearch();
       return new StochasticSupplier<Solver>() {
@@ -141,7 +141,7 @@ public final class Opt2 {
           if (dfs) {
             final RandomGenerator rng = new MersenneTwister(seed);
             return new DfsOpt2(rng.nextLong(), delegate.get(rng.nextLong()),
-                objFunc, progressListener);
+              objFunc, progressListener);
           }
           return new BfsOpt2(delegate.get(seed), objFunc, progressListener);
         }
@@ -169,8 +169,8 @@ public final class Opt2 {
         @Nullable ObjectiveFunction objFunc,
         boolean dfs) {
       return new AutoValue_Opt2_Builder(
-          (StochasticSupplier<Solver>) solverSup,
-          objFunc, dfs);
+        (StochasticSupplier<Solver>) solverSup,
+        objFunc, dfs);
     }
   }
 
@@ -340,7 +340,7 @@ public final class Opt2 {
             if (result == null) {
               scheduler.get().reportException(
                 new IllegalArgumentException("Solver.solve(..) must return a "
-                    + "non-null result. Solver: " + solver));
+                  + "non-null result. Solver: " + solver));
             } else {
               scheduler.get().updateSchedule(snapshot, result);
               scheduler.get().doneForNow();

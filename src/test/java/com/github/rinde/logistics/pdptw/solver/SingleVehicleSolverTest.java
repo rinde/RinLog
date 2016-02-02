@@ -89,7 +89,7 @@ public class SingleVehicleSolverTest {
   @Parameters
   public static Collection<Object[]> configs() {
     return Arrays.asList(new Object[][] {//
-        {new HeuristicSolver(new MersenneTwister(123))}});
+      {new HeuristicSolver(new MersenneTwister(123))}});
   }
 
   @Test
@@ -106,10 +106,10 @@ public class SingleVehicleSolverTest {
 
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder(DoubleBid.class))
-        .addModel(SolverModel.builder())
-        .build();
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder(DoubleBid.class))
+      .addModel(SolverModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
@@ -151,10 +151,10 @@ public class SingleVehicleSolverTest {
     final Gendreau06Scenario testScen = GendreauTestUtil.create(events);
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder(DoubleBid.class))
-        .addModel(SolverModel.builder())
-        .build();
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder(DoubleBid.class))
+      .addModel(SolverModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
@@ -204,10 +204,10 @@ public class SingleVehicleSolverTest {
 
     final Creator creator = new Creator(solver, SI.SECOND);
     final MASConfiguration tc = MASConfiguration.pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class, creator)
-        .addModel(AuctionCommModel.builder(DoubleBid.class))
-        .addModel(SolverModel.builder())
-        .build();
+      .addEventHandler(AddVehicleEvent.class, creator)
+      .addModel(AuctionCommModel.builder(DoubleBid.class))
+      .addModel(SolverModel.builder())
+      .build();
     final StatisticsDTO stats = ExperimentTestUtil.singleRun(testScen, tc, 123,
       Gendreau06ObjectiveFunction.instance(), false);
     assertEquals(1, creator.debuggers.size());
@@ -229,26 +229,26 @@ public class SingleVehicleSolverTest {
   static AddParcelEvent newParcelEvent(Point origin, Point destination) {
     return AddParcelEvent.create(
       Parcel.builder(origin, destination)
-          .pickupTimeWindow(TimeWindow.create(0, 3600000))
-          .deliveryTimeWindow(TimeWindow.create(1800000, 5400000))
-          .neededCapacity(0)
-          .orderAnnounceTime(-1L)
-          .pickupDuration(300000L)
-          .deliveryDuration(300000L)
-          .buildDTO());
+        .pickupTimeWindow(TimeWindow.create(0, 3600000))
+        .deliveryTimeWindow(TimeWindow.create(1800000, 5400000))
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(300000L)
+        .deliveryDuration(300000L)
+        .buildDTO());
   }
 
   static AddParcelEvent newParcelEvent(Point origin, Point destination,
       TimeWindow pickup, TimeWindow delivery) {
     return AddParcelEvent.create(
       Parcel.builder(origin, destination)
-          .pickupTimeWindow(pickup)
-          .deliveryTimeWindow(delivery)
-          .neededCapacity(0)
-          .orderAnnounceTime(-1L)
-          .pickupDuration(300000L)
-          .deliveryDuration(300000L)
-          .buildDTO());
+        .pickupTimeWindow(pickup)
+        .deliveryTimeWindow(delivery)
+        .neededCapacity(0)
+        .orderAnnounceTime(-1L)
+        .pickupDuration(300000L)
+        .deliveryDuration(300000L)
+        .buildDTO());
   }
 
   static class Creator implements TimedEventHandler<AddVehicleEvent>,
@@ -274,9 +274,9 @@ public class SingleVehicleSolverTest {
         ArraysSolverValidator.wrap(solver), false);
       debuggers.add(sd);
       simulator.register(new Truck(event.getVehicleDTO(),
-          new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd, timeUnit),
-              true),
-          c, RouteFollowingVehicle.nopAdjuster(), true));
+        new SolverRoutePlanner(new SingleVehicleSolverAdapter(sd, timeUnit),
+          true),
+        c, RouteFollowingVehicle.nopAdjuster(), true));
     }
   }
 

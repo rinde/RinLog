@@ -58,16 +58,16 @@ public class AuctionPanel
   static final String TIME_SEPARATOR = ":";
 
   static final PeriodFormatter FORMATTER = new PeriodFormatterBuilder()
-      .appendDays()
-      .appendSeparator(SPACE)
-      .minimumPrintedDigits(2)
-      .printZeroAlways()
-      .appendHours()
-      .appendLiteral(TIME_SEPARATOR)
-      .appendMinutes()
-      .appendLiteral(TIME_SEPARATOR)
-      .appendSeconds()
-      .toFormatter();
+    .appendDays()
+    .appendSeparator(SPACE)
+    .minimumPrintedDigits(2)
+    .printZeroAlways()
+    .appendHours()
+    .appendLiteral(TIME_SEPARATOR)
+    .appendMinutes()
+    .appendLiteral(TIME_SEPARATOR)
+    .appendSeconds()
+    .toFormatter();
   final AuctionCommModel<?> model;
   Optional<Tree> tree;
 
@@ -103,11 +103,11 @@ public class AuctionPanel
             final TreeItem item = new TreeItem(parent, 0);
             parent.setExpanded(true);
             item.setText(new String[] {
-                ae.getEventType().toString(),
-                FORMATTER.print(new Period(0, ae.getTime())),
-                finish
-                    ? ae.getWinner().get().toString() + " " + ae.getNumBids()
-                    : ""
+              ae.getEventType().toString(),
+              FORMATTER.print(new Period(0, ae.getTime())),
+              finish
+                ? ae.getWinner().get().toString() + " " + ae.getNumBids()
+                : ""
             });
 
             if (collapseButton.get().getSelection()) {
@@ -123,18 +123,18 @@ public class AuctionPanel
               model.getNumAuctions() - model.getNumParcels();
             final int perc =
               (int) ((reauctions - model.getNumUnsuccesfulAuctions()
-                  - model.getNumFailedAuctions()) / (double) reauctions
-                  * 100d);
+                - model.getNumFailedAuctions()) / (double) reauctions
+                * 100d);
 
             statusLabel.get().setText(
               "# parcels: " + model.getNumParcels()
-                  + " # ongoing auctions: " + model.getNumberOfOngoingAuctions()
-                  + " reauctions: " + reauctions
-                  + " (success: " + perc + "%)");
+                + " # ongoing auctions: " + model.getNumberOfOngoingAuctions()
+                + " reauctions: " + reauctions
+                + " (success: " + perc + "%)");
 
             statusLabel.get().setToolTipText(
               "unsuccessful: " + model.getNumUnsuccesfulAuctions()
-                  + " failed: " + model.getNumFailedAuctions());
+                + " failed: " + model.getNumFailedAuctions());
 
             statusLabel.get().pack(true);
             statusLabel.get().getParent().redraw();
@@ -189,13 +189,13 @@ public class AuctionPanel
     collapseButton.get().setText("Auto expand/collapse");
     collapseButton.get().setToolTipText(
       "Automatically expands parcels that are being auctioned, collapses "
-          + "parcels for which the auction is over.");
+        + "parcels for which the auction is over.");
     collapseButton.get().setSelection(true);
     scrollButton = Optional.of(new Button(parent, SWT.CHECK));
     scrollButton.get().setText("Auto scroll");
     scrollButton.get().setToolTipText(
       "Automatically scrolls the view such that the newly added event "
-          + "is visible.");
+        + "is visible.");
     scrollButton.get().setSelection(true);
 
     final Button b = new Button(parent, SWT.PUSH);

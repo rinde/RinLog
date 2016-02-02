@@ -130,9 +130,9 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     //
 
     sols = solveWithLateAcceptance(n, v, travelTime, releaseDates, dueDates,
-        servicePairs, serviceTimes, vehicleTravelTimes, inventories,
-        remainingServiceTimes, currentDestinations, pickupToDeliveryMap,
-        deliveryToPickupMap, fixedVehicleAssignment);
+      servicePairs, serviceTimes, vehicleTravelTimes, inventories,
+      remainingServiceTimes, currentDestinations, pickupToDeliveryMap,
+      deliveryToPickupMap, fixedVehicleAssignment);
     return sols;
   }
 
@@ -145,25 +145,25 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
     /* Determine a random feasible vehicle assignment */
     final int[] initialVehicleAssignment = randomFeasibleAssignment(n, v,
-        fixedVehicleAssignment, pickupToDeliveryMap, deliveryToPickupMap,
-        currentDestinations);
+      fixedVehicleAssignment, pickupToDeliveryMap, deliveryToPickupMap,
+      currentDestinations);
 
     /* Determine a random feasible permutation of orders */
     final List<Integer> perm0 = generateFeasibleRandomPermutation(n,
-        servicePairs, currentDestinations, dueDates);
+      servicePairs, currentDestinations, dueDates);
 
     /* Construct a solution with this permutation and vehicle assignment */
     final SolutionObject[] sol0 = construct(n, v, Ints.toArray(perm0),
-        initialVehicleAssignment, travelTime, releaseDates, dueDates,
-        servicePairs, serviceTimes, vehicleTravelTimes, inventories,
-        remainingServiceTimes);
+      initialVehicleAssignment, travelTime, releaseDates, dueDates,
+      servicePairs, serviceTimes, vehicleTravelTimes, inventories,
+      remainingServiceTimes);
 
     // ADDED BY RINDE
     // only for checking feasibility of initial permutation
     if (strictMode) {
       ArraysSolverValidator.validateOutputs(sol0, travelTime, releaseDates,
-          dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
-          inventories, remainingServiceTimes, currentDestinations);
+        dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
+        inventories, remainingServiceTimes, currentDestinations);
     }
     // END ADDED BY RINDE
 
@@ -177,13 +177,13 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
     List<Integer> currentPerm = new ArrayList<Integer>(perm0);
     int[] currentVehicleAssignment = Arrays.copyOf(initialVehicleAssignment,
-        initialVehicleAssignment.length);
+      initialVehicleAssignment.length);
     double currentObj = obj0;
     SolutionObject[] currentSol = sol0;
 
     // List<Integer> bestPerm = new ArrayList<Integer>(perm0);
     int[] bestVehicleAssignment = Arrays.copyOf(initialVehicleAssignment,
-        initialVehicleAssignment.length);
+      initialVehicleAssignment.length);
     double bestObj = obj0;
     SolutionObject[] bestSol = sol0;
 
@@ -194,13 +194,13 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
       if (debug) {
         if (it % 100 == 0) {
           System.out.println("[" + it + "] Current:\t " + (currentObj / 60d)
-              + "\tbest:\t" + (bestObj / 60d));
+            + "\tbest:\t" + (bestObj / 60d));
         }
       }
 
       final List<Integer> newPerm = new ArrayList<Integer>(currentPerm);
       final int[] newVehicleAssignment = Arrays.copyOf(
-          currentVehicleAssignment, currentVehicleAssignment.length);
+        currentVehicleAssignment, currentVehicleAssignment.length);
 
       SolutionObject[] newSol = null;
 
@@ -209,8 +209,9 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
         // System.out.println("VM");
         int ro = 1 + rand.nextInt(n - 2); // random order
         while (fixedVehicleAssignment[ro] != -1
-        // if is fixed or its pickup is fixed
-            || (deliveryToPickupMap[ro] != -1 && fixedVehicleAssignment[deliveryToPickupMap[ro]] != -1)) {
+          // if is fixed or its pickup is fixed
+          || (deliveryToPickupMap[ro] != -1
+            && fixedVehicleAssignment[deliveryToPickupMap[ro]] != -1)) {
           ro = rand.nextInt(n); // new random order
         }
         final int rv = rand.nextInt(v); // random vehicle
@@ -239,14 +240,14 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
         newSol = copySolution(currentSol);
         final int[] newPermAr = Ints.toArray(newPerm);
         final SolutionObject newSolForOriginalVehicle = constructSingleVehicle(
-            n, newPermAr, newVehicleAssignment, travelTime, releaseDates,
-            dueDates, serviceTimes, vehicleTravelTimes, remainingServiceTimes,
-            originalVehicle);
+          n, newPermAr, newVehicleAssignment, travelTime, releaseDates,
+          dueDates, serviceTimes, vehicleTravelTimes, remainingServiceTimes,
+          originalVehicle);
         newSol[originalVehicle] = newSolForOriginalVehicle;
         final SolutionObject newSolForNewVehicle = constructSingleVehicle(n,
-            newPermAr, newVehicleAssignment, travelTime, releaseDates,
-            dueDates, serviceTimes, vehicleTravelTimes, remainingServiceTimes,
-            rv);
+          newPermAr, newVehicleAssignment, travelTime, releaseDates,
+          dueDates, serviceTimes, vehicleTravelTimes, remainingServiceTimes,
+          rv);
         newSol[rv] = newSolForNewVehicle;
 
         // for (int k = 0; k < dsol.length; k++) {
@@ -287,7 +288,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
               continue;
             }
             j = i + 1
-                + rand.nextInt(Math.min(deliveryLocation, n - 1) - (i + 1));
+              + rand.nextInt(Math.min(deliveryLocation, n - 1) - (i + 1));
 
           } while (!ok);
 
@@ -300,9 +301,9 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
           newSol = copySolution(currentSol);
           final int veh = newVehicleAssignment[el];
           final SolutionObject newSolForVehicle = constructSingleVehicle(n,
-              Ints.toArray(newPerm), newVehicleAssignment, travelTime,
-              releaseDates, dueDates, serviceTimes, vehicleTravelTimes,
-              remainingServiceTimes, veh);
+            Ints.toArray(newPerm), newVehicleAssignment, travelTime,
+            releaseDates, dueDates, serviceTimes, vehicleTravelTimes,
+            remainingServiceTimes, veh);
           newSol[veh] = newSolForVehicle;
 
         } else {
@@ -324,7 +325,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
               continue;
             }
             j = Math.max(1, pickupLocation + 1)
-                + rand.nextInt(i - Math.max(1, pickupLocation + 1));
+              + rand.nextInt(i - Math.max(1, pickupLocation + 1));
           } while (!ok);
 
           final int el = newPerm.remove(i);
@@ -337,9 +338,9 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
           newSol = copySolution(currentSol);
           final int veh = newVehicleAssignment[el];
           final SolutionObject newSolForVehicle = constructSingleVehicle(n,
-              Ints.toArray(newPerm), newVehicleAssignment, travelTime,
-              releaseDates, dueDates, serviceTimes, vehicleTravelTimes,
-              remainingServiceTimes, veh);
+            Ints.toArray(newPerm), newVehicleAssignment, travelTime,
+            releaseDates, dueDates, serviceTimes, vehicleTravelTimes,
+            remainingServiceTimes, veh);
           newSol[veh] = newSolForVehicle;
         }
       }
@@ -347,15 +348,15 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
       final double newObj = getTotalObjective(newSol);
       if (newObj < 0) {
         throw new RuntimeException("Found a negative objective value: "
-            + newObj);
+          + newObj);
       }
 
       // ADDED BY RINDE
       // only for checking feasibility
       if (strictMode) {
         ArraysSolverValidator.validateOutputs(newSol, travelTime, releaseDates,
-            dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
-            inventories, remainingServiceTimes, currentDestinations);
+          dueDates, servicePairs, serviceTimes, vehicleTravelTimes,
+          inventories, remainingServiceTimes, currentDestinations);
       }
       // END ADDED BY RINDE
 
@@ -374,11 +375,11 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
           // bestPerm = new ArrayList<Integer>(newPerm);
           bestObj = newObj;
           bestVehicleAssignment = Arrays.copyOf(newVehicleAssignment,
-              newVehicleAssignment.length);
+            newVehicleAssignment.length);
           nrOfNonImprovements = 0;
           if (debug) {
             System.out.println("Found new best solution with objective: "
-                + (newObj / 60d));
+              + (newObj / 60d));
           }
         }
 
@@ -405,13 +406,13 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
   private SolutionObject copySolutionObject(SolutionObject solutionObject) {
     final int[] route = Arrays.copyOf(solutionObject.route,
-        solutionObject.route.length);
+      solutionObject.route.length);
     final int[] arrivalTimes = Arrays.copyOf(solutionObject.arrivalTimes,
-        solutionObject.arrivalTimes.length);
+      solutionObject.arrivalTimes.length);
     final int objectiveValue = solutionObject.objectiveValue;
     checkArgument(objectiveValue >= 0);
     final SolutionObject copy = new SolutionObject(route, arrivalTimes,
-        objectiveValue);
+      objectiveValue);
     return copy;
   }
 
@@ -443,7 +444,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     double obj = 0;
     for (int i = 0; i < sol.length; i++) {
       checkArgument(sol[i].objectiveValue >= 0,
-          "Found negative objective value: " + sol[i].objectiveValue);
+        "Found negative objective value: " + sol[i].objectiveValue);
       obj += sol[i].objectiveValue;
     }
     return obj;
@@ -476,8 +477,8 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     for (int j = 0; j < v; j++) { // for each vehicle j
 
       final SolutionObject solutionObject = constructSingleVehicle(n,
-          permutation, vehicleAssignment, travelTime, releaseDates, dueDates,
-          serviceTimes, vehicleTravelTimes, remainingServiceTimes, j);
+        permutation, vehicleAssignment, travelTime, releaseDates, dueDates,
+        serviceTimes, vehicleTravelTimes, remainingServiceTimes, j);
       solution[j] = solutionObject;
 
     }
@@ -490,7 +491,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
       int[] remainingServiceTimes, int j) {
     /* calculate route */
     final List<Integer> route = getRouteForVehicle(n, permutation,
-        vehicleAssignment, j);
+      vehicleAssignment, j);
 
     /* calculate arrival times + track total travel time */
     int totalTravelTime = 0;
@@ -506,7 +507,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
         tt = travelTime[route.get(i - 1)][next];
       }
       checkArgument(tt >= 0 && tt < Integer.MAX_VALUE,
-          "Found invalid travel time: %s", tt);
+        "Found invalid travel time: %s", tt);
 
       arrivalTimes[i] = Math.max(previousT + tt, releaseDates[next]);
       totalTravelTime += tt;
@@ -516,15 +517,15 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
 
     /* compute total tardiness */
     final int totalTardiness = ArraysSolvers.computeRouteTardiness(
-        Ints.toArray(route), arrivalTimes, serviceTimes, dueDates,
-        remainingServiceTimes[j]);
+      Ints.toArray(route), arrivalTimes, serviceTimes, dueDates,
+      remainingServiceTimes[j]);
 
     // calculate objective value for vehicle j
     final int objectiveValue = totalTardiness * TARDINESS_WEIGHT
-        + totalTravelTime * TRAVEL_TIME_WEIGHT;
+      + totalTravelTime * TRAVEL_TIME_WEIGHT;
 
     final SolutionObject solutionObject = new SolutionObject(
-        Ints.toArray(route), arrivalTimes, objectiveValue);
+      Ints.toArray(route), arrivalTimes, objectiveValue);
     return solutionObject;
   }
 
@@ -673,7 +674,7 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
   public static StochasticSupplier<Solver> supplier(int pListLength,
       int pMaxNrOfNonImprovements, boolean pDebug, boolean pStrictMode) {
     return new Supplier(pListLength, pMaxNrOfNonImprovements, pDebug,
-        pStrictMode);
+      pStrictMode);
   }
 
   private static class Supplier implements StochasticSupplier<Solver> {
@@ -704,15 +705,16 @@ public class MultiVehicleHeuristicSolver implements MultiVehicleArraysSolver {
     @Override
     public Solver get(long seed) {
       return SolverValidator.wrap(new MultiVehicleSolverAdapter(
-          ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
-              new MersenneTwister(seed), listLength, maxNrOfNonImprovements,
-              debug, strictMode)), SI.SECOND));
+        ArraysSolverValidator.wrap(new MultiVehicleHeuristicSolver(
+          new MersenneTwister(seed), listLength, maxNrOfNonImprovements,
+          debug, strictMode)),
+        SI.SECOND));
     }
 
     @Override
     public String toString() {
       return new StringBuilder("Heuristic-").append(listLength).append("-")
-          .append(maxNrOfNonImprovements).toString();
+        .append(maxNrOfNonImprovements).toString();
     }
   }
 }

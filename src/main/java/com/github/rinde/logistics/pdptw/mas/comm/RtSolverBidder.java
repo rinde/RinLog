@@ -137,7 +137,7 @@ public class RtSolverBidder
     if (auctioneer.getWinner().equals(this)) {
       lastAuctionWinTime = time;
     } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
-        && !assignedParcels.isEmpty()) {
+      && !assignedParcels.isEmpty()) {
       LOGGER.trace("{} We haven't won an auction for a while -> reauction",
         this);
       // we haven't won an auction for a while
@@ -176,12 +176,12 @@ public class RtSolverBidder
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
     final ImmutableList<Parcel> currentRoute = ImmutableList
-        .copyOf(((Truck) vehicle.get()).getRoute());
+      .copyOf(((Truck) vehicle.get()).getRoute());
 
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create()
-          .useCurrentRoutes(ImmutableList.of(currentRoute))
-          .useParcels(parcels));
+        .useCurrentRoutes(ImmutableList.of(currentRoute))
+        .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
       state, ImmutableList.of(currentRoute)));
 
@@ -196,7 +196,7 @@ public class RtSolverBidder
 
         if (exec || !event.getState().equals(state)) {
           LOGGER.trace("handleEvent called with incorrect arguments, executed "
-              + "before: {} same state: {}",
+            + "before: {} same state: {}",
             exec, event.getState().equals(state));
           if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
             ev.removeListener(this, EventType.NEW_SCHEDULE);
@@ -252,7 +252,7 @@ public class RtSolverBidder
     LOGGER.trace("{} Considering a reauction, assignedParcels: {}.", this,
       assignedParcels.size());
     final ImmutableList<Parcel> currentRoute = ImmutableList
-        .copyOf(((Truck) vehicle.get()).getRoute());
+      .copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
     final StatisticsDTO stats =
@@ -275,10 +275,10 @@ public class RtSolverBidder
       final Set<Parcel> swappableParcels = new LinkedHashSet<>();
       for (final Parcel ap : assignedParcels) {
         if (!pdpModel.get().getParcelState(ap).isPickedUp()
-            && !pdpModel.get().getParcelState(ap).isTransitionState()
-            && !state.getVehicles().get(0).getDestination().asSet()
-                .contains(ap)
-            && !ap.equals(lastReceivedParcel)) {
+          && !pdpModel.get().getParcelState(ap).isTransitionState()
+          && !state.getVehicles().get(0).getDestination().asSet()
+            .contains(ap)
+          && !ap.equals(lastReceivedParcel)) {
           swappableParcels.add(ap);
         }
       }
@@ -306,8 +306,8 @@ public class RtSolverBidder
       // we have found the most expensive parcel in the route, that is, removing
       // this parcel from the route will yield the greatest cost reduction.
       if (toSwap != null
-          && !reauctioning.get()
-          && !toSwap.equals(lastReceivedParcel)) {
+        && !reauctioning.get()
+        && !toSwap.equals(lastReceivedParcel)) {
         reauctioning.set(true);
         LOGGER.trace("Found most expensive parcel for reauction: {}.", toSwap);
         // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
@@ -372,7 +372,7 @@ public class RtSolverBidder
   @Override
   public void setSolverProvider(RtSimSolverBuilder builder) {
     solverHandle = Optional.of(builder.setVehicles(vehicle.asSet())
-        .build(solver));
+      .build(solver));
   }
 
   public static StochasticSupplier<RtSolverBidder> supplier(
@@ -380,7 +380,7 @@ public class RtSolverBidder
       StochasticSupplier<? extends RealtimeSolver> solverSupplier,
       BidFunction bidFunction) {
     return new AutoValue_RtSolverBidder_Sup(objFunc, solverSupplier,
-        bidFunction);
+      bidFunction);
   }
 
   public interface BidFunction {
@@ -447,7 +447,7 @@ public class RtSolverBidder
     @Override
     public RtSolverBidder get(long seed) {
       return new RtSolverBidder(getObjectiveFunction(),
-          getSolverSupplier().get(seed), getBidFunction());
+        getSolverSupplier().get(seed), getBidFunction());
     }
 
     @Override

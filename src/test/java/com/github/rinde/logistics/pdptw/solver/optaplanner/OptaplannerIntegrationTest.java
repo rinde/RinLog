@@ -45,32 +45,32 @@ public class OptaplannerIntegrationTest {
   @Test
   public void testSimulatedTime() {
     Experiment.build(Gendreau06ObjectiveFunction.instance())
-        .withThreads(1)
-        .addConfiguration(
-          MASConfiguration.builder(Central
-              .solverConfiguration(
-                OptaplannerSolvers.builder()
-                    .withValidated(true)
-                    .withObjectiveFunction(
-                      Gendreau06ObjectiveFunction.instance(30d))
-                    .withUnimprovedMsLimit(1L)
-                    .withName("test")
-                    .buildSolverSupplier()))
-              .addEventHandler(AddParcelEvent.class,
-                AddParcelEvent.namedHandler())
-              .build())
-        .addScenarios(Gendreau06Parser.parser().addFile(new File(
-            "files/scenarios/gendreau06/req_rapide_1_240_24"))
-            .offline()
-            .parse())
-        .showGui(View.builder()
-            .with(PlaneRoadModelRenderer.builder())
-            .with(RoadUserRenderer.builder())
-            .with(RouteRenderer.builder())
-            .with(TimeLinePanel.builder())
-            .withAutoPlay())
-        .showGui(false)
-        .perform();
+      .withThreads(1)
+      .addConfiguration(
+        MASConfiguration.builder(Central
+          .solverConfiguration(
+            OptaplannerSolvers.builder()
+              .withValidated(true)
+              .withObjectiveFunction(
+                Gendreau06ObjectiveFunction.instance(30d))
+              .withUnimprovedMsLimit(1L)
+              .withName("test")
+              .buildSolverSupplier()))
+          .addEventHandler(AddParcelEvent.class,
+            AddParcelEvent.namedHandler())
+          .build())
+      .addScenarios(Gendreau06Parser.parser().addFile(new File(
+        "files/scenarios/gendreau06/req_rapide_1_240_24"))
+        .offline()
+        .parse())
+      .showGui(View.builder()
+        .with(PlaneRoadModelRenderer.builder())
+        .with(RoadUserRenderer.builder())
+        .with(RouteRenderer.builder())
+        .with(TimeLinePanel.builder())
+        .withAutoPlay())
+      .showGui(false)
+      .perform();
   }
 
   @Test
@@ -78,39 +78,39 @@ public class OptaplannerIntegrationTest {
 
     final ExperimentResults results =
       Experiment.build(Gendreau06ObjectiveFunction.instance())
-          .withThreads(1)
-          .addConfiguration(
-            MASConfiguration.builder(
-              RtCentral.solverConfiguration(
-                OptaplannerSolvers.builder()
-                    .withValidated(true)
-                    .withObjectiveFunction(
-                      Gendreau06ObjectiveFunction.instance())
-                    .withUnimprovedMsLimit(5000L)
-                    .withName("test")
-                    .buildRealtimeSolverSupplier(),
-                ""))
-                .addEventHandler(AddParcelEvent.class,
-                  AddParcelEvent.namedHandler())
-                .build())
-          .addScenarios(
-            Gendreau06Parser.parser()
-                .addFile(
-                  new File("files/scenarios/gendreau06/req_rapide_1_240_24"))
-                .realtime()
-                .setNumParcels(5)
-                .parse())
-          .usePostProcessor(PostProcessors.statisticsPostProcessor())
-          .showGui(View.builder()
-              .with(PlaneRoadModelRenderer.builder())
-              .with(PDPModelRenderer.builder().withDestinationLines())
-              // .with(RoadUserRenderer.builder().withToStringLabel())
-              .with(RouteRenderer.builder())
-              .with(TimeLinePanel.builder())
-              .withSpeedUp(30)
-              .withAutoPlay())
-          .showGui(false)
-          .perform();
+        .withThreads(1)
+        .addConfiguration(
+          MASConfiguration.builder(
+            RtCentral.solverConfiguration(
+              OptaplannerSolvers.builder()
+                .withValidated(true)
+                .withObjectiveFunction(
+                  Gendreau06ObjectiveFunction.instance())
+                .withUnimprovedMsLimit(5000L)
+                .withName("test")
+                .buildRealtimeSolverSupplier(),
+              ""))
+            .addEventHandler(AddParcelEvent.class,
+              AddParcelEvent.namedHandler())
+            .build())
+        .addScenarios(
+          Gendreau06Parser.parser()
+            .addFile(
+              new File("files/scenarios/gendreau06/req_rapide_1_240_24"))
+            .realtime()
+            .setNumParcels(5)
+            .parse())
+        .usePostProcessor(PostProcessors.statisticsPostProcessor())
+        .showGui(View.builder()
+          .with(PlaneRoadModelRenderer.builder())
+          .with(PDPModelRenderer.builder().withDestinationLines())
+          // .with(RoadUserRenderer.builder().withToStringLabel())
+          .with(RouteRenderer.builder())
+          .with(TimeLinePanel.builder())
+          .withSpeedUp(30)
+          .withAutoPlay())
+        .showGui(false)
+        .perform();
 
     final StatisticsDTO stats =
       (StatisticsDTO) results.getResults().iterator().next().getResultObject();

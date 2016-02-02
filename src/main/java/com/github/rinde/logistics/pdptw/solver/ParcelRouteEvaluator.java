@@ -23,7 +23,7 @@ import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.google.common.collect.ImmutableList;
 
 class ParcelRouteEvaluator implements
-RouteEvaluator<GlobalStateObject, Parcel> {
+    RouteEvaluator<GlobalStateObject, Parcel> {
   private final ObjectiveFunction objectiveFunction;
 
   ParcelRouteEvaluator(ObjectiveFunction objFunc) {
@@ -32,7 +32,7 @@ RouteEvaluator<GlobalStateObject, Parcel> {
 
   @Override
   public double computeCost(GlobalStateObject context, int routeIndex,
-    ImmutableList<Parcel> newRoute) {
+      ImmutableList<Parcel> newRoute) {
     return objectiveFunction.computeCost(Solvers.computeStats(
       context.withSingleVehicle(routeIndex), ImmutableList.of(newRoute)));
   }

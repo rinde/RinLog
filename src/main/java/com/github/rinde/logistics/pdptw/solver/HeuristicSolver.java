@@ -141,7 +141,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
             improved = true;
             if (DEBUG) {
               System.out.println("Found new best solution with objective : "
-                  + newSol.objectiveValue);
+                + newSol.objectiveValue);
             }
           }
         }
@@ -166,7 +166,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
             improved = true;
             if (DEBUG) {
               System.out.println("Found new best solution with objective: "
-                  + newSol.objectiveValue);
+                + newSol.objectiveValue);
             }
           }
         }
@@ -204,7 +204,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
       if (DEBUG) {
         if (it % 100 == 0) {
           System.out.println("Current:\t " + currentObj + "\tbest:\t"
-              + bestSol.objectiveValue);
+            + bestSol.objectiveValue);
         }
       }
 
@@ -256,7 +256,7 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
             continue;
           }
           j = Math.max(1, pickupLocation + 1)
-              + rand.nextInt(i - Math.max(1, pickupLocation + 1));
+            + rand.nextInt(i - Math.max(1, pickupLocation + 1));
         } while (!ok);
 
         final int el = newPerm.remove(i);
@@ -369,15 +369,15 @@ public class HeuristicSolver implements SingleVehicleArraysSolver {
     int totalTardiness = 0;
     for (int i = 0; i < n; i++) {
       final int tardiness = Math.max(0, arrivalTimes[i] + serviceTime[i]
-          - dueDates[i]);
+        - dueDates[i]);
       totalTardiness += tardiness;
     }
     // calculate objective value
     final int objectiveValue = totalTardiness * TARDINESS_WEIGHT
-        + totalTravelTime * TRAVEL_TIME_WEIGHT;
+      + totalTravelTime * TRAVEL_TIME_WEIGHT;
 
     final SolutionObject solutionObject = new SolutionObject(permutation,
-        arrivalTimes, objectiveValue);
+      arrivalTimes, objectiveValue);
     return solutionObject;
   }
 

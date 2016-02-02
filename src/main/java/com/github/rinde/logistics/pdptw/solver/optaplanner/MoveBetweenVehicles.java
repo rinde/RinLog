@@ -137,7 +137,7 @@ public class MoveBetweenVehicles extends AbstractMove {
       final ImmutableSet.Builder<Visit> entityBuilder = ImmutableSet.builder();
       for (final Changeset c : changesets) {
         entityBuilder
-            .addAll(isUndo ? c.getOriginalEntities() : c.getTargetEntities());
+          .addAll(isUndo ? c.getOriginalEntities() : c.getTargetEntities());
       }
       planningEntities = entityBuilder.build();
     }
@@ -150,7 +150,7 @@ public class MoveBetweenVehicles extends AbstractMove {
       final ImmutableSet.Builder<Visit> valuesBuilder = ImmutableSet.builder();
       for (final Changeset c : changesets) {
         valuesBuilder
-            .addAll(isUndo ? c.getOriginalValues() : c.getTargetValues());
+          .addAll(isUndo ? c.getOriginalValues() : c.getTargetValues());
       }
       planningValues = valuesBuilder.build();
     }

@@ -61,7 +61,7 @@ public final class Insertions {
       list.size(), startIndex);
     checkArgument(numOfInsertions > 0, "numOfInsertions must be positive.");
     return Iterators.transform(new InsertionIndexGenerator(numOfInsertions,
-        list.size(), startIndex),
+      list.size(), startIndex),
       new IndexToInsertionTransform<T>(list, item));
   }
 

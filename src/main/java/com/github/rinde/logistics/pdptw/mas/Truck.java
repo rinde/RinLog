@@ -112,7 +112,7 @@ public class Truck
         updateRoute();
       }
     } else if (changed && isDiversionAllowed()
-        && !stateMachine.stateIs(serviceState)) {
+      && !stateMachine.stateIs(serviceState)) {
       updateAssignmentAndRoutePlanner();
     }
   }
@@ -163,14 +163,14 @@ public class Truck
 
       // when diverting -> unclaim previous
       if ((event.trigger == DefaultEvent.REROUTE
-          || event.trigger == DefaultEvent.NOGO)
-          && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
-              .isPickedUp()) {
+        || event.trigger == DefaultEvent.NOGO)
+        && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
+          .isPickedUp()) {
         communicator.unclaim(gotoState.getPreviousDestination());
       }
 
       if (event.trigger == DefaultEvent.GOTO
-          || event.trigger == DefaultEvent.REROUTE) {
+        || event.trigger == DefaultEvent.REROUTE) {
         final Parcel cur = getRoute().iterator().next();
         if (!getPDPModel().getParcelState(cur).isPickedUp()) {
           LOGGER.trace("{} claim:{}", this, cur);
@@ -186,8 +186,8 @@ public class Truck
       }
 
       if ((event.newState == waitState
-          || isDiversionAllowed() && event.newState != serviceState)
-          && changed) {
+        || isDiversionAllowed() && event.newState != serviceState)
+        && changed) {
         updateAssignmentAndRoutePlanner();
       }
     }
@@ -224,9 +224,9 @@ public class Truck
   @Override
   public String toString() {
     return toStringHelper(this)
-        .addValue(Integer.toHexString(hashCode()))
-        .add("rp", routePlanner)
-        .add("c", communicator)
-        .toString();
+      .addValue(Integer.toHexString(hashCode()))
+      .add("rp", routePlanner)
+      .add("c", communicator)
+      .toString();
   }
 }

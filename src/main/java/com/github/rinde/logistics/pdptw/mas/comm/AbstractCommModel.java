@@ -43,7 +43,7 @@ import com.google.common.base.Optional;
  * @param <T> The type of {@link Communicator} this model expects.
  */
 public abstract class AbstractCommModel<T extends Communicator> extends
-  AbstractModel<T> implements ModelReceiver {
+    AbstractModel<T> implements ModelReceiver {
   /**
    * The logger.
    */

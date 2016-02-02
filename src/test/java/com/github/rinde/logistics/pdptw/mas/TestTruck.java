@@ -77,12 +77,12 @@ public class TestTruck extends Truck {
         SimulatorAPI simulator) {
       final RoutePlanner rp =
         getRoutePlanner().get(simulator.getRandomGenerator()
-            .nextLong());
+          .nextLong());
       final Communicator c =
         getCommunicator().get(simulator.getRandomGenerator()
-            .nextLong());
+          .nextLong());
       simulator.register(new TestTruck(event.getVehicleDTO(), rp, c,
-          getRouteAdjuster(), getLazyComputation()));
+        getRouteAdjuster(), getLazyComputation()));
     }
 
     public static Builder testBuilder() {
@@ -93,7 +93,7 @@ public class TestTruck extends Truck {
       @Override
       public TestTruckFactory build() {
         return new AutoValue_TestTruck_TestTruckFactory(routePlanner,
-            communicator, routeAdjuster, lazyComputation);
+          communicator, routeAdjuster, lazyComputation);
       }
     }
   }

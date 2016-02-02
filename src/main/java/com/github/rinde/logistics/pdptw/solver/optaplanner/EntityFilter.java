@@ -29,7 +29,7 @@ public class EntityFilter implements SelectionFilter<Visit> {
   @Override
   public boolean accept(ScoreDirector scoreDirector, Visit selection) {
     if (selection.getVehicle().equals(selection)
-        && selection.getVehicle().getDestination().isPresent()) {
+      && selection.getVehicle().getDestination().isPresent()) {
       return false;
     }
     return true;

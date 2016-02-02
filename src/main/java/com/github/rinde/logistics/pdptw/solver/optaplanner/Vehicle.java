@@ -60,7 +60,7 @@ public class Vehicle implements Visit {
     vehicle = vso;
     endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
     remainingServiceTime = vso.getRemainingServiceTime() > 0
-        ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
+      ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
     index = ind;
   }
 
@@ -162,9 +162,9 @@ public class Vehicle implements Visit {
     checkNotNull(rvehicle);
 
     return Objects.equals(lvehicle.vehicle, rvehicle.vehicle)
-        && Objects.equals(lvehicle.endTime, rvehicle.endTime)
-        && Objects.equals(lvehicle.remainingServiceTime,
-          rvehicle.remainingServiceTime);
+      && Objects.equals(lvehicle.endTime, rvehicle.endTime)
+      && Objects.equals(lvehicle.remainingServiceTime,
+        rvehicle.remainingServiceTime);
   }
 
   static boolean scheduleEqual(Vehicle lvehicle, Vehicle rvehicle) {

@@ -69,7 +69,7 @@ public class RandomRoutePlanner extends AbstractRoutePlanner {
       current = Optional.absent();
     } else {
       final List<Parcel> list = newArrayList(assignedParcels
-          .elementSet());
+        .elementSet());
       current = Optional.of(list.get(rng.nextInt(list.size())));
     }
     dispatchChangeEvent();

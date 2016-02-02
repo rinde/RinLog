@@ -66,12 +66,12 @@ public interface TruckFactory
         SimulatorAPI simulator) {
       final RoutePlanner rp =
         getRoutePlanner().get(simulator.getRandomGenerator()
-            .nextLong());
+          .nextLong());
       final Communicator c =
         getCommunicator().get(simulator.getRandomGenerator()
-            .nextLong());
+          .nextLong());
       simulator.register(new Truck(event.getVehicleDTO(), rp, c,
-          getRouteAdjuster(), getLazyComputation()));
+        getRouteAdjuster(), getLazyComputation()));
     }
 
     public static Builder builder() {
@@ -120,7 +120,7 @@ public interface TruckFactory
       checkArgument(routePlanner != null, "A route planner must be specified.");
       checkArgument(communicator != null, "A communicator must be specified.");
       return new AutoValue_TruckFactory_DefaultTruckFactory(routePlanner,
-          communicator, routeAdjuster, lazyComputation);
+        communicator, routeAdjuster, lazyComputation);
     }
   }
 }

@@ -157,7 +157,7 @@ public class AuctionCommModel<T extends Bid<T>>
       return clazz.cast(this);
     }
     throw new IllegalArgumentException(
-        AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
+      AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
   }
 
   /**
@@ -199,11 +199,11 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(AuctionEvent.class)
-          .add("type", getEventType())
-          .add("parcel", parcel)
-          .add("winner", winner)
-          .add("time", time)
-          .toString();
+        .add("type", getEventType())
+        .add("parcel", parcel)
+        .add("winner", winner)
+        .add("time", time)
+        .toString();
     }
 
     /**
@@ -271,7 +271,7 @@ public class AuctionCommModel<T extends Bid<T>>
       synchronized (bids) {
         if (time - auctionStartTime > MAX_AUCTION_DURATION) {
           throw new IllegalStateException(
-              "Auction duration exceeded threshold.");
+            "Auction duration exceeded threshold.");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
@@ -293,7 +293,7 @@ public class AuctionCommModel<T extends Bid<T>>
           winner = Optional.of(winningBid.getBidder());
 
           if (initiator.isPresent()
-              && winningBid.getBidder().equals(initiator.get())) {
+            && winningBid.getBidder().equals(initiator.get())) {
             unsuccessfulAuctions++;
             // nothing changes
             initiator = Optional.absent();
@@ -325,7 +325,7 @@ public class AuctionCommModel<T extends Bid<T>>
           // notify anybody else interested in auctions
           final AuctionEvent ev =
             new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
-                bids.size());
+              bids.size());
 
           eventDispatcher.dispatchEvent(ev);
           if (callback.isPresent()) {
@@ -354,7 +354,7 @@ public class AuctionCommModel<T extends Bid<T>>
       checkArgument(bidToBeat.getBidder().equals(currentOwner));
       checkArgument(winner.get().equals(currentOwner),
         "A reauction can only be initiated by the previous winner (%s), "
-            + "found %s. Parcel: %s.",
+          + "found %s. Parcel: %s.",
         winner.get(), currentOwner, parcel);
 
       callback = Optional.of(cb);
@@ -427,7 +427,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     static <T extends Bid<T>> Builder<T> create() {
       return new AutoValue_AuctionCommModel_Builder<T>(
-          AuctionStopConditions.<T>allBidders());
+        AuctionStopConditions.<T>allBidders());
     }
   }
 }

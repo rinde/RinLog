@@ -75,7 +75,7 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(p);
     final ImmutableList<Parcel> currentRoute = ImmutableList
-        .copyOf(((Truck) vehicle.get()).getRoute());
+      .copyOf(((Truck) vehicle.get()).getRoute());
     LOGGER.trace(" > currentRoute {}", currentRoute);
     final StateContext context = solverHandle.get().convert(
       SolveArgs.create().noCurrentRoutes().useParcels(parcels));
@@ -92,7 +92,7 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
 
     // check whether the RoutePlanner produces routes compatible with the solver
     final SolveArgs args = SolveArgs.create().useParcels(parcels)
-        .useCurrentRoutes(ImmutableList.of(currentRoute));
+      .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
       final GlobalStateObject gso = solverHandle.get().convert(args).state;
       SolverValidator.checkRoute(gso.getVehicles().get(0), 0);

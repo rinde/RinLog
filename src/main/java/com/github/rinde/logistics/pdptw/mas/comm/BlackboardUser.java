@@ -94,7 +94,7 @@ public class BlackboardUser implements Communicator {
    */
   public void update() {
     eventDispatcher
-        .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
+      .dispatchEvent(new Event(CommunicatorEventType.CHANGE, this));
   }
 
   @Override
@@ -115,7 +115,7 @@ public class BlackboardUser implements Communicator {
   @Override
   public String toString() {
     return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
-        .toString();
+      .toString();
   }
 
   // not needed

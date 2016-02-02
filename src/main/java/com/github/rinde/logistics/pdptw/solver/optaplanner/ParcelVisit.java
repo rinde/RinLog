@@ -95,8 +95,8 @@ public class ParcelVisit implements Visit {
   @Nullable
   @PlanningVariable(strengthComparatorClass = VisitStrengthComparator.class,
                     valueRangeProviderRefs = {
-                        PDPSolution.PARCEL_RANGE,
-                        PDPSolution.VEHICLE_RANGE
+                      PDPSolution.PARCEL_RANGE,
+                      PDPSolution.VEHICLE_RANGE
                     },
                     graphType = PlanningVariableGraphType.CHAINED)
   public Visit getPreviousVisit() {
@@ -198,11 +198,11 @@ public class ParcelVisit implements Visit {
     checkNotNull(lpv);
     checkNotNull(rpv);
     return Objects.equals(lpv.getVisitType(), rpv.getVisitType())
-        && Objects.equals(lpv.getParcel(), rpv.getParcel())
-        && Objects.equals(lpv.getPosition(), rpv.getPosition())
-        && Objects.equals(lpv.getServiceDuration(), rpv.getServiceDuration())
-        && Objects.equals(lpv.timeWindow, rpv.timeWindow)
-        && Objects.equals(lpv.latestStartTime, rpv.latestStartTime);
+      && Objects.equals(lpv.getParcel(), rpv.getParcel())
+      && Objects.equals(lpv.getPosition(), rpv.getPosition())
+      && Objects.equals(lpv.getServiceDuration(), rpv.getServiceDuration())
+      && Objects.equals(lpv.timeWindow, rpv.timeWindow)
+      && Objects.equals(lpv.latestStartTime, rpv.latestStartTime);
   }
 
   enum VisitType {
@@ -237,14 +237,14 @@ public class ParcelVisit implements Visit {
       }
 
       return ComparisonChain.start()
-          // small time windows are more difficult, therefore: reverse ordering
-          .compare(
-            p1.getPickupTimeWindow().length()
-                + p1.getDeliveryTimeWindow().length(),
-            p2.getPickupTimeWindow().length()
-                + p2.getDeliveryTimeWindow().length(),
-            Ordering.natural().reverse())
-          .result();
+        // small time windows are more difficult, therefore: reverse ordering
+        .compare(
+          p1.getPickupTimeWindow().length()
+            + p1.getDeliveryTimeWindow().length(),
+          p2.getPickupTimeWindow().length()
+            + p2.getDeliveryTimeWindow().length(),
+          Ordering.natural().reverse())
+        .result();
     }
 
   }

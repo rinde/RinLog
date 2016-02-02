@@ -47,7 +47,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
    * Logger.
    */
   protected static final Logger LOGGER = LoggerFactory
-      .getLogger(AbstractRoutePlanner.class);
+    .getLogger(AbstractRoutePlanner.class);
 
   /**
    * Reference to the {@link RoadModel}.
@@ -205,7 +205,7 @@ public abstract class AbstractRoutePlanner implements RoutePlanner {
   @Override
   public String toString() {
     return toStringHelper(this)
-        .addValue(Integer.toHexString(hashCode()))
-        .toString();
+      .addValue(Integer.toHexString(hashCode()))
+      .toString();
   }
 }

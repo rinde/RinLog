@@ -126,12 +126,12 @@ public class ScoreCalculator
 
   static String asString(Object entity, String variableName) {
     final StringBuilder sb = new StringBuilder()
-        .append(entity)
-        .append(" \tvariable: ")
-        .append(variableName)
-        .append(Strings.repeat(" ",
-          ParcelVisit.PREV_VISIT.length() - variableName.length()))
-        .append(" \tvalue: ");
+      .append(entity)
+      .append(" \tvariable: ")
+      .append(variableName)
+      .append(Strings.repeat(" ",
+        ParcelVisit.PREV_VISIT.length() - variableName.length()))
+      .append(" \tvalue: ");
     if (variableName.equals(NEXT_VISIT)) {
       sb.append(((Visit) entity).getNextVisit());
     } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
@@ -236,7 +236,7 @@ public class ScoreCalculator
   public HardSoftLongScore calculateScore() {
     if (!changes.isEmpty()) {
       for (final Entry<Vehicle, Collection<Visit>> entry : changes.asMap()
-          .entrySet()) {
+        .entrySet()) {
         updateRoute(entry.getKey(), entry.getValue());
       }
     }
@@ -282,7 +282,7 @@ public class ScoreCalculator
     ParcelVisit cur = v.getNextVisit();
     if (v.getDestination().isPresent()) {
       if (cur == null
-          || !cur.getParcel().equals(v.getDestination().get())) {
+        || !cur.getParcel().equals(v.getDestination().get())) {
         routeHardScore -= 1L;
       }
     }

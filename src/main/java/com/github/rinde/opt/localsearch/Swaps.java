@@ -231,7 +231,7 @@ public final class Swaps {
     final IntList indices = indices(schedule.routes.get(fromRow), item);
     final ImmutableList.Builder<Iterator<Swap<T>>> iteratorBuilder =
       ImmutableList
-          .builder();
+        .builder();
 
     Range<Integer> range;
     if (indices.size() == 1) {
@@ -246,13 +246,13 @@ public final class Swaps {
         rowSize -= indices.size();
       }
       Iterator<IntList> it = new InsertionIndexGenerator(
-          indices.size(), rowSize, startIndices.getInt(i));
+        indices.size(), rowSize, startIndices.getInt(i));
       // filter out swaps that have existing result
       if (fromRow == i) {
         it = Iterators.filter(it, Predicates.not(Predicates.equalTo(indices)));
       }
       iteratorBuilder.add(Iterators.transform(it, new IndexToSwapTransform<T>(
-          item, fromRow, i)));
+        item, fromRow, i)));
     }
     return Iterators.concat(iteratorBuilder.build().iterator());
   }
@@ -328,16 +328,16 @@ public final class Swaps {
       final ImmutableList<T> newRouteA = ImmutableList.copyOf(filter(
         s.routes.get(swap.fromRow()), not(equalTo(swap.item()))));
       final int itemCount = s.routes.get(swap.fromRow()).size()
-          - newRouteA.size();
+        - newRouteA.size();
       checkArgument(
         itemCount > 0,
         "The item (%s) is not in row %s, hence it cannot be swapped to another "
-            + "row.",
+          + "row.",
         swap.item(), swap.fromRow());
       checkArgument(
         itemCount == swap.toIndices().size(),
         "The number of occurences in the fromRow (%s) should equal the number "
-            + "of insertion indices (%s).",
+          + "of insertion indices (%s).",
         itemCount, swap.toIndices().size());
 
       final double newCostA = computeCost(s, swap.fromRow(), newRouteA, cache);
@@ -412,14 +412,14 @@ public final class Swaps {
     checkArgument(
       newList.size() == originalList.size() - insertionIndices.size(),
       "The number of occurrences (%s) of item should equal the number of "
-          + "insertionIndices (%s), original list: %s, item %s, "
-          + "insertionIndices %s.",
+        + "insertionIndices (%s), original list: %s, item %s, "
+        + "insertionIndices %s.",
       indices.size(), insertionIndices.size(), originalList, item,
       insertionIndices);
     checkArgument(
       !indices.equals(insertionIndices),
       "Attempt to move the item to exactly the same locations as the input. "
-          + "Indices in original list %s, insertion indices %s.",
+        + "Indices in original list %s, insertion indices %s.",
       indices, insertionIndices);
     return Insertions.insert(newList, insertionIndices, item);
   }

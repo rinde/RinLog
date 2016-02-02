@@ -86,23 +86,23 @@ public class SingleTruckTest {
   @BeforeClass
   public static void setUp() {
     builder = Parcel
-        .builder(new Point(1, 1), new Point(3, 3))
-        .pickupTimeWindow(TimeWindow.create(1, 60000))
-        .deliveryTimeWindow(TimeWindow.create(1, 60000))
-        .neededCapacity(0)
-        .orderAnnounceTime(1L)
-        .pickupDuration(1000L)
-        .deliveryDuration(3000L);
+      .builder(new Point(1, 1), new Point(3, 3))
+      .pickupTimeWindow(TimeWindow.create(1, 60000))
+      .deliveryTimeWindow(TimeWindow.create(1, 60000))
+      .neededCapacity(0)
+      .orderAnnounceTime(1L)
+      .pickupDuration(1000L)
+      .deliveryDuration(3000L);
   }
 
   static Parcel.Builder setCommonProperties(Parcel.Builder b) {
     return b
-        .pickupTimeWindow(TimeWindow.create(1, 60000))
-        .deliveryTimeWindow(TimeWindow.create(1, 60000))
-        .neededCapacity(0)
-        .orderAnnounceTime(1L)
-        .pickupDuration(3000L)
-        .deliveryDuration(3000L);
+      .pickupTimeWindow(TimeWindow.create(1, 60000))
+      .deliveryTimeWindow(TimeWindow.create(1, 60000))
+      .neededCapacity(0)
+      .orderAnnounceTime(1L)
+      .pickupDuration(3000L)
+      .deliveryDuration(3000L);
   }
 
   // should be called in beginning of every test
@@ -120,14 +120,14 @@ public class SingleTruckTest {
     }
 
     final MASConfiguration randomRandom = MASConfiguration.pdptwBuilder()
-        .addEventHandler(AddVehicleEvent.class,
-          TestTruckFactory.testBuilder()
-              .setRoutePlanner(DebugRoutePlanner.supplier(rp))
-              .setCommunicator(TestBidder.supplier())
-              .build())
-        .addModel(AuctionCommModel.builder(DoubleBid.class))
-        .addModel(SolverModel.builder())
-        .build();
+      .addEventHandler(AddVehicleEvent.class,
+        TestTruckFactory.testBuilder()
+          .setRoutePlanner(DebugRoutePlanner.supplier(rp))
+          .setCommunicator(TestBidder.supplier())
+          .build())
+      .addModel(AuctionCommModel.builder(DoubleBid.class))
+      .addModel(SolverModel.builder())
+      .build();
 
     simulator = ExperimentTestUtil.init(scen, randomRandom, 123, false);
 
@@ -173,12 +173,12 @@ public class SingleTruckTest {
     simulator.tick();
     assertThat(roadModel.getObjectsOfType(Parcel.class)).hasSize(1);
     final Parcel parcel1 = roadModel.getObjectsOfType(Parcel.class).iterator()
-        .next();
+      .next();
     assertThat(parcel1.getDto()).isEqualTo(parcel1dto);
     assertEquals(ParcelState.AVAILABLE, pdpModel.getParcelState(parcel1));
     assertEquals(truck.getState(), truck.gotoState());
     assertFalse(truck.getDTO().getStartPosition().equals(roadModel
-        .getPosition(truck)));
+      .getPosition(truck)));
     final Parcel cur2 = truck.getRoute().iterator().next();
     assertEquals(parcel1dto, cur2.getDto());
 
@@ -198,11 +198,11 @@ public class SingleTruckTest {
       assertEquals(parcel1dto.getPickupLocation(),
         roadModel.getPosition(truck));
       assertThat(pdpModel.getParcelState(parcel1))
-          .isEqualTo(ParcelState.PICKING_UP);
+        .isEqualTo(ParcelState.PICKING_UP);
       simulator.tick();
     }
     assertThat(pdpModel.getParcelState(parcel1))
-        .isEqualTo(ParcelState.IN_CARGO);
+      .isEqualTo(ParcelState.IN_CARGO);
     assertThat(pdpModel.getContents(truck)).containsExactly(parcel1);
     assertThat(truck.getState()).isEqualTo(truck.gotoState());
 
@@ -230,8 +230,8 @@ public class SingleTruckTest {
     assertEquals(truck.getState(), truck.waitState());
 
     while (truck.getState() == truck.waitState()
-        && !roadModel.getPosition(truck)
-            .equals(truck.getDTO().getStartPosition())) {
+      && !roadModel.getPosition(truck)
+        .equals(truck.getDTO().getStartPosition())) {
       simulator.tick();
     }
     assertEquals(truck.getState(), truck.waitState());
@@ -260,8 +260,8 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
       SolverRoutePlanner
-          .supplierWithoutCurrentRoutes(
-            MultiVehicleHeuristicSolver.supplier(50, 100)));
+        .supplierWithoutCurrentRoutes(
+          MultiVehicleHeuristicSolver.supplier(50, 100)));
 
     final List<Event> events = new ArrayList<>();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {
@@ -278,14 +278,14 @@ public class SingleTruckTest {
 
     ((TestBidder) truck.getCommunicator()).removeAll();
     final int before = ((DebugRoutePlanner) truck.getRoutePlanner())
-        .getUpdateCount();
+      .getUpdateCount();
 
     while (truck.gotoState() == truck.getState()) {
       simulator.tick();
     }
     simulator.tick();
     final int after = ((DebugRoutePlanner) truck.getRoutePlanner())
-        .getUpdateCount();
+      .getUpdateCount();
     assertEquals(before + 1, after);
   }
 

@@ -67,15 +67,15 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
   @Override
   protected void doUpdate(Set<Parcel> onMap, long time) {
     if (onMap.isEmpty()
-        && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
+      && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
       final Set<Parcel> toRemove = new LinkedHashSet<Parcel>();
       // remove all parcels which are no longer assigned to this routeplanner
       for (final Parcel p : route) {
         if (!onMap.contains(p)
-            && !pdpModel.get().getParcelState(p).isPickedUp()
-            && !pdpModel.get().getParcelState(p).isTransitionState()) {
+          && !pdpModel.get().getParcelState(p).isPickedUp()
+          && !pdpModel.get().getParcelState(p).isTransitionState()) {
           toRemove.add(p);
         }
       }
@@ -88,12 +88,12 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
         pdpRoadModel.get().getDestinationToParcel(vehicle.get());
 
       if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE
-          || destination != null) {
+        || destination != null) {
         // vehicle is picking up or delivering -> make sure that first item in
         // route is the parcel that is being serviced
         final Parcel next = destination == null
-            ? pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel()
-            : destination;
+          ? pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel()
+          : destination;
         if (!route.peek().equals(next)) {
           // remove first occurrence
           route.removeFirstOccurrence(next);
@@ -103,8 +103,8 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
       final GlobalStateObject gso =
         simSolver.get().getCurrentState(SolveArgs.create()
-            .useParcels(onMap)
-            .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
+          .useParcels(onMap)
+          .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
 
       final Optional<Parcel> dest = gso.getVehicles().get(0).getDestination();
       LOGGER.trace("destination {}", dest);

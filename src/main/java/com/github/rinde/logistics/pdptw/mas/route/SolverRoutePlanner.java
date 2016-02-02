@@ -77,18 +77,18 @@ public class SolverRoutePlanner
   @Override
   protected void doUpdate(Set<Parcel> onMap, long time) {
     if (onMap.isEmpty()
-        && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
+      && pdpModel.get().getContents(vehicle.get()).isEmpty()) {
       route.clear();
     } else {
       LOGGER.info("vehicle {}", pdpModel.get().getVehicleState(vehicle.get()));
       if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE) {
         LOGGER.info("parcel {} {}",
           pdpModel.get().getVehicleActionInfo(vehicle.get())
-              .getParcel(),
+            .getParcel(),
 
           pdpModel.get().getParcelState(
             pdpModel.get().getVehicleActionInfo(vehicle.get())
-                .getParcel()));
+              .getParcel()));
       }
 
       final SolveArgs args = SolveArgs.create().useParcels(onMap);
@@ -144,7 +144,7 @@ public class SolverRoutePlanner
   public void afterInit() {
     if (solverBuilder.isPresent() && vehicle.isPresent()) {
       solverHandle = Optional.of(solverBuilder.get().setVehicle(vehicle.get())
-          .build(solver));
+        .build(solver));
     }
   }
 
@@ -189,7 +189,7 @@ public class SolverRoutePlanner
     @Override
     public SolverRoutePlanner get(long seed) {
       return new SolverRoutePlanner(solverSupplier.get(seed),
-          reuseCurrentRoutes);
+        reuseCurrentRoutes);
     }
 
     @Override

@@ -40,17 +40,17 @@ import com.google.common.collect.ImmutableList;
 public class MoveTest {
 
   Parcel A = Parcel.builder(new Point(0, 0), new Point(0, 1))
-      .toString("A")
-      .build();
+    .toString("A")
+    .build();
   Parcel B = Parcel.builder(new Point(1, 0), new Point(1, 1))
-      .toString("B")
-      .build();
+    .toString("B")
+    .build();
   Parcel C = Parcel.builder(new Point(2, 0), new Point(2, 1))
-      .toString("C")
-      .build();
+    .toString("C")
+    .build();
   Parcel D = Parcel.builder(new Point(3, 0), new Point(3, 1))
-      .toString("D")
-      .build();
+    .toString("D")
+    .build();
 
   @Test
   public void test() {
@@ -378,8 +378,8 @@ public class MoveTest {
   @SafeVarargs
   static PDPSolution create(ImmutableList<Parcel>... schedule) {
     final VehicleDTO vehicleDto = VehicleDTO.builder()
-        .speed(1d)
-        .build();
+      .speed(1d)
+      .build();
     final GlobalStateObjectBuilder b = GlobalStateObjectBuilder.globalBuilder();
 
     final Set<Parcel> available = new LinkedHashSet<>();
@@ -391,9 +391,9 @@ public class MoveTest {
 
     for (final ImmutableList<Parcel> v : schedule) {
       b.addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
-          .setVehicleDTO(vehicleDto)
-          .setRoute(v)
-          .build());
+        .setVehicleDTO(vehicleDto)
+        .setRoute(v)
+        .build());
     }
     return OptaplannerSolvers.convert(b.build());
   }
@@ -409,6 +409,6 @@ public class MoveTest {
       SolutionDescriptor.buildSolutionDescriptor(PDPSolution.class,
         ParcelVisit.class, Visit.class));
     return new IncrementalScoreDirector(
-        scoreDirectorFactory, false, new ScoreCalculator());
+      scoreDirectorFactory, false, new ScoreCalculator());
   }
 }
