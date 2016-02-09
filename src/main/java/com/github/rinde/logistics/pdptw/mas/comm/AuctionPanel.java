@@ -57,6 +57,12 @@ public class AuctionPanel
   static final String SPACE = " ";
   static final String TIME_SEPARATOR = ":";
 
+  static final int COLUMN_PARCEL_W = 150;
+  static final int COLUMN_TIME_W = 60;
+  static final int COLUMN_WINNER_W = 200;
+  static final int PREFERRED_PANEL_SIZE = 300;
+  static final int NUM_GRID_COLUMNS = 4;
+
   static final PeriodFormatter FORMATTER = new PeriodFormatterBuilder()
     .appendDays()
     .appendSeparator(SPACE)
@@ -106,7 +112,7 @@ public class AuctionPanel
               ae.getEventType().toString(),
               FORMATTER.print(new Period(0, ae.getTime())),
               finish
-                ? ae.getWinner().get().toString() + " " + ae.getNumBids()
+                ? ae.getWinner().get().toString() + SPACE + ae.getNumBids()
                 : ""
             });
 
@@ -157,7 +163,7 @@ public class AuctionPanel
     statusLabel.get().setText("# ongoing auctions: 0");
 
     final GridData statusLabelLayouData = new GridData();
-    statusLabelLayouData.horizontalSpan = 4;
+    statusLabelLayouData.horizontalSpan = NUM_GRID_COLUMNS;
     statusLabelLayouData.grabExcessHorizontalSpace = true;
     statusLabel.get().setLayoutData(statusLabelLayouData);
 
@@ -167,7 +173,7 @@ public class AuctionPanel
     tree.get().setLinesVisible(true);
 
     final GridData treeLayoutData = new GridData();
-    treeLayoutData.horizontalSpan = 4;
+    treeLayoutData.horizontalSpan = NUM_GRID_COLUMNS;
     treeLayoutData.grabExcessVerticalSpace = true;
     treeLayoutData.grabExcessHorizontalSpace = true;
     treeLayoutData.verticalAlignment = SWT.FILL;
@@ -176,14 +182,14 @@ public class AuctionPanel
 
     final TreeColumn tc = new TreeColumn(tree.get(), 0);
     tc.setText("Parcel");
-    tc.setWidth(150);
+    tc.setWidth(COLUMN_PARCEL_W);
     final TreeColumn tc4 = new TreeColumn(tree.get(), 0);
     tc4.setText("Time");
-    tc4.setWidth(60);
+    tc4.setWidth(COLUMN_TIME_W);
 
     final TreeColumn tc3 = new TreeColumn(tree.get(), 0);
     tc3.setText("Winner");
-    tc3.setWidth(200);
+    tc3.setWidth(COLUMN_WINNER_W);
 
     collapseButton = Optional.of(new Button(parent, SWT.CHECK));
     collapseButton.get().setText("Auto expand/collapse");
@@ -231,7 +237,7 @@ public class AuctionPanel
 
   @Override
   public int preferredSize() {
-    return 300;
+    return PREFERRED_PANEL_SIZE;
   }
 
   @Override
@@ -264,7 +270,7 @@ public class AuctionPanel
   }
 
   @AutoValue
-  public static abstract class Builder
+  public abstract static class Builder
       extends AbstractModelBuilder<AuctionPanel, Parcel> {
 
     Builder() {
