@@ -186,7 +186,8 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
   @Override
   public String toString() {
-    return toStringHelper(this).addValue(Integer.toHexString(hashCode()))
+    return toStringHelper(this)
+      .addValue(Integer.toHexString(hashCode()))
       .toString();
   }
 }

@@ -53,7 +53,9 @@ import com.google.common.base.Optional;
 public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
     implements TickListener {
-  private static final long MAX_AUCTION_DURATION_MS = 5 * 60 * 1000L;
+  // FIXME
+  private static final long MAX_AUCTION_DURATION_MS = 30000L;
+  // 5 * 60 * 1000L;
 
   final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
   final AuctionStopCondition<T> stopCondition;
@@ -247,7 +249,8 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     void initialAuction(long time) {
-      LOGGER.trace("*** Start auction at {} for {}. ***", time, parcel);
+      LOGGER.trace("{} *** Start auction at {} for {}. ***", this, time,
+        parcel);
       checkRealtime();
       auctionStartTime = time;
       auctions++;
@@ -271,38 +274,40 @@ public class AuctionCommModel<T extends Bid<T>>
       synchronized (bids) {
         if (time - auctionStartTime > MAX_AUCTION_DURATION_MS) {
           throw new IllegalStateException(
-            "Auction duration exceeded threshold of " + MAX_AUCTION_DURATION_MS
-              + " ms.");
+            "Auction duration for " + parcel + " exceeded threshold of "
+              + MAX_AUCTION_DURATION_MS + " ms.");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
           communicators.size(), auctionStartTime, time)) {
 
           LOGGER.trace(
-            ">>>> {} end of auction for {}, received {} bids, duration {} <<<<",
-            time, parcel, bids.size(), time - auctionStartTime);
+            "{} >>>> {} end of auction for {}, received {} bids, duration {} "
+              + "<<<<",
+            this, time, parcel, bids.size(), time - auctionStartTime);
           checkState(!bids.isEmpty(),
             "No bids received (yet), cannot end auction.");
 
           // end of auction, choose winner
           final T winningBid = Collections.min(bids);
-          LOGGER.trace("Winning bid : {}", winningBid);
+          LOGGER.trace("{} Winning bid : {}", this, winningBid);
           if (initiator.isPresent()) {
-            LOGGER.trace(" > reference bid {}", bids.iterator().next());
+            LOGGER.trace("{} > reference bid {}", this, bids.iterator().next());
           }
 
           winner = Optional.of(winningBid.getBidder());
 
           if (initiator.isPresent()
             && winningBid.getBidder().equals(initiator.get())) {
-            LOGGER.info("Auction for {} had no success.", parcel);
+            LOGGER.info("{} Auction for {} had no success.", this, parcel);
             unsuccessfulAuctions++;
             // nothing changes
             initiator = Optional.absent();
           } else {
             boolean success = true;
             if (initiator.isPresent()) {
-              LOGGER.info("Release {} from {}.", parcel, initiator.get());
+              LOGGER.info("{} Release {} from {}.", this, parcel,
+                initiator.get());
               success = initiator.get().releaseParcel(parcel);
               initiator = Optional.absent();
             }
@@ -310,8 +315,8 @@ public class AuctionCommModel<T extends Bid<T>>
             // transferred (the auction will complete without effect)
             if (success) {
               LOGGER.info(
-                "Auction completed successfully, transfer {} to {}.",
-                parcel, winner.get());
+                "{} Auction completed successfully, transfer {} to {}.",
+                this, parcel, winner.get());
               winner.get().receiveParcel(this, parcel, auctionStartTime);
             } else {
               failedAuctions++;
@@ -320,7 +325,8 @@ public class AuctionCommModel<T extends Bid<T>>
           if (clock != null) {
             // this is called to prevent the clock from switching to simulated
             // time because the winner also needs to do some computation itself.
-            LOGGER.debug("end of auction -> switch to real time");
+            LOGGER.debug(
+              "{} End of auction -> switch to (or stay in) real time", this);
             clock.switchToRealTime();
           }
 
@@ -345,9 +351,10 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public void auctionParcel(Bidder<T> currentOwner, long time,
         T bidToBeat, Listener cb) {
-      LOGGER.trace("*** Start RE-auction at {} for {}. Prev auctions: {} ***",
-        time, parcel, auctions);
-      LOGGER.trace(" > base line bid: {}", bidToBeat);
+      LOGGER.trace(
+        "{} *** Start RE-auction at {} for {}. Prev auctions: {} ***",
+        this, time, parcel, auctions);
+      LOGGER.trace("{} > base line bid: {}", this, bidToBeat);
       checkRealtime();
 
       checkNotNull(currentOwner);
@@ -384,7 +391,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     @Override
     public void submit(T bid) {
-      LOGGER.trace("Receive bid for {}, bid: {}.", parcel, bid);
+      LOGGER.trace("{} Receive bid for {}, bid: {}.", this, parcel, bid);
       checkArgument(bid.getParcel().equals(parcel));
       // if a winner is already present, the auction is over. if the auction
       // times do not match, it means a new auction is taking place while the
@@ -392,8 +399,8 @@ public class AuctionCommModel<T extends Bid<T>>
       if (!winner.isPresent() && bid.getTimeOfAuction() == auctionStartTime) {
         bids.add(bid);
       } else {
-        LOGGER.warn("Ignoring bid {}, winner {}, auctionStartTime {}", bid,
-          winner, auctionStartTime);
+        LOGGER.warn("{} Ignoring bid {}, winner {}, auctionStartTime {}", this,
+          bid, winner, auctionStartTime);
       }
     }
 
@@ -401,6 +408,11 @@ public class AuctionCommModel<T extends Bid<T>>
     public Bidder<T> getWinner() {
       checkState(winner.isPresent());
       return winner.get();
+    }
+
+    @Override
+    public String toString() {
+      return "{Auctioneer for " + parcel.toString() + "}";
     }
 
   }

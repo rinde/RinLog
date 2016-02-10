@@ -39,7 +39,7 @@ import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver.EventType;
-import com.github.rinde.rinsim.central.rt.RtSimSolver.NewScheduleEvent;
+import com.github.rinde.rinsim.central.rt.RtSimSolver.SolverEvent;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
@@ -96,22 +96,21 @@ public class RtSolverBidder
     parcelAuctioneers = new LinkedHashMap<>();
     reauctioning = new AtomicBoolean();
     computing = new AtomicBoolean();
-
   }
 
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
       final Parcel parcel, final long time) {
-    LOGGER.trace("receive callForBids {} {} {}", auctioneer, parcel, time);
+    LOGGER.trace("{} receive callForBids {} {} {}", this, auctioneer, parcel,
+      time);
     cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
     parcelAuctioneers.put(parcel, auctioneer);
 
     // avoid multiple bids at the same time
     checkState(solverHandle.isPresent(),
       "A %s could not be obtained, probably missing a %s.",
-      RealtimeSolver.class.getSimpleName(),
+      RtSimSolver.class.getSimpleName(),
       RtSolverModel.class.getSimpleName());
-
     next();
   }
 
@@ -134,7 +133,7 @@ public class RtSolverBidder
       CallForBids.create(auctioneer, parcel, time);
 
     // we have won
-    if (auctioneer.getWinner().equals(this)) {
+    if (equals(auctioneer.getWinner())) {
       lastAuctionWinTime = time;
     } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
       && !assignedParcels.isEmpty()) {
@@ -148,13 +147,16 @@ public class RtSolverBidder
       if (computing.get()) {
         // if current computation is about this auction -> cancel it
         if (endedAuction.equals(cfbQueue.peek())) {
-          LOGGER.trace("cancel computation");
+          LOGGER.trace("{} cancel computation", this);
+
           computing.set(false);
-          solverHandle.get().cancel();
           final EventAPI ev = solverHandle.get().getEventAPI();
-          if (ev.containsListener(currentListener, EventType.NEW_SCHEDULE)) {
-            ev.removeListener(currentListener, EventType.NEW_SCHEDULE);
-          }
+          checkState(
+            ev.containsListener(currentListener, EventType.DONE),
+            "Current listener %s is not registered.", currentListener);
+          ev.removeListener(currentListener, EventType.DONE);
+
+          solverHandle.get().cancel();
         }
         cfbQueue.remove(endedAuction);
         next();
@@ -165,78 +167,96 @@ public class RtSolverBidder
   void next() {
     synchronized (computing) {
       if (!cfbQueue.isEmpty() && !computing.get()) {
-        computeBid(cfbQueue.poll());
+        computeBid(cfbQueue.peek());
       }
     }
   }
 
   void computeBid(final CallForBids cfb) {
+    checkState(!computing.get());
     computing.set(true);
-    LOGGER.trace("start computing bid {}", cfb);
+    LOGGER.trace("{} Start computing bid {}", this, cfb);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
-    final ImmutableList<Parcel> currentRoute = ImmutableList
-      .copyOf(((Truck) vehicle.get()).getRoute());
+    final ImmutableList<Parcel> currentRoute =
+      ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
 
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create()
         .useCurrentRoutes(ImmutableList.of(currentRoute))
         .useParcels(parcels));
-    final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
-      state, ImmutableList.of(currentRoute)));
+    final double baseline = objectiveFunction.computeCost(
+      Solvers.computeStats(state, ImmutableList.of(currentRoute)));
 
     final EventAPI ev = solverHandle.get().getEventAPI();
     final RtSolverBidder bidder = this;
     currentListener = new Listener() {
       boolean exec;
 
+      // this is called to notify us of the newly computed schedule
       @Override
       public void handleEvent(Event e) {
-        final NewScheduleEvent event = (NewScheduleEvent) e;
-
-        if (exec || !event.getState().equals(state)) {
-          LOGGER.trace("handleEvent called with incorrect arguments, executed "
-            + "before: {} same state: {}",
-            exec, event.getState().equals(state));
-          if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
-            ev.removeListener(this, EventType.NEW_SCHEDULE);
+        synchronized (computing) {
+          final SolverEvent event = (SolverEvent) e;
+          if (!cfbQueue.peek().equals(cfb)) {
+            System.out.println("is this an issue?");
+            LOGGER.warn("Is this an issue?");
+            return;
           }
-          return;
+
+          checkArgument(event.hasScheduleAndState(),
+            "Solver was terminated before it found a solution.");
+          checkState(!exec && event.getState().equals(state),
+            "handleEvent called with incorrect arguments, executed before: %s "
+              + "same state: %s, expected %s, but was %s.",
+            exec, event.getState().equals(state), state.getTime(),
+            event.getState().getTime(), e, state);
+
+          exec = true;
+          // submit bid using baseline
+          final ImmutableList<ImmutableList<Parcel>> schedule =
+            solverHandle.get().getCurrentSchedule();
+          final double newCost =
+            objectiveFunction
+              .computeCost(Solvers.computeStats(state, schedule));
+
+          LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
+            baseline, newCost);
+
+          final double bidValue =
+            bidFunction.computeBidValue(currentRoute.size() + 2,
+              newCost - baseline);
+          cfb.getAuctioneer().submit(DoubleBid.create(
+            cfb.getTime(), bidder, cfb.getParcel(), bidValue));
+
+          checkState(ev.containsListener(this, EventType.DONE));
+          ev.removeListener(this, EventType.DONE);
+
+          cfbQueue.poll();
+          computing.set(false);
         }
-        exec = true;
-        // submit bid using baseline
-        final ImmutableList<ImmutableList<Parcel>> schedule =
-          solverHandle.get().getCurrentSchedule();
-        final double cost =
-          objectiveFunction.computeCost(Solvers.computeStats(state, schedule));
+      }
 
-        LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
-          baseline, cost);
-
-        final double bidValue =
-          bidFunction.computeBidValue(currentRoute.size() + 2, cost - baseline);
-        cfb.getAuctioneer().submit(DoubleBid.create(
-          cfb.getTime(), bidder, cfb.getParcel(), bidValue));
-
-        if (ev.containsListener(this, EventType.NEW_SCHEDULE)) {
-          ev.removeListener(this, EventType.NEW_SCHEDULE);
-        }
-        computing.set(false);
+      @Override
+      public String toString() {
+        return cfb.getParcel() + "-auction-listener-" + bidder;
       }
     };
-    solverHandle.get().getEventAPI().addListener(currentListener,
-      EventType.NEW_SCHEDULE);
+    // add callback to solver, such that we get the newly computed schedule as
+    // soon as it is done computing (note, we are NOT interested in intermediary
+    // schedules since we can only propose one bid, therefore we wait for the
+    // best schedule).
+    solverHandle.get().getEventAPI()
+      .addListener(currentListener, EventType.DONE);
 
-    LOGGER.trace("Compute new bid, currentRoute {}, parcels {}.", currentRoute,
-      parcels);
+    LOGGER.trace("{} Compute new bid, currentRoute {}, parcels {}.", this,
+      currentRoute, parcels);
     solverHandle.get().solve(state);
   }
 
-  @SuppressWarnings("unused")
   @Override
   public void receiveParcel(Auctioneer<DoubleBid> auctioneer, Parcel p,
       long auctionStartTime) {
-
     LOGGER.trace("{} RECEIVE PARCEL {} {} {}", this, auctioneer, p,
       auctionStartTime);
 
@@ -260,12 +280,7 @@ public class RtSolverBidder
 
     final Parcel lastReceivedParcel = Iterables.getLast(assignedParcels);
 
-    if (!reauctioning.get()
-    // && (stats.pickupTardiness > 0
-    // || stats.deliveryTardiness > 0
-    // || stats.overTime > 0)
-    ) {
-
+    if (!reauctioning.get()) {
       // find all swappable parcels, a parcel can be swapped if it is not yet in
       // cargo (it must occur twice in route for that)
       // TODO filter out parcels that will be visited within several seconds
@@ -290,7 +305,6 @@ public class RtSolverBidder
 
       LOGGER.trace("Compute cost of swapping");
       for (final Parcel sp : swappableParcels) {
-        LOGGER.trace("try to swap {}", sp);
         final List<Parcel> newRoute = new ArrayList<>();
         newRoute.addAll(currentRoute);
         newRoute.removeAll(Collections.singleton(sp));
@@ -310,12 +324,6 @@ public class RtSolverBidder
         && !toSwap.equals(lastReceivedParcel)) {
         reauctioning.set(true);
         LOGGER.trace("Found most expensive parcel for reauction: {}.", toSwap);
-        // for (final Map.Entry<Parcel, Auctioneer<DoubleBid>> entry :
-        // parcelAuctioneers
-        // .entrySet()) {
-        //
-        // System.out.println(entry.toString());
-        // }
 
         // try to reauction
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
