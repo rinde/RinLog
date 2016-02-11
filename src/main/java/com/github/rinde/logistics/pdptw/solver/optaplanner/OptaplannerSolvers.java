@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -91,6 +90,7 @@ public final class OptaplannerSolvers {
   static final Unit<Duration> TIME_UNIT = SI.MILLI(SI.SECOND);
   static final Unit<Velocity> SPEED_UNIT = NonSI.KILOMETERS_PER_HOUR;
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
+  static final String NAME_SEPARATOR = "-";
 
   // this part of a while loop
   static final long WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS = 5L;
@@ -116,7 +116,8 @@ public final class OptaplannerSolvers {
       ImmutableMap.builder();
     for (final SolverBenchmarkResult sbr : pbr.getPlannerBenchmarkResult()
       .getSolverBenchmarkResultList()) {
-      builder.put(sbr.getName().replaceAll(" ", "-"), sbr.getSolverConfig());
+      builder.put(sbr.getName().replaceAll(" ", NAME_SEPARATOR),
+        sbr.getSolverConfig());
     }
     return builder.build();
   }
@@ -484,17 +485,19 @@ public final class OptaplannerSolvers {
 
   static class OptaplannerRTSolver implements RealtimeSolver {
     final OptaplannerSolver solver;
-    final AtomicBoolean permissionToRun;
+    // final AtomicBoolean permissionToRun;
     Optional<Scheduler> scheduler;
     @Nullable
     GlobalStateObject lastSnapshot;
+    @Nullable
+    ListenableFuture<ImmutableList<ImmutableList<Parcel>>> currentFuture;
     private final String name;
 
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);
       scheduler = Optional.absent();
       name = "OptaplannerRT-" + verifyNotNull(b.getName());
-      permissionToRun = new AtomicBoolean(false);
+      // permissionToRun = new AtomicBoolean(false);
     }
 
     @Override
@@ -504,6 +507,7 @@ public final class OptaplannerSolvers {
         "Solver can be initialized only once.");
       scheduler = Optional.of(sched);
 
+      final OptaplannerRTSolver ref = this;
       solver.addEventListener(new SolverEventListener<PDPSolution>() {
         @Override
         public void bestSolutionChanged(
@@ -513,7 +517,7 @@ public final class OptaplannerSolvers {
             final ImmutableList<ImmutableList<Parcel>> schedule =
               toSchedule(event.getNewBestSolution());
 
-            LOGGER.info("Found new best solution, update schedule. {}",
+            LOGGER.info("{} Found new best solution, update schedule. {}", ref,
               solver.isSolving());
             sched.updateSchedule(verifyNotNull(lastSnapshot), schedule);
           }
@@ -523,7 +527,9 @@ public final class OptaplannerSolvers {
 
     @Override
     public synchronized void problemChanged(final GlobalStateObject snapshot) {
-      permissionToRun.set(true);
+      // the problem has changed so we should be computing (it doesn't matter if
+      // we were already computing, that computation will be canceled).
+      // permissionToRun.set(true);
       start(snapshot);
     }
 
@@ -561,93 +567,119 @@ public final class OptaplannerSolvers {
 
     @Override
     public synchronized void cancel() {
-      permissionToRun.set(false);
+      // permissionToRun.set(false);
       doCancel();
     }
 
     synchronized void start(final GlobalStateObject snapshot) {
       checkState(scheduler.isPresent());
       doCancel();
-      if (!permissionToRun.get()) {
-        LOGGER.info("No permission to continue, not starting new computation.");
-        return;
-      }
+      // if (!permissionToRun.get()) {
+      // LOGGER.info("No permission to continue, not starting new
+      // computation.");
+      // return;
+      // }
+      checkState(currentFuture == null);
+
       lastSnapshot = snapshot;
-      LOGGER.info("Start RT Optaplanner Solver");
+      LOGGER.info("{} Start RT Optaplanner Solver.", this);
       final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
         scheduler.get().getSharedExecutor()
           .submit(new OptaplannerCallable(solver, snapshot));
-
+      currentFuture = future;
+      final OptaplannerRTSolver ref = this;
       Futures.addCallback(future,
         new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
-
           @Override
           public void onSuccess(
               @Nullable ImmutableList<ImmutableList<Parcel>> result) {
-            if (result == null) {
-              if (solver.isTerminateEarly()) {
-                LOGGER.info(
-                  "Solver was terminated early and didn't have enough time to "
-                    + "find a valid solution.");
-              } else {
-                scheduler.get().reportException(
-                  new IllegalArgumentException("Solver.solve(..) must return a "
-                    + "non-null result. Solver: " + solver));
-              }
-            } else {
-              LOGGER.info("Computations stopped, update schedule.");
-              scheduler.get().updateSchedule(snapshot, result);
-
-              if (permissionToRun.get() && solver.isTerminateEarly()) {
-                LOGGER.info(" > continue after restart.");
-              } else {
-                LOGGER.info(" > done for now.");
-                scheduler.get().doneForNow();
-              }
-            }
+            ref.handleSolverSuccess(result);
           }
 
           @Override
           public void onFailure(Throwable t) {
-            if (t instanceof CancellationException) {
-              return;
-            }
-            scheduler.get().reportException(t);
+            ref.handleSolverFailure(t);
           }
         });
     }
 
-    synchronized void doCancel() {
-      if (solver.isSolving()) {
-        LOGGER.info("Terminate early");
-        solver.terminateEarly();
-        while (solver.isSolving()) {
-          try {
-            Thread.sleep(WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS);
-          } catch (final InterruptedException e) {
-            LOGGER.warn("Interrupt while waiting for solver termination.");
-            // stop waiting upon interrupt
-            break;
-          }
+    synchronized void handleSolverSuccess(
+        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+
+      if (result == null) {
+        if (solver.isTerminateEarly() || currentFuture == null) {
+          LOGGER.info("{} Solver was terminated early.", this);
+        } else {
+          LOGGER.warn("{} Solver could not find a solution.", this);
+          scheduler.get().doneForNow();
+          // scheduler.get().reportException(new IllegalArgumentException(
+          // "Solver.solve(..) must return a non-null result. Solver: "
+          // + solver));
         }
-        LOGGER.info("Solver terminated early.");
+      } else {
+        LOGGER.info("{} Computations finished, update schedule.", this);
+        scheduler.get().updateSchedule(verifyNotNull(lastSnapshot), result);
+
+        // if (permissionToRun.get() && currentFuture.isCancelled()) {
+        // LOGGER.info("{} > continue after restart.", this);
+        // } else {
+        // LOGGER.info("{} > done for now.", this);
+        scheduler.get().doneForNow();
+
+        // if (!permissionToRun.getAndSet(false)) {
+        // scheduler.get().reportException(new IllegalStateException(
+        // "Solver stopped but had no permission to run?"));
+        // }
+        // }
+      }
+      currentFuture = null;
+    }
+
+    synchronized void handleSolverFailure(Throwable t) {
+      if (t instanceof CancellationException) {
+        LOGGER.trace("{} Solver got cancelled.", this);
+        return;
+      }
+      scheduler.get().reportException(t);
+    }
+
+    synchronized void doCancel() {
+      if (!isComputing()) {
+        return;
+      }
+      // try {
+
+      LOGGER.trace("{} Cancel", this);
+      currentFuture.cancel(true);
+      currentFuture = null;
+      if (solver.isSolving()) {
+        LOGGER.trace("{} > terminate solver.", this);
+        solver.terminateEarly();
+        try {
+          while (solver.isSolving()) {
+            Thread.sleep(WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS);
+          }
+          LOGGER.info("{} Solver terminated early.", this);
+        } catch (final InterruptedException e) {
+          // stop waiting upon interrupt
+          LOGGER.warn("Interrupt while waiting for solver termination.");
+        }
       }
     }
 
     @Override
     public synchronized boolean isComputing() {
-      return solver.isSolving() || permissionToRun.get();
+      return currentFuture != null && !currentFuture.isDone();
     }
 
     @Override
     public String toString() {
-      return name;
+      return name + NAME_SEPARATOR + Integer.toHexString(hashCode());
     }
   }
 
   static class OptaplannerCallable
       implements Callable<ImmutableList<ImmutableList<Parcel>>> {
-
     final OptaplannerSolver solver;
     final GlobalStateObject state;
 
@@ -659,10 +691,13 @@ public final class OptaplannerSolvers {
     @Nullable
     @Override
     public ImmutableList<ImmutableList<Parcel>> call() throws Exception {
+      if (Thread.interrupted()) {
+        LOGGER.trace("Stop computation before starting solver");
+        return null;
+      }
       verify(!solver.isSolving(), "Solver is already solving, this is a bug.");
       return solver.doSolve(state);
     }
-
   }
 
   static class SimulatedTimeSupplier implements StochasticSupplier<Solver> {

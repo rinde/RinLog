@@ -28,6 +28,9 @@ import com.google.common.collect.ImmutableList;
  * @author Rinde van Lon
  */
 public final class AuctionStopConditions {
+  private static final String R_BRACE = ")";
+  private static final String COMMA = ",";
+
   private AuctionStopConditions() {}
 
   @SuppressWarnings("unchecked")
@@ -80,10 +83,10 @@ public final class AuctionStopConditions {
 
     @Override
     public String toString() {
-      return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
+      return new StringBuilder(AuctionStopConditions.class.getSimpleName())
         .append(".or(")
-        .append(Joiner.on(",").join(conditions).toString())
-        .append(")").toString();
+        .append(Joiner.on(COMMA).join(conditions).toString())
+        .append(R_BRACE).toString();
     }
   }
 
@@ -110,10 +113,10 @@ public final class AuctionStopConditions {
 
     @Override
     public String toString() {
-      return (new StringBuilder(AuctionStopConditions.class.getSimpleName()))
+      return new StringBuilder(AuctionStopConditions.class.getSimpleName())
         .append(".and(")
-        .append(Joiner.on(",").join(conditions).toString())
-        .append(")").toString();
+        .append(Joiner.on(COMMA).join(conditions).toString())
+        .append(R_BRACE).toString();
     }
   }
 
@@ -135,7 +138,7 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return AuctionStopConditions.class.getSimpleName()
-        + ".maxAuctionDuration(" + maxAuctionDuration + ")";
+        + ".maxAuctionDuration(" + maxAuctionDuration + R_BRACE;
     }
   }
 
@@ -157,7 +160,7 @@ public final class AuctionStopConditions {
     @Override
     public String toString() {
       return AuctionStopConditions.class.getSimpleName() + ".atLeastNumBids("
-        + numBidders + ")";
+        + numBidders + R_BRACE;
     }
   }
 

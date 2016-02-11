@@ -148,7 +148,7 @@ public class AuctionCommModel<T extends Bid<T>>
         "Clock must be in real-time mode, but is in %s mode.",
         clock.getClockMode());
       // make sure we stay in rt
-      LOGGER.debug("check real time -> switch to real time");
+      LOGGER.debug("Check real time -> stay in real time.");
       clock.switchToRealTime();
     }
   }

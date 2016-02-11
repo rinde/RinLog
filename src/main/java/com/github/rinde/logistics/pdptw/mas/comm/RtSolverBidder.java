@@ -173,8 +173,7 @@ public class RtSolverBidder
   }
 
   void computeBid(final CallForBids cfb) {
-    checkState(!computing.get());
-    computing.set(true);
+    checkState(!computing.getAndSet(true));
     LOGGER.trace("{} Start computing bid {}", this, cfb);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
@@ -207,9 +206,9 @@ public class RtSolverBidder
           checkArgument(event.hasScheduleAndState(),
             "Solver was terminated before it found a solution.");
           checkState(!exec && event.getState().equals(state),
-            "handleEvent called with incorrect arguments, executed before: %s "
-              + "same state: %s, expected %s, but was %s.",
-            exec, event.getState().equals(state), state.getTime(),
+            "%s handleEvent called with incorrect arguments, executed before:"
+              + " %s same state: %s, expected %s, but was %s.",
+            bidder, exec, event.getState().equals(state), state.getTime(),
             event.getState().getTime(), e, state);
 
           exec = true;
@@ -233,7 +232,7 @@ public class RtSolverBidder
           ev.removeListener(this, EventType.DONE);
 
           cfbQueue.poll();
-          computing.set(false);
+          checkState(computing.getAndSet(false));
         }
       }
 

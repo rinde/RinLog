@@ -139,7 +139,6 @@ public class RtRoutePlannerTest {
           final AuctionCommModelLogger logger =
             sim.getModelProvider().getModel(AuctionCommModelLogger.class);
 
-          System.out.println(logger.events);
           assertThat(logger.events.keySet().size()).isEqualTo(3);
           for (final Entry<Parcel, Collection<Enum<?>>> entry : logger.events
             .asMap().entrySet()) {
@@ -156,9 +155,9 @@ public class RtRoutePlannerTest {
 
           final Set<Truck> trucks = rm.getObjectsOfType(Truck.class);
 
-          for (final Truck t : trucks) {
-            System.out.println(t.getRoute());
-          }
+          // for (final Truck t : trucks) {
+          // System.out.println(t.getRoute());
+          // }
 
           return new Object();
         }
