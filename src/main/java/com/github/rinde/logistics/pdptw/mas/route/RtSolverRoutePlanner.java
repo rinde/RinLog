@@ -35,10 +35,12 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
+import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  *
@@ -79,6 +81,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
           toRemove.add(p);
         }
       }
+
       LOGGER.trace("route {}", route);
       route.removeAll(toRemove);
       LOGGER.trace("to remove: {}", toRemove);
@@ -100,6 +103,13 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
           route.addFirst(next);
         }
       }
+
+      final Iterable<Parcel> newRoute =
+        RouteFollowingVehicle.delayAdjuster().adjust(route,
+          (RouteFollowingVehicle) vehicle.get());
+
+      route.clear();
+      Iterables.addAll(route, newRoute);
 
       final GlobalStateObject gso = simSolver.get().getCurrentState(
         SolveArgs.create()

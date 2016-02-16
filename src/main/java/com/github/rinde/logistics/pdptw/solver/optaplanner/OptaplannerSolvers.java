@@ -51,6 +51,7 @@ import org.optaplanner.core.config.score.director.ScoreDirectorFactoryConfig;
 import org.optaplanner.core.config.solver.EnvironmentMode;
 import org.optaplanner.core.config.solver.SolverConfig;
 import org.optaplanner.core.config.solver.random.RandomType;
+import org.optaplanner.core.config.solver.termination.TerminationCompositionStyle;
 import org.optaplanner.core.config.solver.termination.TerminationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,14 +222,15 @@ public final class OptaplannerSolvers {
     }
     final SolverConfig config = factory.getSolverConfig();
     config.setEntityClassList(
-      ImmutableList.<Class<?>>of(
-        ParcelVisit.class,
-        Visit.class));
+      ImmutableList.<Class<?>>of(ParcelVisit.class, Visit.class));
     config.setSolutionClass(PDPSolution.class);
 
     final TerminationConfig terminationConfig = new TerminationConfig();
     terminationConfig
       .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
+    terminationConfig
+      .setTerminationCompositionStyle(TerminationCompositionStyle.AND);
+    terminationConfig.setBestScoreFeasible(true);
     config.setTerminationConfig(terminationConfig);
 
     final ScoreDirectorFactoryConfig scoreConfig =
@@ -610,11 +612,9 @@ public final class OptaplannerSolvers {
         if (solver.isTerminateEarly() || currentFuture == null) {
           LOGGER.info("{} Solver was terminated early.", this);
         } else {
-          LOGGER.warn("{} Solver could not find a solution.", this);
-          scheduler.get().doneForNow();
-          // scheduler.get().reportException(new IllegalArgumentException(
-          // "Solver.solve(..) must return a non-null result. Solver: "
-          // + solver));
+          scheduler.get().reportException(new IllegalArgumentException(
+            "Solver.solve(..) must return a non-null result. Solver: "
+              + solver));
         }
       } else {
         LOGGER.info("{} Computations finished, update schedule.", this);
