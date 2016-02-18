@@ -271,6 +271,7 @@ public class AuctionCommModel<T extends Bid<T>>
         return;
       }
 
+      boolean notify = false;
       synchronized (bids) {
         if (time - auctionStartTime > MAX_AUCTION_DURATION_MS) {
           throw new IllegalStateException(
@@ -280,7 +281,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
           communicators.size(), auctionStartTime, time)) {
-
+          notify = true;
           LOGGER.trace(
             "{} >>>> {} end of auction for {}, received {} bids, duration {} "
               + "<<<<",
@@ -329,21 +330,23 @@ public class AuctionCommModel<T extends Bid<T>>
               "{} End of auction -> switch to (or stay in) real time", this);
             clock.switchToRealTime();
           }
+        }
+      }
 
-          // notify all bidders
-          for (final Bidder<T> bidder : communicators) {
-            bidder.endOfAuction(this, parcel, auctionStartTime);
-          }
-          // notify anybody else interested in auctions
-          final AuctionEvent ev =
-            new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
-              bids.size());
+      if (notify) {
+        // notify all bidders
+        for (final Bidder<T> bidder : communicators) {
+          bidder.endOfAuction(this, parcel, auctionStartTime);
+        }
+        // notify anybody else interested in auctions
+        final AuctionEvent ev =
+          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
+            bids.size());
 
-          eventDispatcher.dispatchEvent(ev);
-          if (callback.isPresent()) {
-            callback.get().handleEvent(ev);
-            callback = Optional.absent();
-          }
+        eventDispatcher.dispatchEvent(ev);
+        if (callback.isPresent()) {
+          callback.get().handleEvent(ev);
+          callback = Optional.absent();
         }
       }
     }

@@ -114,6 +114,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       final GlobalStateObject gso = simSolver.get().getCurrentState(
         SolveArgs.create()
           .useParcels(onMap)
+          .fixRoutes()
           .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
 
       final Optional<Parcel> dest = gso.getVehicles().get(0).getDestination();

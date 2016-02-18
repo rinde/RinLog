@@ -569,8 +569,10 @@ public final class OptaplannerSolvers {
 
     @Override
     public synchronized void cancel() {
+      LOGGER.trace("{} cancel", this);
       // permissionToRun.set(false);
       doCancel();
+      scheduler.get().doneForNow();
     }
 
     synchronized void start(final GlobalStateObject snapshot) {
@@ -607,7 +609,6 @@ public final class OptaplannerSolvers {
 
     synchronized void handleSolverSuccess(
         @Nullable ImmutableList<ImmutableList<Parcel>> result) {
-
       if (result == null) {
         if (solver.isTerminateEarly() || currentFuture == null) {
           LOGGER.info("{} Solver was terminated early.", this);
@@ -619,18 +620,7 @@ public final class OptaplannerSolvers {
       } else {
         LOGGER.info("{} Computations finished, update schedule.", this);
         scheduler.get().updateSchedule(verifyNotNull(lastSnapshot), result);
-
-        // if (permissionToRun.get() && currentFuture.isCancelled()) {
-        // LOGGER.info("{} > continue after restart.", this);
-        // } else {
-        // LOGGER.info("{} > done for now.", this);
         scheduler.get().doneForNow();
-
-        // if (!permissionToRun.getAndSet(false)) {
-        // scheduler.get().reportException(new IllegalStateException(
-        // "Solver stopped but had no permission to run?"));
-        // }
-        // }
       }
       currentFuture = null;
     }

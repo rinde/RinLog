@@ -135,12 +135,6 @@ public class RtSolverBidder
     // we have won
     if (equals(auctioneer.getWinner())) {
       lastAuctionWinTime = time;
-    } else if (time - lastAuctionWinTime > MAX_LOSING_TIME
-      && !assignedParcels.isEmpty()) {
-      LOGGER.trace("{} We haven't won an auction for a while -> reauction",
-        this);
-      // we haven't won an auction for a while
-      reauction();
     }
 
     synchronized (computing) {
@@ -161,6 +155,15 @@ public class RtSolverBidder
         cfbQueue.remove(endedAuction);
         next();
       }
+    }
+
+    if (!equals(auctioneer.getWinner())
+      && time - lastAuctionWinTime > MAX_LOSING_TIME
+      && !assignedParcels.isEmpty()) {
+      LOGGER.trace("{} We haven't won an auction for a while -> reauction",
+        this);
+      // we haven't won an auction for a while
+      reauction();
     }
   }
 
@@ -183,6 +186,7 @@ public class RtSolverBidder
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create()
         .useCurrentRoutes(ImmutableList.of(currentRoute))
+        .fixRoutes()
         .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(
       Solvers.computeStats(state, ImmutableList.of(currentRoute)));
