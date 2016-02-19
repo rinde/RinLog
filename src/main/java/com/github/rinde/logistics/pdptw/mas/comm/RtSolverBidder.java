@@ -145,11 +145,12 @@ public class RtSolverBidder
 
           computing.set(false);
           final EventAPI ev = solverHandle.get().getEventAPI();
-          checkState(
-            ev.containsListener(currentListener, EventType.DONE),
-            "Current listener %s is not registered.", currentListener);
-          ev.removeListener(currentListener, EventType.DONE);
 
+          // in some cases the listener is already removed because it was called
+          // before it could be removed, we can safely ignore this
+          if (ev.containsListener(currentListener, EventType.DONE)) {
+            ev.removeListener(currentListener, EventType.DONE);
+          }
           solverHandle.get().cancel();
         }
         cfbQueue.remove(endedAuction);
