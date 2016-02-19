@@ -402,7 +402,7 @@ public class AuctionCommModel<T extends Bid<T>>
       if (!winner.isPresent() && bid.getTimeOfAuction() == auctionStartTime) {
         bids.add(bid);
       } else {
-        LOGGER.warn("{} Ignoring bid {}, winner {}, auctionStartTime {}", this,
+        LOGGER.info("{} Ignoring bid {}, winner {}, auctionStartTime {}", this,
           bid, winner, auctionStartTime);
       }
     }
