@@ -201,27 +201,28 @@ public class RtSolverBidder
       public void handleEvent(Event e) {
         synchronized (computing) {
           final SolverEvent event = (SolverEvent) e;
-          if (!cfbQueue.peek().equals(cfb)) {
-            System.out.println("is this an issue?");
-            LOGGER.warn("Is this an issue?");
+          checkState(cfbQueue.peek().equals(cfb));
+          checkArgument(event.hasScheduleAndState(),
+            "Solver was terminated before it found a solution.");
+
+          checkState(!exec, "%s handleEvent was already called.", bidder);
+          checkState(ev.containsListener(this, EventType.DONE));
+          ev.removeListener(this, EventType.DONE);
+          exec = true;
+
+          // check if we receive the callback of the expected computation, (with
+          // the correct state). If this is not the case, the callback was
+          // probably already done before the listener could be removed. This
+          // can be safely ignored.
+          if (!event.getState().equals(state)) {
             return;
           }
 
-          checkArgument(event.hasScheduleAndState(),
-            "Solver was terminated before it found a solution.");
-          checkState(!exec && event.getState().equals(state),
-            "%s handleEvent called with incorrect arguments, executed before:"
-              + " %s same state: %s, expected %s, but was %s.",
-            bidder, exec, event.getState().equals(state), state.getTime(),
-            event.getState().getTime(), e, state);
-
-          exec = true;
           // submit bid using baseline
           final ImmutableList<ImmutableList<Parcel>> schedule =
             solverHandle.get().getCurrentSchedule();
-          final double newCost =
-            objectiveFunction
-              .computeCost(Solvers.computeStats(state, schedule));
+          final double newCost = objectiveFunction.computeCost(
+            Solvers.computeStats(state, schedule));
 
           LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
             baseline, newCost);
@@ -231,9 +232,6 @@ public class RtSolverBidder
               newCost - baseline);
           cfb.getAuctioneer().submit(DoubleBid.create(
             cfb.getTime(), bidder, cfb.getParcel(), bidValue));
-
-          checkState(ev.containsListener(this, EventType.DONE));
-          ev.removeListener(this, EventType.DONE);
 
           cfbQueue.poll();
           checkState(computing.getAndSet(false));
