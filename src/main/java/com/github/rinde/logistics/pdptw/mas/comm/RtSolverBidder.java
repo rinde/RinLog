@@ -137,24 +137,27 @@ public class RtSolverBidder
       lastAuctionWinTime = time;
     }
 
-    synchronized (computing) {
-      if (computing.get()) {
-        // if current computation is about this auction -> cancel it
-        if (endedAuction.equals(cfbQueue.peek())) {
-          LOGGER.trace("{} cancel computation", this);
+    synchronized (solverHandle.get().getLock()) {
+      synchronized (computing) {
+        if (computing.get()) {
+          // if current computation is about this auction -> cancel it
+          if (endedAuction.equals(cfbQueue.peek())) {
+            LOGGER.trace("{} cancel computation", this);
 
-          computing.set(false);
-          final EventAPI ev = solverHandle.get().getEventAPI();
+            computing.set(false);
+            final EventAPI ev = solverHandle.get().getEventAPI();
 
-          // in some cases the listener is already removed because it was called
-          // before it could be removed, we can safely ignore this
-          if (ev.containsListener(currentListener, EventType.DONE)) {
-            ev.removeListener(currentListener, EventType.DONE);
+            // in some cases the listener is already removed because it was
+            // called
+            // before it could be removed, we can safely ignore this
+            if (ev.containsListener(currentListener, EventType.DONE)) {
+              ev.removeListener(currentListener, EventType.DONE);
+            }
+            solverHandle.get().cancel();
           }
-          solverHandle.get().cancel();
+          cfbQueue.remove(endedAuction);
+          next();
         }
-        cfbQueue.remove(endedAuction);
-        next();
       }
     }
 
