@@ -270,6 +270,7 @@ public class AuctionCommModel<T extends Bid<T>>
       if (winner.isPresent()) {
         return;
       }
+      checkRealtime();
 
       boolean notify = false;
       synchronized (bids) {
