@@ -634,14 +634,11 @@ public final class OptaplannerSolvers {
     }
 
     synchronized void doCancel() {
-      if (!isComputing()) {
-        return;
-      }
-      // try {
-
       LOGGER.trace("{} Cancel", this);
-      currentFuture.cancel(true);
-      currentFuture = null;
+      if (isComputing()) {
+        currentFuture.cancel(true);
+        currentFuture = null;
+      }
       if (solver.isSolving()) {
         LOGGER.trace("{} > terminate solver.", this);
         solver.terminateEarly();
@@ -674,6 +671,7 @@ public final class OptaplannerSolvers {
     final GlobalStateObject state;
 
     OptaplannerCallable(OptaplannerSolver solv, GlobalStateObject st) {
+      verify(!solv.isSolving(), "Solver is already solving.");
       solver = solv;
       state = st;
     }
