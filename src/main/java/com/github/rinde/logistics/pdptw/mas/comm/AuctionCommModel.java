@@ -136,9 +136,10 @@ public class AuctionCommModel<T extends Bid<T>>
         numOfOngoingAuctions++;
       }
     }
-    if (numOfOngoingAuctions > 0) {
+    if (numOfOngoingAuctions > 0 || numAuctions.get() > 0) {
       checkRealtime();
     }
+
     numAuctions.set(numOfOngoingAuctions);
   }
 
