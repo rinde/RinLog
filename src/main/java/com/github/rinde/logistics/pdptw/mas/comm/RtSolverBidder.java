@@ -174,6 +174,11 @@ public class RtSolverBidder
   void next() {
     synchronized (computing) {
       if (!cfbQueue.isEmpty() && !computing.get()) {
+        while (!cfbQueue.isEmpty()
+          && cfbQueue.peek().getAuctioneer().hasWinner()) {
+          // remove all call for bids which have already finished
+          cfbQueue.remove();
+        }
         computeBid(cfbQueue.peek());
       }
     }
