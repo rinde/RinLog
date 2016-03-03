@@ -265,7 +265,8 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
-    boolean hasWinner() {
+    @Override
+    public boolean hasWinner() {
       synchronized (bids) {
         return winner.isPresent();
       }

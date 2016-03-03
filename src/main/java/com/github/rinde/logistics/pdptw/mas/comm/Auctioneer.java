@@ -32,4 +32,6 @@ public interface Auctioneer<T extends Bid<T>> {
 
   Bidder<T> getWinner();
 
+  boolean hasWinner();
+
 }

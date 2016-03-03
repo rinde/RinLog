@@ -180,6 +180,7 @@ public class RtSolverBidder
   }
 
   void computeBid(final CallForBids cfb) {
+    checkState(!cfb.getAuctioneer().hasWinner());
     checkState(!computing.getAndSet(true));
     LOGGER.trace("{} Start computing bid {}", this, cfb);
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
