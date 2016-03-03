@@ -179,7 +179,9 @@ public class RtSolverBidder
           // remove all call for bids which have already finished
           cfbQueue.remove();
         }
-        computeBid(cfbQueue.peek());
+        if (!cfbQueue.isEmpty()) {
+          computeBid(cfbQueue.peek());
+        }
       }
     }
   }
