@@ -615,9 +615,7 @@ public final class OptaplannerSolvers {
       if (cancelled) {
         LOGGER.info("{} Solver was cancelled but also completed its "
           + "computation, result is ignored.", this);
-        return;
-      }
-      if (result == null) {
+      } else if (result == null) {
         if (solver.isTerminateEarly() || currentFuture == null) {
           LOGGER.info("{} Solver was terminated early.", this);
         } else {
