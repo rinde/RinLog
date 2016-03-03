@@ -252,29 +252,33 @@ public class AuctionCommModel<T extends Bid<T>>
     void initialAuction(long time) {
       LOGGER.trace("{} *** Start auction at {} for {}. ***", this, time,
         parcel);
-      checkRealtime();
-      auctionStartTime = time;
-      auctions++;
+      synchronized (bids) {
+        checkRealtime();
+        auctionStartTime = time;
+        auctions++;
+      }
+
       eventDispatcher.dispatchEvent(
         new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
-
       for (final Bidder<T> b : communicators) {
         b.callForBids(this, parcel, time);
       }
     }
 
     boolean hasWinner() {
-      return winner.isPresent();
+      synchronized (bids) {
+        return winner.isPresent();
+      }
     }
 
     void update(long time) {
-      if (winner.isPresent()) {
+      if (hasWinner()) {
         return;
       }
-      checkRealtime();
 
       boolean notify = false;
       synchronized (bids) {
+        checkRealtime();
         if (time - auctionStartTime > MAX_AUCTION_DURATION_MS) {
           throw new IllegalStateException(
             "Auction duration for " + parcel + " exceeded threshold of "
@@ -360,36 +364,38 @@ public class AuctionCommModel<T extends Bid<T>>
         "{} *** Start RE-auction at {} for {}. Prev auctions: {} ***",
         this, time, parcel, auctions);
       LOGGER.trace("{} > base line bid: {}", this, bidToBeat);
-      checkRealtime();
 
-      checkNotNull(currentOwner);
-      checkArgument(time >= 0L);
-      checkNotNull(bidToBeat);
-      checkNotNull(cb);
-      checkState(winner.isPresent());
-      checkState(!callback.isPresent());
-      checkArgument(bidToBeat.getParcel().equals(parcel));
-      checkArgument(bidToBeat.getBidder().equals(currentOwner));
-      checkArgument(winner.get().equals(currentOwner),
-        "A reauction can only be initiated by the previous winner (%s), "
-          + "found %s. Parcel: %s.",
-        winner.get(), currentOwner, parcel);
+      synchronized (bids) {
+        checkRealtime();
 
-      callback = Optional.of(cb);
-      winner = Optional.absent();
-      bids.clear();
-      bids.add(bidToBeat);
-      initiator = Optional.of(currentOwner);
+        checkNotNull(currentOwner);
+        checkArgument(time >= 0L);
+        checkNotNull(bidToBeat);
+        checkNotNull(cb);
+        checkState(winner.isPresent());
+        checkState(!callback.isPresent());
+        checkArgument(bidToBeat.getParcel().equals(parcel));
+        checkArgument(bidToBeat.getBidder().equals(currentOwner));
+        checkArgument(winner.get().equals(currentOwner),
+          "A reauction can only be initiated by the previous winner (%s), "
+            + "found %s. Parcel: %s.",
+          winner.get(), currentOwner, parcel);
 
-      auctionStartTime = time;
-      auctions++;
+        callback = Optional.of(cb);
+        winner = Optional.absent();
+        bids.clear();
+        bids.add(bidToBeat);
+        initiator = Optional.of(currentOwner);
+
+        auctionStartTime = time;
+        auctions++;
+      }
 
       for (final Bidder<T> b : communicators) {
         if (b != currentOwner) {
           b.callForBids(this, parcel, time);
         }
       }
-
       eventDispatcher.dispatchEvent(
         new AuctionEvent(EventType.START_RE_AUCTION, parcel, this, time));
     }
@@ -398,21 +404,27 @@ public class AuctionCommModel<T extends Bid<T>>
     public void submit(T bid) {
       LOGGER.trace("{} Receive bid for {}, bid: {}.", this, parcel, bid);
       checkArgument(bid.getParcel().equals(parcel));
-      // if a winner is already present, the auction is over. if the auction
-      // times do not match, it means a new auction is taking place while the
-      // submitted bid is for a previously held auction.
-      if (!winner.isPresent() && bid.getTimeOfAuction() == auctionStartTime) {
-        bids.add(bid);
-      } else {
-        LOGGER.info("{} Ignoring bid {}, winner {}, auctionStartTime {}", this,
-          bid, winner, auctionStartTime);
+
+      synchronized (bids) {
+        // if a winner is already present, the auction is over. if the auction
+        // times do not match, it means a new auction is taking place while the
+        // submitted bid is for a previously held auction.
+        if (!winner.isPresent() && bid.getTimeOfAuction() == auctionStartTime) {
+          bids.add(bid);
+        } else {
+          LOGGER.info("{} Ignoring bid {}, winner {}, auctionStartTime {}",
+            this,
+            bid, winner, auctionStartTime);
+        }
       }
     }
 
     @Override
     public Bidder<T> getWinner() {
-      checkState(winner.isPresent());
-      return winner.get();
+      synchronized (bids) {
+        checkState(winner.isPresent());
+        return winner.get();
+      }
     }
 
     @Override
