@@ -494,6 +494,7 @@ public final class OptaplannerSolvers {
     @Nullable
     ListenableFuture<ImmutableList<ImmutableList<Parcel>>> currentFuture;
     private final String name;
+    private boolean cancelled;
 
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);
@@ -572,12 +573,14 @@ public final class OptaplannerSolvers {
       LOGGER.trace("{} cancel", this);
       // permissionToRun.set(false);
       doCancel();
+      cancelled = true;
       scheduler.get().doneForNow();
     }
 
     synchronized void start(final GlobalStateObject snapshot) {
       checkState(scheduler.isPresent());
       doCancel();
+      cancelled = false;
       // if (!permissionToRun.get()) {
       // LOGGER.info("No permission to continue, not starting new
       // computation.");
@@ -609,6 +612,11 @@ public final class OptaplannerSolvers {
 
     synchronized void handleSolverSuccess(
         @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+      if (cancelled) {
+        LOGGER.info("{} Solver was cancelled but also completed its "
+          + "computation, result is ignored.", this);
+        return;
+      }
       if (result == null) {
         if (solver.isTerminateEarly() || currentFuture == null) {
           LOGGER.info("{} Solver was terminated early.", this);
