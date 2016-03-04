@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -352,7 +353,7 @@ public final class OptaplannerSolvers {
     }
 
     void checkPreconditions() {
-      checkArgument(getName() != null);
+      checkArgument(getName() != null, "A name must be specified.");
     }
 
     static Builder defaultInstance() {
@@ -487,20 +488,19 @@ public final class OptaplannerSolvers {
 
   static class OptaplannerRTSolver implements RealtimeSolver {
     final OptaplannerSolver solver;
-    // final AtomicBoolean permissionToRun;
     Optional<Scheduler> scheduler;
     @Nullable
     GlobalStateObject lastSnapshot;
     @Nullable
     ListenableFuture<ImmutableList<ImmutableList<Parcel>>> currentFuture;
+    @Nullable
+    ScheduleCallback currentScheduleCallback;
     private final String name;
-    private boolean cancelled;
 
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);
       scheduler = Optional.absent();
       name = "OptaplannerRT-" + verifyNotNull(b.getName());
-      // permissionToRun = new AtomicBoolean(false);
     }
 
     @Override
@@ -568,82 +568,23 @@ public final class OptaplannerSolvers {
       }
     }
 
+    // @Override
+    // public synchronized void cancel() {
+    // LOGGER.trace("{} Cancel", this);
+    // doCancel();
+    // scheduler.get().doneForNow();
+    // }
+
     @Override
     public synchronized void cancel() {
       LOGGER.trace("{} cancel", this);
-      // permissionToRun.set(false);
-      doCancel();
-      cancelled = true;
-      scheduler.get().doneForNow();
-    }
-
-    synchronized void start(final GlobalStateObject snapshot) {
-      checkState(scheduler.isPresent());
-      doCancel();
-      cancelled = false;
-      // if (!permissionToRun.get()) {
-      // LOGGER.info("No permission to continue, not starting new
-      // computation.");
-      // return;
-      // }
-      checkState(currentFuture == null);
-
-      lastSnapshot = snapshot;
-      LOGGER.info("{} Start RT Optaplanner Solver.", this);
-      final ListenableFuture<ImmutableList<ImmutableList<Parcel>>> future =
-        scheduler.get().getSharedExecutor()
-          .submit(new OptaplannerCallable(solver, snapshot));
-      currentFuture = future;
-      final OptaplannerRTSolver ref = this;
-      Futures.addCallback(future,
-        new FutureCallback<ImmutableList<ImmutableList<Parcel>>>() {
-          @Override
-          public void onSuccess(
-              @Nullable ImmutableList<ImmutableList<Parcel>> result) {
-            ref.handleSolverSuccess(result);
-          }
-
-          @Override
-          public void onFailure(Throwable t) {
-            ref.handleSolverFailure(t);
-          }
-        });
-    }
-
-    synchronized void handleSolverSuccess(
-        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
-      if (cancelled) {
-        LOGGER.info("{} Solver was cancelled but also completed its "
-          + "computation, result is ignored.", this);
-      } else if (result == null) {
-        if (solver.isTerminateEarly() || currentFuture == null) {
-          LOGGER.info("{} Solver was terminated early.", this);
-        } else {
-          scheduler.get().reportException(new IllegalArgumentException(
-            "Solver.solve(..) must return a non-null result. Solver: "
-              + solver));
-        }
-      } else {
-        LOGGER.info("{} Computations finished, update schedule.", this);
-        scheduler.get().updateSchedule(verifyNotNull(lastSnapshot), result);
-        scheduler.get().doneForNow();
-      }
-      currentFuture = null;
-    }
-
-    synchronized void handleSolverFailure(Throwable t) {
-      if (t instanceof CancellationException) {
-        LOGGER.trace("{} Solver got cancelled.", this);
-        return;
-      }
-      scheduler.get().reportException(t);
-    }
-
-    synchronized void doCancel() {
-      LOGGER.trace("{} Cancel", this);
       if (isComputing()) {
+        LOGGER.trace("{} is computing, cancel future");
+        currentScheduleCallback.cancel();
         currentFuture.cancel(true);
+        currentScheduleCallback = null;
         currentFuture = null;
+        scheduler.get().doneForNow();
       }
       if (solver.isSolving()) {
         LOGGER.trace("{} > terminate solver.", this);
@@ -660,14 +601,93 @@ public final class OptaplannerSolvers {
       }
     }
 
+    synchronized void start(final GlobalStateObject snapshot) {
+      checkState(scheduler.isPresent());
+      cancel();
+      checkState(currentFuture == null);
+      checkState(currentScheduleCallback == null);
+
+      lastSnapshot = snapshot;
+      LOGGER.info("{} Start RT Optaplanner Solver.", this);
+      currentFuture = scheduler.get().getSharedExecutor()
+        .submit(new OptaplannerCallable(solver, snapshot));
+      currentScheduleCallback = new ScheduleCallback(this);
+      Futures.addCallback(currentFuture, currentScheduleCallback);
+    }
+
+    synchronized void handleSolverSuccess(
+        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+      if (result == null) {
+        if (solver.isTerminateEarly() || currentFuture == null) {
+          LOGGER.info("{} Solver was terminated early.", this);
+        } else {
+          scheduler.get().reportException(new IllegalArgumentException(
+            "Solver.solve(..) must return a non-null result. Solver: "
+              + solver));
+        }
+      } else {
+        LOGGER.info("{} Computations finished, update schedule.", this);
+        scheduler.get().updateSchedule(verifyNotNull(lastSnapshot), result);
+        scheduler.get().doneForNow();
+      }
+      currentFuture = null;
+      currentScheduleCallback = null;
+    }
+
+    synchronized void handleSolverFailure(Throwable t) {
+      if (t instanceof CancellationException) {
+        LOGGER.trace("{} Solver got cancelled.", this);
+        return;
+      }
+      scheduler.get().reportException(t);
+    }
+
     @Override
     public synchronized boolean isComputing() {
-      return currentFuture != null && !currentFuture.isDone();
+      return currentFuture != null && currentScheduleCallback != null;
     }
 
     @Override
     public String toString() {
       return name + NAME_SEPARATOR + Integer.toHexString(hashCode());
+    }
+  }
+
+  static class ScheduleCallback
+      implements FutureCallback<ImmutableList<ImmutableList<Parcel>>> {
+    OptaplannerRTSolver reference;
+
+    AtomicBoolean active;
+
+    ScheduleCallback(OptaplannerRTSolver ref) {
+      reference = ref;
+      active = new AtomicBoolean(true);
+    }
+
+    synchronized void cancel() {
+      checkState(active.get());
+      active.set(false);
+    }
+
+    synchronized boolean isDone() {
+      return !active.get();
+    }
+
+    @Override
+    public synchronized void onSuccess(
+        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+      if (active.get()) {
+        reference.handleSolverSuccess(result);
+        active.set(false);
+      }
+    }
+
+    @Override
+    public synchronized void onFailure(Throwable t) {
+      if (active.get()) {
+        reference.handleSolverFailure(t);
+        active.set(false);
+      }
     }
   }
 
