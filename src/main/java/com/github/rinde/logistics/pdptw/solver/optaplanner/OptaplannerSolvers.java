@@ -664,29 +664,31 @@ public final class OptaplannerSolvers {
       active = new AtomicBoolean(true);
     }
 
-    synchronized void cancel() {
-      checkState(active.get());
-      active.set(false);
-    }
-
-    synchronized boolean isDone() {
-      return !active.get();
-    }
-
-    @Override
-    public synchronized void onSuccess(
-        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
-      if (active.get()) {
-        reference.handleSolverSuccess(result);
+    void cancel() {
+      synchronized (reference) {
+        checkState(active.get());
         active.set(false);
       }
     }
 
     @Override
-    public synchronized void onFailure(Throwable t) {
-      if (active.get()) {
-        reference.handleSolverFailure(t);
-        active.set(false);
+    public void onSuccess(
+        @Nullable ImmutableList<ImmutableList<Parcel>> result) {
+      synchronized (reference) {
+        if (active.get()) {
+          reference.handleSolverSuccess(result);
+          active.set(false);
+        }
+      }
+    }
+
+    @Override
+    public void onFailure(Throwable t) {
+      synchronized (reference) {
+        if (active.get()) {
+          reference.handleSolverFailure(t);
+          active.set(false);
+        }
       }
     }
   }
