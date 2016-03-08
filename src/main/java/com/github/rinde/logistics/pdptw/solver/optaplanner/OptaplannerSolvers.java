@@ -666,8 +666,9 @@ public final class OptaplannerSolvers {
 
     void cancel() {
       synchronized (reference) {
-        checkState(active.get());
-        active.set(false);
+        if (active.get()) {
+          active.set(false);
+        }
       }
     }
 
