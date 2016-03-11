@@ -533,7 +533,7 @@ public final class OptaplannerSolvers {
       // the problem has changed so we should be computing (it doesn't matter if
       // we were already computing, that computation will be canceled).
       // permissionToRun.set(true);
-      start(snapshot);
+      start(snapshot, true);
     }
 
     @Override
@@ -564,19 +564,16 @@ public final class OptaplannerSolvers {
       if (significantChangeDetected) {
         LOGGER.info(
           "Vehicle destination commitment change detected -> restart solver.");
-        start(snapshot);
+        start(snapshot, false);
       }
     }
 
-    // @Override
-    // public synchronized void cancel() {
-    // LOGGER.trace("{} Cancel", this);
-    // doCancel();
-    // scheduler.get().doneForNow();
-    // }
-
     @Override
     public synchronized void cancel() {
+      doCancel(true);
+    }
+
+    synchronized void doCancel(boolean notify) {
       LOGGER.trace("{} cancel", this);
       if (isComputing()) {
         LOGGER.trace("{} is computing, cancel future");
@@ -584,7 +581,9 @@ public final class OptaplannerSolvers {
         currentFuture.cancel(true);
         currentScheduleCallback = null;
         currentFuture = null;
-        scheduler.get().doneForNow();
+        if (notify) {
+          scheduler.get().doneForNow();
+        }
       }
       if (solver.isSolving()) {
         LOGGER.trace("{} > terminate solver.", this);
@@ -601,9 +600,10 @@ public final class OptaplannerSolvers {
       }
     }
 
-    synchronized void start(final GlobalStateObject snapshot) {
+    synchronized void start(final GlobalStateObject snapshot,
+        boolean notifyCancel) {
       checkState(scheduler.isPresent());
-      cancel();
+      doCancel(notifyCancel);
       checkState(currentFuture == null);
       checkState(currentScheduleCallback == null);
 
