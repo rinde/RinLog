@@ -75,9 +75,9 @@ public class CommunicationIntegrationTest implements TickListener {
     problem = ExperimentTestUtil.init(
       Gendreau06Parser.parser()
         .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
+        .allowDiversion()
         .parse().get(0),
-      configuration, 123,
-      false);
+      configuration, 123, false);
 
     problem.tick();
     problem.register(this);

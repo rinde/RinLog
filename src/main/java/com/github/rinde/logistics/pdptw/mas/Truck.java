@@ -18,6 +18,7 @@ package com.github.rinde.logistics.pdptw.mas;
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,7 @@ public class Truck
   private final RoutePlanner routePlanner;
   private final Communicator communicator;
   private boolean changed;
+  private final AtomicBoolean routePlannerChanged;
   private final boolean lazyRouteComputing;
   private final EventDispatcher eventDispatcher;
   private final Event routeChangedEvent;
@@ -79,12 +81,13 @@ public class Truck
       @Override
       public void handleEvent(Event e) {
         LOGGER.trace("routeplanner computed a new route, update route");
-        updateRoute();
+        routePlannerChanged.set(true);
       }
     }, RoutePlannerEventType.CHANGE);
     stateMachine.getEventAPI().addListener(this,
       StateMachineEvent.STATE_TRANSITION);
     lazyRouteComputing = lazyRouteComp;
+    routePlannerChanged = new AtomicBoolean();
     eventDispatcher = new EventDispatcher(TruckEvent.values());
     routeChangedEvent = new Event(TruckEvent.ROUTE_CHANGE, this);
     LOGGER.trace("Truck constructor, {}, {}, {}, {}.", rp, c, ra,
@@ -105,6 +108,10 @@ public class Truck
 
   @Override
   protected void preTick(TimeLapse time) {
+    if (routePlannerChanged.getAndSet(false)) {
+      updateRoute();
+    }
+
     if (stateMachine.stateIs(waitState)) {
       if (changed) {
         updateAssignmentAndRoutePlanner();
