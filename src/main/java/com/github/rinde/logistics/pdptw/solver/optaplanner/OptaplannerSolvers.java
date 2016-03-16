@@ -540,7 +540,9 @@ public final class OptaplannerSolvers {
     public synchronized void receiveSnapshot(GlobalStateObject snapshot) {
       // this is the snapshot the solver is currently using
       final GlobalStateObject last = lastSnapshot;
-      if (last == null) {
+      if (last == null
+        || !isComputing()
+        || last.getTime() > snapshot.getTime()) {
         return;
       }
       // if something significant happens -> restart solver
