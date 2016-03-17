@@ -111,7 +111,7 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
       "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
       "Can not claim parcel %s which is not in assigned parcels: %s.", p,
-      assignedParcels, vehicle.get());
+      assignedParcels, vehicle.get(), this);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
       || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
     checkArgument(claimedParcels.isEmpty(),

@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.swt.graphics.RGB;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,16 +38,26 @@ import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.Model.AbstractModel;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
+import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
+import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
+import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
+import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
+import com.github.rinde.rinsim.pdptw.common.RouteRenderer;
+import com.github.rinde.rinsim.pdptw.common.TimeLinePanel;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Parser;
+import com.github.rinde.rinsim.ui.View;
+import com.github.rinde.rinsim.ui.renderers.PlaneRoadModelRenderer;
+import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 
@@ -57,7 +68,7 @@ import com.google.common.base.Optional;
 @RunWith(Parameterized.class)
 public class CommunicationIntegrationTest implements TickListener {
   final MASConfiguration configuration;
-  Simulator problem;
+  Simulator simulator;
 
   /**
    * @param c The configuration under test.
@@ -72,16 +83,27 @@ public class CommunicationIntegrationTest implements TickListener {
    */
   @Test
   public void test() {
-    problem = ExperimentTestUtil.init(
+
+    simulator = ExperimentTestUtil.init(
       Gendreau06Parser.parser()
         .addFile("files/scenarios/gendreau06/req_rapide_1_240_24")
         .allowDiversion()
         .parse().get(0),
-      configuration, 123, false);
+      configuration, 123, false,
+      View.builder()
+        .with(PlaneRoadModelRenderer.builder())
+        .with(RoadUserRenderer.builder()
+          .withColorAssociation(Vehicle.class, new RGB(255, 0, 0))
+          .withColorAssociation(Depot.class, new RGB(0, 255, 0))
+          .withColorAssociation(Parcel.class, new RGB(0, 0, 255)))
+        .with(RouteRenderer.builder())
+        .with(TimeLinePanel.builder())
+        .with(AuctionPanel.builder())
+        .withAutoPlay());
 
-    problem.tick();
-    problem.register(this);
-    problem.start();
+    // simulator.tick();
+    simulator.register(this);
+    simulator.start();
   }
 
   /**
@@ -96,7 +118,10 @@ public class CommunicationIntegrationTest implements TickListener {
           DefaultTruckFactory.builder()
             .setRoutePlanner(RandomRoutePlanner.supplier())
             .setCommunicator(RandomBidder.supplier())
+            .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
+            .setLazyComputation(false)
             .build())
+        .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
         .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(CommTestModel.builder())
         .build()},
@@ -106,6 +131,8 @@ public class CommunicationIntegrationTest implements TickListener {
             .setRoutePlanner(RandomRoutePlanner.supplier())
             .setCommunicator(
               SolverBidder.supplier(objFunc, RandomSolver.supplier()))
+            .setLazyComputation(false)
+            .setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
             .build())
         .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(CommTestModel.builder())
@@ -117,6 +144,7 @@ public class CommunicationIntegrationTest implements TickListener {
           DefaultTruckFactory.builder()
             .setRoutePlanner(GotoClosestRoutePlanner.supplier())
             .setCommunicator(BlackboardUser.supplier())
+            .setLazyComputation(false)
             .build())
         .addModel(BlackboardCommModel.builder())
         .addModel(CommTestModel.builder())
@@ -126,11 +154,12 @@ public class CommunicationIntegrationTest implements TickListener {
 
   @Override
   public void tick(TimeLapse timeLapse) {
-    final Optional<PDPModel> pdpModel = Optional.fromNullable(problem
+    final Optional<PDPModel> pdpModel = Optional.fromNullable(simulator
       .getModelProvider().getModel(PDPModel.class));
 
-    final Optional<CommTestModel> commTestModel = Optional.fromNullable(problem
-      .getModelProvider().getModel(CommTestModel.class));
+    final Optional<CommTestModel> commTestModel =
+      Optional.fromNullable(simulator
+        .getModelProvider().getModel(CommTestModel.class));
 
     for (final Communicator c : commTestModel.get().communicators) {
       assertTrue(

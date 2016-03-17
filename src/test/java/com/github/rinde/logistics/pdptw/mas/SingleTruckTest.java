@@ -124,12 +124,14 @@ public class SingleTruckTest {
         TestTruckFactory.testBuilder()
           .setRoutePlanner(DebugRoutePlanner.supplier(rp))
           .setCommunicator(TestBidder.supplier())
+          .setLazyComputation(false)
           .build())
+      .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
       .addModel(AuctionCommModel.builder(DoubleBid.class))
       .addModel(SolverModel.builder())
       .build();
 
-    simulator = ExperimentTestUtil.init(scen, randomRandom, 123, false);
+    simulator = ExperimentTestUtil.init(scen, randomRandom, 123);
 
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
@@ -146,6 +148,7 @@ public class SingleTruckTest {
     assertTrue(roadModel.getObjectsOfType(Parcel.class).isEmpty());
 
     truck = roadModel.getObjectsOfType(TestTruck.class).iterator().next();
+
     assertNotNull(truck);
     assertEquals(1000, simulator.getCurrentTime());
   }
@@ -162,7 +165,7 @@ public class SingleTruckTest {
 
   @Test
   public void oneParcel() {
-    final ParcelDTO parcel1dto = builder.buildDTO();
+    final ParcelDTO parcel1dto = builder.toString("ONE_PARCEL").buildDTO();
 
     setUp(asList(parcel1dto), 1, null);
 
@@ -259,9 +262,8 @@ public class SingleTruckTest {
     final ParcelDTO parcel3dto = builder.buildDTO();
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
-      SolverRoutePlanner
-        .supplierWithoutCurrentRoutes(
-          MultiVehicleHeuristicSolver.supplier(50, 100)));
+      SolverRoutePlanner.supplierWithoutCurrentRoutes(
+        MultiVehicleHeuristicSolver.supplier(50, 100)));
 
     final List<Event> events = new ArrayList<>();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {
@@ -286,7 +288,7 @@ public class SingleTruckTest {
     simulator.tick();
     final int after = ((DebugRoutePlanner) truck.getRoutePlanner())
       .getUpdateCount();
-    assertEquals(before + 1, after);
+    assertEquals(before, after);
   }
 
   /**
@@ -304,7 +306,7 @@ public class SingleTruckTest {
     assertEquals(0, drp.getUpdateCount());
     simulator.tick();
 
-    assertEquals(1, drp.getUpdateCount());
+    assertEquals(2, drp.getUpdateCount());
     assertThat(truck.getState()).isEqualTo(truck.gotoState());
 
     // introduce new parcel
@@ -315,18 +317,18 @@ public class SingleTruckTest {
     while (truck.getState().equals(truck.gotoState())) {
       simulator.tick();
     }
-    assertEquals(1, drp.getUpdateCount());
+    assertEquals(3, drp.getUpdateCount());
     // introduce new parcel
     final ParcelDTO parcel4dto = setCommonProperties(
       Parcel.builder(new Point(0, 3), new Point(5, 3))).buildDTO();
     simulator.register(new Parcel(parcel4dto));
     // service
     while (truck.getState().equals(truck.serviceState())) {
-      assertEquals(1, drp.getUpdateCount());
+      assertEquals(4, drp.getUpdateCount());
       simulator.tick();
     }
 
-    assertEquals(2,
+    assertEquals(4,
       ((DebugRoutePlanner) truck.getRoutePlanner()).getUpdateCount());
   }
 
@@ -383,6 +385,11 @@ public class SingleTruckTest {
     @Override
     public boolean hasNext() {
       return delegate.hasNext();
+    }
+
+    @Override
+    public String toString() {
+      return "DebugRoutePlanner";
     }
 
     public static StochasticSupplier<RoutePlanner> supplier(

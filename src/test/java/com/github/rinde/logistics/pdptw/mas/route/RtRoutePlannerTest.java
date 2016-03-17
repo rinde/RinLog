@@ -123,6 +123,7 @@ public class RtRoutePlannerTest {
         .addModel(RtSolverModel.builder())
         .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(AuctionCommModelLogger.builder())
+        .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
         .addEventHandler(AddVehicleEvent.class,
           DefaultTruckFactory.builder()
             .setRoutePlanner(RtSolverRoutePlanner.supplier(rtSolverSup))
@@ -140,11 +141,12 @@ public class RtRoutePlannerTest {
             sim.getModelProvider().getModel(AuctionCommModelLogger.class);
 
           assertThat(logger.events.keySet().size()).isEqualTo(3);
+          System.out.println(logger.events);
           for (final Entry<Parcel, Collection<Enum<?>>> entry : logger.events
             .asMap().entrySet()) {
 
             assertThat(entry.getValue())
-              .containsExactly(AuctionCommModel.EventType.START_AUCTION,
+              .containsAllOf(AuctionCommModel.EventType.START_AUCTION,
                 AuctionCommModel.EventType.FINISH_AUCTION)
               .inOrder();
 

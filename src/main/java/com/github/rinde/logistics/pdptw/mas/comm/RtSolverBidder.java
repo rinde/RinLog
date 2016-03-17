@@ -284,8 +284,8 @@ public class RtSolverBidder
     }
     LOGGER.trace("{} Considering a reauction, assignedParcels: {}.", this,
       assignedParcels.size());
-    final ImmutableList<Parcel> currentRoute = ImmutableList
-      .copyOf(((Truck) vehicle.get()).getRoute());
+    final ImmutableList<Parcel> currentRoute =
+      ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
     final StatisticsDTO stats =

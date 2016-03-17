@@ -112,7 +112,7 @@ public class RoutePlannerTest {
       .addModel(SolverModel.builder())
       .build();
 
-    simulator = ExperimentTestUtil.init(scen, config, 123, false);
+    simulator = ExperimentTestUtil.init(scen, config, 123);
     roadModel = simulator.getModelProvider().getModel(RoadModel.class);
     pdpModel = simulator.getModelProvider().getModel(PDPModel.class);
     if (routePlanner instanceof SolverRoutePlanner) {
@@ -183,7 +183,7 @@ public class RoutePlannerTest {
     assertFalse(routePlanner.next(0).isPresent());
 
     assertEquals("total number of stops should equal num locations",
-      (onMap.size() * 2) + inCargo.size(), visited.size());
+      onMap.size() * 2 + inCargo.size(), visited.size());
 
     for (final Parcel p : onMap) {
       assertEquals(2, Collections.frequency(visited, p));

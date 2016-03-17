@@ -17,6 +17,7 @@ package com.github.rinde.logistics.pdptw.mas;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -108,19 +109,27 @@ public class Truck
 
   @Override
   protected void preTick(TimeLapse time) {
-    if (routePlannerChanged.getAndSet(false)) {
-      updateRoute();
-    }
-
+    boolean updated = false;
     if (stateMachine.stateIs(waitState)) {
       if (changed) {
         updateAssignmentAndRoutePlanner();
       } else if (getRoute().isEmpty() && routePlanner.current().isPresent()) {
+        updated = true;
         updateRoute();
       }
     } else if (changed && isDiversionAllowed()
       && !stateMachine.stateIs(serviceState)) {
       updateAssignmentAndRoutePlanner();
+    }
+
+    if (!updated) {
+      checkRoutePlanner();
+    }
+  }
+
+  void checkRoutePlanner() {
+    if (routePlannerChanged.getAndSet(false)) {
+      updateRoute();
     }
   }
 
@@ -129,9 +138,10 @@ public class Truck
    * {@link Communicator}.
    */
   protected void updateAssignmentAndRoutePlanner() {
+    LOGGER.trace("{} updateAssignmentAndRoutePlanner()", this);
     changed = false;
 
-    routePlanner.update(communicator.getParcels(), getCurrentTime().getTime());
+    routePlanner.update(communicator.getParcels(), getCurrentTime());
     final Optional<Parcel> cur = routePlanner.current();
     if (cur.isPresent()) {
       communicator.waitFor(cur.get());
@@ -146,17 +156,31 @@ public class Truck
    * Updates the route based on the {@link RoutePlanner}.
    */
   protected void updateRoute() {
+    LOGGER.trace("{} updateRoute() {}", this, communicator.getParcels());
+
+    final Collection<Parcel> curRoute = getRoute();
+
     if (routePlanner.current().isPresent()) {
+      LOGGER.trace("{}", routePlanner.currentRoute());
       setRoute(routePlanner.currentRoute().get());
+      if (getRoute().isEmpty()
+        && !routePlanner.currentRoute().get().isEmpty()) {
+        updateAssignmentAndRoutePlanner();
+      }
     } else {
       setRoute(new LinkedList<Parcel>());
     }
-    eventDispatcher.dispatchEvent(routeChangedEvent);
+
+    if (!curRoute.equals(getRoute())) {
+      eventDispatcher.dispatchEvent(routeChangedEvent);
+    }
   }
 
   @Override
   public void handleEvent(Event e) {
     LOGGER.trace("{} - Event: {}", this, e);
+    // checkRoutePlanner();
+
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
       changed = true;
       if (!lazyRouteComputing) {
@@ -188,7 +212,7 @@ public class Truck
         if (changed) {
           updateAssignmentAndRoutePlanner();
         } else {
-          routePlanner.next(getCurrentTime().getTime());
+          routePlanner.next(getCurrentTimeLapse().getTime());
         }
       }
 
@@ -198,6 +222,8 @@ public class Truck
         updateAssignmentAndRoutePlanner();
       }
     }
+
+    checkRoutePlanner();
   }
 
   /**

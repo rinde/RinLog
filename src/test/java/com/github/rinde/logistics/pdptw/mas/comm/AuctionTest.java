@@ -140,8 +140,7 @@ public class AuctionTest {
       .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
       .parse().get(0);
 
-    final Simulator sim = ExperimentTestUtil.init(scen,
-      configuration, 123, false);
+    final Simulator sim = ExperimentTestUtil.init(scen, configuration, 123);
     sim.tick();
 
     final RoadModel rm = sim.getModelProvider().getModel(RoadModel.class);
@@ -232,7 +231,10 @@ public class AuctionTest {
           DefaultTruckFactory.builder()
             .setRoutePlanner(RandomRoutePlanner.supplier())
             .setCommunicator(bidderSupplier)
+            .setLazyComputation(false)
+
             .build())
+        .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
         .addModel(AuctionCommModel.builder(DoubleBid.class))
         .addModel(CommTestModel.builder())
         .addModel(SolverModel.builder())
@@ -247,8 +249,7 @@ public class AuctionTest {
       .addFile(ImmutableList.of(ape1, ape2), "req_rapide_1_240_24")
       .parse().get(0);
 
-    final Simulator sim = ExperimentTestUtil.init(scen,
-      configuration, 123, false);
+    final Simulator sim = ExperimentTestUtil.init(scen, configuration, 123);
     sim.tick();
 
     final RoadModel rm = sim.getModelProvider().getModel(RoadModel.class);
@@ -266,6 +267,8 @@ public class AuctionTest {
       (Bidder<DoubleBid>) truck1.getCommunicator();
     final Bidder<DoubleBid> bidder2 =
       (Bidder<DoubleBid>) truck2.getCommunicator();
+    System.out.println(bidder1);
+    System.out.println(bidder2);
     sim.tick();
 
     final Parcel newParcel = new Parcel(Parcel.builder(
@@ -282,7 +285,7 @@ public class AuctionTest {
       sim.tick();
     }
     assertEquals(ParcelState.IN_CARGO, pm.getParcelState(parcelToSwap));
-    assertTrue(pm.getContents(truck2).contains(parcelToSwap));
+    assertThat(pm.getContents(truck2)).contains(parcelToSwap);
 
     sim.register(newParcel);
     // cm.receiveParcel(newParcel, sim.getCurrentTime());
