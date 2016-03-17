@@ -54,7 +54,7 @@ public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
     implements TickListener {
   // FIXME
-  private static final long MAX_AUCTION_DURATION_MS = 30000L;
+  private static final long MAX_AUCTION_DURATION_MS = 60000L;
   // 5 * 60 * 1000L;
 
   final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
