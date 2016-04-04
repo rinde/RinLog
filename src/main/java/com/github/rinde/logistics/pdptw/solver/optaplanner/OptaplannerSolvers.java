@@ -377,7 +377,7 @@ public final class OptaplannerSolvers {
    */
   public interface OptaplannerFactory {
     /**
-     * Create an optaplanner solver.
+     * Create an OptaPlanner solver.
      * @param unimprovedMs Maximum interval of time (in ms) the solver will run
      *          without finding an improving solution.
      * @param nm The name of the solver.
@@ -385,7 +385,9 @@ public final class OptaplannerSolvers {
      * @throws IllegalArgumentException if a solver with the specified name does
      *           not exist in the factory.
      */
-    StochasticSupplier<RealtimeSolver> create(long unimprovedMs, String nm);
+    StochasticSupplier<RealtimeSolver> createRT(long unimprovedMs, String nm);
+
+    StochasticSupplier<Solver> create(long unimprovedMs, String nm);
 
     ImmutableSet<String> getAvailableSolvers();
   }
@@ -398,19 +400,28 @@ public final class OptaplannerSolvers {
     }
 
     @Override
-    public StochasticSupplier<RealtimeSolver> create(long ms, String nm) {
+    public StochasticSupplier<RealtimeSolver> createRT(long ms, String nm) {
+      return builderHelper(ms, nm).buildRealtimeSolverSupplier();
+    }
+
+    @Override
+    public StochasticSupplier<Solver> create(long unimprovedMs, String nm) {
+      return builderHelper(unimprovedMs, nm).buildSolverSupplier();
+    }
+
+    Builder builderHelper(long ms, String nm) {
       checkArgument(configs.containsKey(nm));
       return builder()
         .withUnimprovedMsLimit(ms)
         .withSolverConfig(configs.get(nm))
-        .withName(nm)
-        .buildRealtimeSolverSupplier();
+        .withName(nm);
     }
 
     @Override
     public ImmutableSet<String> getAvailableSolvers() {
       return configs.keySet();
     }
+
   }
 
   static class OptaplannerSolver implements Solver {
