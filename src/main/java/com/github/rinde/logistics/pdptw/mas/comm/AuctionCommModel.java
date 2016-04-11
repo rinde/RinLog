@@ -24,14 +24,19 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.math3.random.RandomAdaptor;
+import org.apache.commons.math3.random.RandomGenerator;
+
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.rand.RandomProvider;
 import com.github.rinde.rinsim.core.model.time.Clock;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController.ClockMode;
@@ -61,11 +66,14 @@ public class AuctionCommModel<T extends Bid<T>>
   @Nullable
   final RealtimeClockController clock;
   final AtomicInteger numAuctions;
+  final Random rng;
 
-  AuctionCommModel(AuctionStopCondition<T> sc, Clock c, long maxAuctDurMs) {
+  AuctionCommModel(AuctionStopCondition<T> sc, Clock c, long maxAuctDurMs,
+      RandomGenerator r) {
     stopCondition = sc;
     parcelAuctioneerMap = new LinkedHashMap<>();
     maxAuctionDurationMs = maxAuctDurMs;
+    rng = new RandomAdaptor(r);
 
     eventDispatcher = new EventDispatcher(EventType.values());
     if (c instanceof RealtimeClockController) {
@@ -391,6 +399,8 @@ public class AuctionCommModel<T extends Bid<T>>
         auctions++;
       }
 
+      // FIXME this should be optionally?
+      Collections.shuffle(communicators, rng);
       for (final Bidder<T> b : communicators) {
         if (b != currentOwner) {
           b.callForBids(this, parcel, time);
@@ -446,7 +456,7 @@ public class AuctionCommModel<T extends Bid<T>>
     private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
 
     Builder() {
-      setDependencies(Clock.class);
+      setDependencies(Clock.class, RandomProvider.class);
       setProvidingTypes(AuctionCommModel.class);
     }
 
@@ -480,8 +490,10 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
       final Clock clock = dependencyProvider.get(Clock.class);
+      final RandomGenerator rng =
+        dependencyProvider.get(RandomProvider.class).newInstance();
       return new AuctionCommModel<T>(getStopCondition(), clock,
-        getMaxAuctionDuration());
+        getMaxAuctionDuration(), rng);
     }
 
     static <T extends Bid<T>> Builder<T> create() {
