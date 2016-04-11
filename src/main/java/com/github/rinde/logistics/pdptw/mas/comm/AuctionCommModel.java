@@ -54,8 +54,7 @@ public class AuctionCommModel<T extends Bid<T>>
     extends AbstractCommModel<Bidder<T>>
     implements TickListener {
 
-  private static final long MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
-
+  final long maxAuctionDurationMs;
   final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
   final AuctionStopCondition<T> stopCondition;
   final EventDispatcher eventDispatcher;
@@ -63,9 +62,10 @@ public class AuctionCommModel<T extends Bid<T>>
   final RealtimeClockController clock;
   final AtomicInteger numAuctions;
 
-  AuctionCommModel(AuctionStopCondition<T> sc, Clock c) {
+  AuctionCommModel(AuctionStopCondition<T> sc, Clock c, long maxAuctDurMs) {
     stopCondition = sc;
     parcelAuctioneerMap = new LinkedHashMap<>();
+    maxAuctionDurationMs = maxAuctDurMs;
 
     eventDispatcher = new EventDispatcher(EventType.values());
     if (c instanceof RealtimeClockController) {
@@ -279,10 +279,10 @@ public class AuctionCommModel<T extends Bid<T>>
       boolean notify = false;
       synchronized (bids) {
         checkRealtime();
-        if (time - auctionStartTime > MAX_AUCTION_DURATION_MS) {
+        if (time - auctionStartTime > maxAuctionDurationMs) {
           throw new IllegalStateException(
             "Auction duration for " + parcel + " exceeded threshold of "
-              + MAX_AUCTION_DURATION_MS + " ms.");
+              + maxAuctionDurationMs + " ms.");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
@@ -440,8 +440,10 @@ public class AuctionCommModel<T extends Bid<T>>
    */
   @AutoValue
   public abstract static class Builder<T extends Bid<T>>
-      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder>
+      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>>
       implements Serializable {
+
+    private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
 
     Builder() {
       setDependencies(Clock.class);
@@ -450,19 +452,41 @@ public class AuctionCommModel<T extends Bid<T>>
 
     public abstract AuctionStopCondition<T> getStopCondition();
 
+    public abstract long getMaxAuctionDuration();
+
     public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
-      return new AutoValue_AuctionCommModel_Builder<T>(stopCondition);
+      return new AutoValue_AuctionCommModel_Builder<>(stopCondition,
+        getMaxAuctionDuration());
+    }
+
+    /**
+     * Change the maximum duration of an auction. If an auction takes longer
+     * than this limit, an {@link IllegalStateException} will be thrown. This is
+     * used to detect situations where auctions have not completed normally,
+     * usually this is the result of a programming error. This limit should
+     * always be (significantly) higher than the maximum auction limit as
+     * defined in an {@link AuctionStopCondition}.
+     * @param durationMs The duration in milliseconds. The default is
+     *          <code>600000</code> (10 minutes), only positive values are
+     *          allowed.
+     * @return A new builder instance with the duration property changed.
+     */
+    public Builder<T> withMaxAuctionDuration(long durationMs) {
+      checkArgument(durationMs > 0, "Only positive durations are allowed.");
+      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
+        durationMs);
     }
 
     @Override
     public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
       final Clock clock = dependencyProvider.get(Clock.class);
-      return new AuctionCommModel<T>(getStopCondition(), clock);
+      return new AuctionCommModel<T>(getStopCondition(), clock,
+        getMaxAuctionDuration());
     }
 
     static <T extends Bid<T>> Builder<T> create() {
       return new AutoValue_AuctionCommModel_Builder<T>(
-        AuctionStopConditions.<T>allBidders());
+        AuctionStopConditions.<T>allBidders(), DEFAULT_MAX_AUCTION_DURATION_MS);
     }
   }
 }
