@@ -55,8 +55,7 @@ public class MultiVehicleHeuristicSolverTest {
    */
   @Test
   public void testValidity() throws IOException {
-    Experiment
-      .build(Gendreau06ObjectiveFunction.instance())
+    Experiment.builder()
       .addConfiguration(
         // not good settings, but fast!
         Central.solverConfiguration(MultiVehicleHeuristicSolver.supplier(
@@ -119,8 +118,10 @@ public class MultiVehicleHeuristicSolverTest {
       SI.MILLI(SI.SECOND));
     final Gendreau06ObjectiveFunction objFunc = Gendreau06ObjectiveFunction
       .instance();
-    Experiment.build(objFunc).addScenario(scenario)
-      .addConfiguration(Central.solverConfiguration(dsc)).perform();
+    Experiment.builder()
+      .addScenario(scenario)
+      .addConfiguration(Central.solverConfiguration(dsc))
+      .perform();
 
     for (int i = 0; i < dsc.solver.getInputs().size(); i++) {
       final double arrObjVal = ArraysSolvers

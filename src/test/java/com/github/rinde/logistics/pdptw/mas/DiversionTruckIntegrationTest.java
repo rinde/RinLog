@@ -129,7 +129,7 @@ public class DiversionTruckIntegrationTest {
       .filter(GendreauProblemClass.SHORT_LOW_FREQ)
       .parse();
 
-    final Experiment.Builder builder = Experiment.build(objectiveFunction)
+    final Experiment.Builder builder = Experiment.builder()
       .withRandomSeed(123)
       .repeat(1)
       .withThreads(1)

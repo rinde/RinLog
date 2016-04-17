@@ -116,7 +116,7 @@ public class RtRoutePlannerTest {
       SolverToRealtimeAdapter.create(
         SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
 
-    Experiment.build(objFunc)
+    Experiment.builder()
       .addScenario(scenario)
       .withThreads(1)
       .addConfiguration(MASConfiguration.pdptwBuilder()

@@ -44,7 +44,7 @@ public class OptaplannerIntegrationTest {
 
   @Test
   public void testSimulatedTime() {
-    Experiment.build(Gendreau06ObjectiveFunction.instance())
+    Experiment.builder()
       .withThreads(1)
       .addConfiguration(
         MASConfiguration.builder(Central
@@ -77,7 +77,7 @@ public class OptaplannerIntegrationTest {
   public void testRealtime() {
 
     final ExperimentResults results =
-      Experiment.build(Gendreau06ObjectiveFunction.instance())
+      Experiment.builder()
         .withThreads(1)
         .addConfiguration(
           MASConfiguration.builder(
@@ -100,7 +100,8 @@ public class OptaplannerIntegrationTest {
             .realtime()
             .setNumParcels(5)
             .parse())
-        .usePostProcessor(PostProcessors.statisticsPostProcessor())
+        .usePostProcessor(PostProcessors
+          .statisticsPostProcessor(Gendreau06ObjectiveFunction.instance()))
         .showGui(View.builder()
           .with(PlaneRoadModelRenderer.builder())
           .with(PDPModelRenderer.builder().withDestinationLines())

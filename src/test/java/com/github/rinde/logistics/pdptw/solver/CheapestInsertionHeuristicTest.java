@@ -46,8 +46,7 @@ public class CheapestInsertionHeuristicTest {
   public void consistency() {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     // try test in RinLog?
-    final ExperimentResults er = Experiment
-      .build(objFunc)
+    final ExperimentResults er = Experiment.builder()
       .addScenario(
         Gendreau06Parser.parse(new File(
           "files/scenarios/gendreau06/req_rapide_1_240_24")))
@@ -56,7 +55,7 @@ public class CheapestInsertionHeuristicTest {
           .wrap(CheapestInsertionHeuristic.supplier(objFunc))))
       .repeat(3)
       .withThreads(3)
-      .usePostProcessor(PostProcessors.statisticsPostProcessor())
+      .usePostProcessor(PostProcessors.statisticsPostProcessor(objFunc))
       .perform();
     for (int i = 0; i < er.getResults().size(); i++) {
       assertEquals(979.898336,
