@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static com.google.common.base.Verify.verifyNotNull;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,6 +48,8 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.optaplanner.core.api.solver.event.BestSolutionChangedEvent;
 import org.optaplanner.core.api.solver.event.SolverEventListener;
+import org.optaplanner.core.config.localsearch.LocalSearchPhaseConfig;
+import org.optaplanner.core.config.phase.PhaseConfig;
 import org.optaplanner.core.config.score.definition.ScoreDefinitionType;
 import org.optaplanner.core.config.score.director.ScoreDirectorFactoryConfig;
 import org.optaplanner.core.config.solver.EnvironmentMode;
@@ -228,11 +231,23 @@ public final class OptaplannerSolvers {
 
     final TerminationConfig terminationConfig = new TerminationConfig();
     terminationConfig
-      .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
-    terminationConfig
       .setTerminationCompositionStyle(TerminationCompositionStyle.AND);
     terminationConfig.setBestScoreFeasible(true);
-    config.setTerminationConfig(terminationConfig);
+
+    if (builder.getUnimprovedMsLimit() > 0) {
+      terminationConfig
+        .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
+
+      config.setTerminationConfig(terminationConfig);
+    } else {
+      terminationConfig
+        .setUnimprovedStepCountLimit(builder.getUnimprovedStepCountLimit());
+      for (final PhaseConfig phase : config.getPhaseConfigList()) {
+        if (phase instanceof LocalSearchPhaseConfig) {
+          phase.setTerminationConfig(terminationConfig);
+        }
+      }
+    }
 
     final ScoreDirectorFactoryConfig scoreConfig =
       new ScoreDirectorFactoryConfig();
@@ -278,7 +293,7 @@ public final class OptaplannerSolvers {
   }
 
   @AutoValue
-  public abstract static class Builder {
+  public abstract static class Builder implements Serializable {
 
     static final String DEFAULT_SOLVER_XML_RESOURCE =
       "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml";
@@ -291,6 +306,8 @@ public final class OptaplannerSolvers {
 
     abstract long getUnimprovedMsLimit();
 
+    abstract int getUnimprovedStepCountLimit();
+
     abstract String getSolverXmlResource();
 
     @Nullable
@@ -302,42 +319,65 @@ public final class OptaplannerSolvers {
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig(),
-        getName());
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXmlResource(), getSolverConfig(), getName());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
-        getSolverXmlResource(), getSolverConfig(), getName());
+        getUnimprovedStepCountLimit(), getSolverXmlResource(),
+        getSolverConfig(), getName());
     }
 
+    /**
+     * Sets the time limit (ms) that the solver should continue searching for an
+     * improving solution. When using this option any previous call to
+     * {@link #withUnimprovedStepCountLimit(int)} are ignored.
+     * @param ms The unimproved time limit in milliseconds.
+     * @return A new builder instance with the unimproved property changed.
+     */
     @CheckReturnValue
     public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms,
+        -1, getSolverXmlResource(),
+        getSolverConfig(), getName());
+    }
+
+    /**
+     * Sets the step count limit. This limit indicates the number of unimproving
+     * steps that the solver will perform until it terminates. When using this
+     * option any previous call to {@link #withUnimprovedMsLimit(long)} is
+     * ignored.
+     * @param count The number of steps.
+     * @return A new builder instance with the unimproved property changed.
+     */
+    @CheckReturnValue
+    public Builder withUnimprovedStepCountLimit(int count) {
+      return create(isValidated(), getObjectiveFunction(), -1L, count,
         getSolverXmlResource(), getSolverConfig(), getName());
     }
 
     @CheckReturnValue
     public Builder withSolverXmlResource(String solverXmlResource) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), solverXmlResource, getSolverConfig(),
-        getName());
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        solverXmlResource, getSolverConfig(), getName());
     }
 
     // takes precedence over xml
     @CheckReturnValue
     public Builder withSolverConfig(SolverConfig solverConfig) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource(), solverConfig,
-        getName());
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXmlResource(), solverConfig, getName());
     }
 
     // mandatory, used to identify solver in logs/gui
     public Builder withName(String name) {
       return create(isValidated(), getObjectiveFunction(),
-        getUnimprovedMsLimit(), getSolverXmlResource(), getSolverConfig(),
-        name);
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXmlResource(), getSolverConfig(), name);
     }
 
     @CheckReturnValue
@@ -357,18 +397,20 @@ public final class OptaplannerSolvers {
     }
 
     static Builder defaultInstance() {
-      return create(false, Gendreau06ObjectiveFunction.instance(), 1L,
+      return create(false, Gendreau06ObjectiveFunction.instance(), 1L, -1,
         DEFAULT_SOLVER_XML_RESOURCE, null, null);
     }
 
     static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
-        long sec, String resource, @Nullable SolverConfig config,
+        long ms, int count, String resource, @Nullable SolverConfig config,
         @Nullable String name) {
-      return new AutoValue_OptaplannerSolvers_Builder(validate, func, sec,
+      return new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
         resource, config, name);
     }
   }
 
+  // FIXME factory should be merged with builder as they are conceptually very
+  // similar (but not exactly the same).
   /**
    * Factory for instantiating Optaplanner solvers. See
    * {@link OptaplannerSolvers#getFactoryFromBenchmark(String)} for obtaining an
@@ -389,13 +431,20 @@ public final class OptaplannerSolvers {
 
     StochasticSupplier<Solver> create(long unimprovedMs, String nm);
 
+    StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
+        String nm);
+
     ImmutableSet<String> getAvailableSolvers();
   }
 
   static class OptaplannerSolversFactory implements OptaplannerFactory {
+
     final ImmutableMap<String, SolverConfig> configs;
 
     OptaplannerSolversFactory(String xmlLocation) {
+      // final URL url = Resources.getResource(xmlLocation);
+      // Resources.toString(url, Charsets.UTF_8);
+
       configs = getConfigsFromBenchmark(xmlLocation);
     }
 
@@ -407,6 +456,17 @@ public final class OptaplannerSolvers {
     @Override
     public StochasticSupplier<Solver> create(long unimprovedMs, String nm) {
       return builderHelper(unimprovedMs, nm).buildSolverSupplier();
+    }
+
+    @Override
+    public StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
+        String nm) {
+      checkArgument(configs.containsKey(nm));
+      return builder()
+        .withUnimprovedStepCountLimit(unimprovedCount)
+        .withSolverConfig(configs.get(nm))
+        .withName(nm)
+        .buildSolverSupplier();
     }
 
     Builder builderHelper(long ms, String nm) {
@@ -421,7 +481,6 @@ public final class OptaplannerSolvers {
     public ImmutableSet<String> getAvailableSolvers() {
       return configs.keySet();
     }
-
   }
 
   static class OptaplannerSolver implements Solver {
@@ -730,7 +789,9 @@ public final class OptaplannerSolvers {
     }
   }
 
-  static class SimulatedTimeSupplier implements StochasticSupplier<Solver> {
+  static class SimulatedTimeSupplier
+      implements StochasticSupplier<Solver>, Serializable {
+    private static final long serialVersionUID = -6583451581964069388L;
     final Builder builder;
 
     SimulatedTimeSupplier(Builder b) {
