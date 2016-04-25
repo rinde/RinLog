@@ -21,7 +21,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static com.google.common.base.Verify.verifyNotNull;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -75,11 +78,13 @@ import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Resources;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -97,7 +102,7 @@ public final class OptaplannerSolvers {
   static final Unit<Length> DISTANCE_UNIT = SI.KILOMETER;
   static final String NAME_SEPARATOR = "-";
 
-  // this part of a while loop
+  // this is part of a while loop
   static final long WAIT_FOR_SOLVER_TERMINATION_PERIOD_MS = 5L;
 
   private OptaplannerSolvers() {}
@@ -107,10 +112,11 @@ public final class OptaplannerSolvers {
     return Builder.defaultInstance();
   }
 
-  public static ImmutableMap<String, SolverConfig> getConfigsFromBenchmark(
-      String xmlLocation) {
+  static ImmutableMap<String, SolverConfig> getConfigsFromBenchmark(
+      String xml) {
     final PlannerBenchmarkFactory plannerBenchmarkFactory =
-      PlannerBenchmarkFactory.createFromFreemarkerXmlResource(xmlLocation);
+      PlannerBenchmarkFactory
+        .createFromFreemarkerXmlReader(new StringReader(xml));
     final PlannerBenchmark plannerBenchmark =
       plannerBenchmarkFactory.buildPlannerBenchmark();
 
@@ -127,9 +133,10 @@ public final class OptaplannerSolvers {
     return builder.build();
   }
 
-  public static OptaplannerFactory getFactoryFromBenchmark(String xmlLocation) {
-    return new OptaplannerSolversFactory(xmlLocation);
-  }
+  // public static OptaplannerFactory getFactoryFromBenchmark(String
+  // xmlLocation) {
+  // return new OptaplannerSolversFactory(xmlLocation);
+  // }
 
   @CheckReturnValue
   public static PDPSolution convert(GlobalStateObject state) {
@@ -215,16 +222,8 @@ public final class OptaplannerSolvers {
 
   static org.optaplanner.core.api.solver.Solver createOptaplannerSolver(
       Builder builder, long seed) {
+    final SolverConfig config = builder.getSolverConfig();
 
-    final SolverFactory factory;
-    if (builder.getSolverConfig() != null) {
-      factory = SolverFactory.createEmpty();
-      factory.getSolverConfig().inherit(builder.getSolverConfig());
-    } else {
-      factory =
-        SolverFactory.createFromXmlResource(builder.getSolverXmlResource());
-    }
-    final SolverConfig config = factory.getSolverConfig();
     config.setEntityClassList(
       ImmutableList.<Class<?>>of(ParcelVisit.class, Visit.class));
     config.setSolutionClass(PDPSolution.class);
@@ -237,7 +236,6 @@ public final class OptaplannerSolvers {
     if (builder.getUnimprovedMsLimit() > 0) {
       terminationConfig
         .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
-
       config.setTerminationConfig(terminationConfig);
     } else {
       terminationConfig
@@ -261,6 +259,8 @@ public final class OptaplannerSolvers {
       builder.isValidated() ? EnvironmentMode.FULL_ASSERT
         : EnvironmentMode.REPRODUCIBLE);
 
+    final SolverFactory factory = SolverFactory.createEmpty();
+    factory.getSolverConfig().inherit(config);
     return factory.buildSolver();
   }
 
@@ -294,9 +294,13 @@ public final class OptaplannerSolvers {
 
   @AutoValue
   public abstract static class Builder implements Serializable {
-
-    static final String DEFAULT_SOLVER_XML_RESOURCE =
+    private static final long serialVersionUID = 20160425L;
+    private static final String SINGLE_SOLVER_KEY = "single_solver";
+    private static final String DEFAULT_SOLVER_XML_RESOURCE =
       "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml";
+
+    @Nullable
+    private transient ImmutableMap<String, SolverConfig> configs;
 
     Builder() {}
 
@@ -308,10 +312,18 @@ public final class OptaplannerSolvers {
 
     abstract int getUnimprovedStepCountLimit();
 
-    abstract String getSolverXmlResource();
-
+    // abstract String getSolverXmlResource();
     @Nullable
-    abstract SolverConfig getSolverConfig();
+    abstract String getSolverXml();
+
+    // name as it appears in benchmark xml
+    @Nullable
+    abstract String getSolverKey();
+
+    abstract boolean isBenchmark();
+
+    // @Nullable
+    // abstract SolverConfig getSolverConfig();
 
     @Nullable
     abstract String getName();
@@ -320,14 +332,14 @@ public final class OptaplannerSolvers {
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXmlResource(), getSolverConfig(), getName());
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
-        getUnimprovedStepCountLimit(), getSolverXmlResource(),
-        getSolverConfig(), getName());
+        getUnimprovedStepCountLimit(), getSolverXml(), getSolverKey(),
+        isBenchmark(), getName(), configs);
     }
 
     /**
@@ -339,9 +351,8 @@ public final class OptaplannerSolvers {
      */
     @CheckReturnValue
     public Builder withUnimprovedMsLimit(long ms) {
-      return create(isValidated(), getObjectiveFunction(), ms,
-        -1, getSolverXmlResource(),
-        getSolverConfig(), getName());
+      return create(isValidated(), getObjectiveFunction(), ms, -1,
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
     }
 
     /**
@@ -355,29 +366,56 @@ public final class OptaplannerSolvers {
     @CheckReturnValue
     public Builder withUnimprovedStepCountLimit(int count) {
       return create(isValidated(), getObjectiveFunction(), -1L, count,
-        getSolverXmlResource(), getSolverConfig(), getName());
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
     }
 
     @CheckReturnValue
     public Builder withSolverXmlResource(String solverXmlResource) {
+      final String xml = resourceToString(solverXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        solverXmlResource, getSolverConfig(), getName());
+        xml, SINGLE_SOLVER_KEY, false, getName(), null).interpretXml();
     }
 
-    // takes precedence over xml
     @CheckReturnValue
-    public Builder withSolverConfig(SolverConfig solverConfig) {
+    public Builder withSolverFromBenchmark(String benchmarkXmlResource,
+        String solverKey) {
+      final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXmlResource(), solverConfig, getName());
+        xml, solverKey, true, getName(), null).interpretXml();
     }
 
-    // mandatory, used to identify solver in logs/gui
-    public Builder withName(String name) {
+    @CheckReturnValue
+    public Builder withSolverFromBenchmark(String benchmarkXmlResource) {
+      final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXmlResource(), getSolverConfig(), name);
+        xml, null, true, getName(), null).interpretXml();
+    }
+
+    @CheckReturnValue
+    public Builder withSolverKey(String key) {
+      checkArgument(isBenchmark());
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXml(), key, true, getName(), configs).interpretXml();
+    }
+
+    /**
+     * Changes the name of the solvers that are created. The name can be used to
+     * identify the solver in the logs and GUI. It is mandatory to call this
+     * method.
+     * @param name A non-null string that identifies the solvers created by this
+     *          builder.
+     * @return A new builder with the name property changed.
+     */
+    @CheckReturnValue
+    public Builder withName(String name) {
+      checkNotNull(name);
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXml(), getSolverKey(), isBenchmark(), name, configs);
     }
 
     @CheckReturnValue
@@ -392,20 +430,92 @@ public final class OptaplannerSolvers {
       return new RealtimeSupplier(this);
     }
 
+    @CheckReturnValue
+    public ImmutableSet<String> getSupportedSolverKeys() {
+      if (configs == null) {
+        return ImmutableSet.of();
+      }
+      return verifyNotNull(configs).keySet();
+    }
+
     void checkPreconditions() {
-      checkArgument(getName() != null, "A name must be specified.");
+      checkArgument(getSolverXml() != null,
+        "A solver config must be specified either via a benchmark xml or a "
+          + "regular xml file.");
+      checkArgument(getSolverKey() != null, "A solver key must be specified.");
+      if (!isBenchmark()) {
+        checkArgument(getName() != null, "A name must be specified.");
+      }
+    }
+
+    Builder interpretXml() {
+      if (isBenchmark()) {
+        configs = getConfigsFromBenchmark(verifyNotNull(getSolverXml()));
+      } else {
+        final SolverFactory factory =
+          SolverFactory.createFromXmlReader(new StringReader(getSolverXml()));
+        configs = ImmutableMap.<String, SolverConfig>builder()
+          .put(SINGLE_SOLVER_KEY, factory.getSolverConfig())
+          .build();
+      }
+      if (getSolverKey() != null) {
+        checkArgument(verifyNotNull(configs).containsKey(getSolverKey()));
+      }
+      return this;
+    }
+
+    String getFullName() {
+      final StringBuilder sb = new StringBuilder();
+      if (getName() == null) {
+        checkState(isBenchmark());
+        sb.append(getSolverKey());
+      } else {
+        sb.append(getName());
+      }
+      sb.append(NAME_SEPARATOR);
+      if (getUnimprovedMsLimit() > 0) {
+        return sb.append(getUnimprovedMsLimit())
+          .append("ms")
+          .toString();
+      }
+      return sb.append(getUnimprovedStepCountLimit())
+        .append("steps")
+        .toString();
+    }
+
+    SolverConfig getSolverConfig() {
+      if (configs == null) {
+        interpretXml();
+      }
+      return verifyNotNull(configs).get(getSolverKey());
     }
 
     static Builder defaultInstance() {
-      return create(false, Gendreau06ObjectiveFunction.instance(), 1L, -1,
-        DEFAULT_SOLVER_XML_RESOURCE, null, null);
+      return create(false, Gendreau06ObjectiveFunction.instance(), 1L, -1, null,
+        null, false, null, null)
+          .withSolverXmlResource(DEFAULT_SOLVER_XML_RESOURCE);
     }
 
     static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
-        long ms, int count, String resource, @Nullable SolverConfig config,
-        @Nullable String name) {
-      return new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
-        resource, config, name);
+        long ms, int count, @Nullable String xml, @Nullable String key,
+        boolean benchmark, @Nullable String name,
+        @Nullable ImmutableMap<String, SolverConfig> map) {
+      final Builder b =
+        new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
+          xml, key, benchmark, name);
+      // copy the transient config map
+      b.configs = map;
+      return b;
+    }
+
+    static String resourceToString(String resourcePath) {
+      try {
+        final URL url = Resources.getResource(resourcePath);
+        return Resources.toString(url, Charsets.UTF_8);
+      } catch (final IOException e) {
+        throw new IllegalArgumentException(
+          "A problem occured while attempting to read: " + resourcePath, e);
+      }
     }
   }
 
@@ -417,71 +527,67 @@ public final class OptaplannerSolvers {
    * instance.
    * @author Rinde van Lon
    */
-  public interface OptaplannerFactory {
-    /**
-     * Create an OptaPlanner solver.
-     * @param unimprovedMs Maximum interval of time (in ms) the solver will run
-     *          without finding an improving solution.
-     * @param nm The name of the solver.
-     * @return A supplier that will construct the specified solver.
-     * @throws IllegalArgumentException if a solver with the specified name does
-     *           not exist in the factory.
-     */
-    StochasticSupplier<RealtimeSolver> createRT(long unimprovedMs, String nm);
 
-    StochasticSupplier<Solver> create(long unimprovedMs, String nm);
+  // public interface OptaplannerFactory {
+  /**
+   * Create an OptaPlanner solver.
+   * @param unimprovedMs Maximum interval of time (in ms) the solver will run
+   *          without finding an improving solution.
+   * @param nm The name of the solver.
+   * @return A supplier that will construct the specified solver.
+   * @throws IllegalArgumentException if a solver with the specified name does
+   *           not exist in the factory.
+   */
+  // StochasticSupplier<RealtimeSolver> createRT(long unimprovedMs, String nm);
+  //
+  // StochasticSupplier<Solver> create(long unimprovedMs, String nm);
+  //
+  // StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
+  // String nm);
+  //
+  // // ImmutableSet<String> getAvailableSolvers();
+  // }
 
-    StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
-        String nm);
-
-    ImmutableSet<String> getAvailableSolvers();
-  }
-
-  static class OptaplannerSolversFactory implements OptaplannerFactory {
-
-    final ImmutableMap<String, SolverConfig> configs;
-
-    OptaplannerSolversFactory(String xmlLocation) {
-      // final URL url = Resources.getResource(xmlLocation);
-      // Resources.toString(url, Charsets.UTF_8);
-
-      configs = getConfigsFromBenchmark(xmlLocation);
-    }
-
-    @Override
-    public StochasticSupplier<RealtimeSolver> createRT(long ms, String nm) {
-      return builderHelper(ms, nm).buildRealtimeSolverSupplier();
-    }
-
-    @Override
-    public StochasticSupplier<Solver> create(long unimprovedMs, String nm) {
-      return builderHelper(unimprovedMs, nm).buildSolverSupplier();
-    }
-
-    @Override
-    public StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
-        String nm) {
-      checkArgument(configs.containsKey(nm));
-      return builder()
-        .withUnimprovedStepCountLimit(unimprovedCount)
-        .withSolverConfig(configs.get(nm))
-        .withName(nm)
-        .buildSolverSupplier();
-    }
-
-    Builder builderHelper(long ms, String nm) {
-      checkArgument(configs.containsKey(nm));
-      return builder()
-        .withUnimprovedMsLimit(ms)
-        .withSolverConfig(configs.get(nm))
-        .withName(nm);
-    }
-
-    @Override
-    public ImmutableSet<String> getAvailableSolvers() {
-      return configs.keySet();
-    }
-  }
+  // static class OptaplannerSolversFactory implements OptaplannerFactory {
+  // private final String xmlResource;
+  //
+  // OptaplannerSolversFactory(String xmlLocation) {
+  // xmlResource = xmlLocation;
+  // }
+  //
+  // @Override
+  // public StochasticSupplier<RealtimeSolver> createRT(long ms, String nm) {
+  // return builderHelper(ms, nm).buildRealtimeSolverSupplier();
+  // }
+  //
+  // @Override
+  // public StochasticSupplier<Solver> create(long unimprovedMs, String nm) {
+  // return builderHelper(unimprovedMs, nm).buildSolverSupplier();
+  // }
+  //
+  // @Override
+  // public StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
+  // String nm) {
+  // return builder()
+  // .withUnimprovedStepCountLimit(unimprovedCount)
+  // .withSolverFromBenchmark(xmlResource, nm)
+  // .withName(nm)
+  // .buildSolverSupplier();
+  // }
+  //
+  // Builder builderHelper(long ms, String nm) {
+  // return builder()
+  // .withUnimprovedMsLimit(ms)
+  // .withSolverFromBenchmark(xmlResource, nm)
+  // .withName(nm);
+  // }
+  //
+  // // @Override
+  // // public ImmutableSet<String> getAvailableSolvers() {
+  // // return builder().withSolverFromBenchmark(benchmarkXmlResource,
+  // solverKey)
+  // // }
+  // }
 
   static class OptaplannerSolver implements Solver {
     @Nullable
@@ -496,7 +602,7 @@ public final class OptaplannerSolvers {
       solver = createOptaplannerSolver(builder, seed);
       scoreCalculator = new ScoreCalculator();
       lastSolution = null;
-      name = "Optaplanner-" + verifyNotNull(builder.getName());
+      name = "OptaPlanner-" + verifyNotNull(builder.getFullName());
     }
 
     @Override
@@ -505,7 +611,7 @@ public final class OptaplannerSolvers {
       final ImmutableList<ImmutableList<Parcel>> sol = doSolve(state);
 
       checkState(sol != null,
-        "Optaplanner didn't find a solution satisfying all hard constraints.");
+        "OptaPlanner didn't find a solution satisfying all hard constraints.");
 
       final PDPSolution solution = (PDPSolution) solver.getBestSolution();
       final HardSoftLongScore score = solution.getScore();
@@ -570,7 +676,7 @@ public final class OptaplannerSolvers {
     OptaplannerRTSolver(Builder b, long seed) {
       solver = new OptaplannerSolver(b, seed);
       scheduler = Optional.absent();
-      name = "OptaplannerRT-" + verifyNotNull(b.getName());
+      name = "OptaplannerRT-" + verifyNotNull(b.getFullName());
     }
 
     @Override
