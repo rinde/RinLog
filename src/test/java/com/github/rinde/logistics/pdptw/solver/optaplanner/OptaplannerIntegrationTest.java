@@ -15,6 +15,8 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import java.io.File;
 
 import org.junit.Test;
@@ -22,6 +24,7 @@ import org.junit.Test;
 import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.experiment.Experiment;
+import com.github.rinde.rinsim.experiment.Experiment.SimulationResult;
 import com.github.rinde.rinsim.experiment.ExperimentResults;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.experiment.PostProcessors;
@@ -118,5 +121,41 @@ public class OptaplannerIntegrationTest {
 
     System.out.println(
       Gendreau06ObjectiveFunction.instance().printHumanReadableFormat(stats));
+  }
+
+  @Test
+  public void testDeterminism() {
+    final ExperimentResults results =
+      Experiment.builder()
+        .withThreads(3)
+        .repeatSeed(3)
+        .addConfiguration(
+          MASConfiguration.builder(
+            Central.solverConfiguration(
+              OptaplannerSolvers.builder()
+                .withValidated(true)
+                .withObjectiveFunction(
+                  Gendreau06ObjectiveFunction.instance())
+                .withUnimprovedStepCountLimit(1000)
+                .withName("test")
+                .buildSolverSupplier(),
+              ""))
+            .build())
+        .addScenarios(
+          Gendreau06Parser.parser()
+            .addFile(new File("files/scenarios/gendreau06/req_rapide_1_240_24"))
+            .offline()
+            .setNumParcels(15)
+            .parse())
+        .usePostProcessor(PostProcessors
+          .statisticsPostProcessor(Gendreau06ObjectiveFunction.instance()))
+        .perform();
+
+    final StatisticsDTO stats =
+      (StatisticsDTO) results.getResults().iterator().next().getResultObject();
+    for (final SimulationResult sr : results.getResults()) {
+      assertThat(sr.getResultObject()).isEqualTo(stats);
+    }
+
   }
 }
