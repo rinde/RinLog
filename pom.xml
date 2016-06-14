@@ -337,12 +337,12 @@
 		<dependency>
 			<groupId>org.optaplanner</groupId>
 			<artifactId>optaplanner-core</artifactId>
-			<version>6.3.0.Final</version>
+			<version>6.4.0.Final</version>
 		</dependency>
 		<dependency>
             <groupId>org.optaplanner</groupId>
             <artifactId>optaplanner-benchmark</artifactId>
-            <version>6.3.0.Final</version>
+            <version>6.4.0.Final</version>
         </dependency>
 		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
