@@ -42,6 +42,8 @@ public class MoveItFactory implements MoveIteratorFactory {
   public long getSize(ScoreDirector scoreDirector) {
 
     final PDPSolution sol = (PDPSolution) scoreDirector.getWorkingSolution();
+
+    sol.
     if (sol.vehicleList.size() <= 1) {
       return 0;
     }
@@ -54,6 +56,9 @@ public class MoveItFactory implements MoveIteratorFactory {
     System.out.println("createOriginalMoveIterator -- not supported");
     throw new UnsupportedOperationException();
   }
+
+  // first select Parcel pair (assigned/unassigned) -> walk over parcel list?
+  // then select destination pair
 
   @Override
   public Iterator<Move> createRandomMoveIterator(ScoreDirector scoreDirector,
@@ -114,9 +119,8 @@ public class MoveItFactory implements MoveIteratorFactory {
       final ParcelVisit deliverTarget =
         options.get(rng.nextInt(options.size()));
 
-      return MoveBetweenVehicles.create(pickup, delivery, pickupTarget,
+      return MovePair.create(pickup, delivery, pickupTarget,
         deliverTarget);
     }
   }
-
 }

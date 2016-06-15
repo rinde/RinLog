@@ -54,6 +54,7 @@ public class RealtimeSolverTest {
     solver =
       OptaplannerSolvers.builder()
         .withName("testSolver")
+        .withUnimprovedMsLimit(1000)
         .buildRealtimeSolverSupplier().get(123L);
     solver.init(scheduler);
   }

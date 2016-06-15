@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,13 +65,13 @@ import org.slf4j.LoggerFactory;
 import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
-import com.github.rinde.rinsim.central.GlobalStateObjects;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -163,7 +162,7 @@ public final class OptaplannerSolvers {
       parcelList.add(delivery);
     }
 
-    boolean firstVehicle = true;
+    final boolean firstVehicle = true;
 
     final List<Vehicle> vehicleList = new ArrayList<>();
     for (int i = 0; i < state.getVehicles().size(); i++) {
@@ -173,16 +172,16 @@ public final class OptaplannerSolvers {
 
       final List<ParcelVisit> visits = new ArrayList<>();
       if (vso.getRoute().isPresent()) {
-        List<Parcel> route = vso.getRoute().get();
+        final List<Parcel> route = vso.getRoute().get();
 
-        if (firstVehicle) {
-          route = new ArrayList<>(route);
-          final Set<Parcel> unassigned =
-            GlobalStateObjects.unassignedParcels(state);
-          route.addAll(unassigned);
-          route.addAll(unassigned);
-          firstVehicle = false;
-        }
+        // if (firstVehicle) {
+        // route = new ArrayList<>(route);
+        // final Set<Parcel> unassigned =
+        // GlobalStateObjects.unassignedParcels(state);
+        // route.addAll(unassigned);
+        // route.addAll(unassigned);
+        // firstVehicle = false;
+        // }
 
         for (final Parcel p : route) {
           // is it a pickup or a delivery?
@@ -237,7 +236,7 @@ public final class OptaplannerSolvers {
       terminationConfig
         .setUnimprovedMillisecondsSpentLimit(builder.getUnimprovedMsLimit());
       config.setTerminationConfig(terminationConfig);
-    } else {
+    } else if (builder.getUnimprovedStepCountLimit() > 0) {
       terminationConfig
         .setUnimprovedStepCountLimit(builder.getUnimprovedStepCountLimit());
       for (final PhaseConfig phase : config.getPhaseConfigList()) {
@@ -259,7 +258,7 @@ public final class OptaplannerSolvers {
       builder.isValidated() ? EnvironmentMode.FULL_ASSERT
         : EnvironmentMode.REPRODUCIBLE);
 
-    final SolverFactory factory = SolverFactory.createEmpty();
+    final SolverFactory<PDPSolution> factory = SolverFactory.createEmpty();
     factory.getSolverConfig().inherit(config);
     return factory.buildSolver();
   }
@@ -306,7 +305,7 @@ public final class OptaplannerSolvers {
 
     abstract boolean isValidated();
 
-    abstract Gendreau06ObjectiveFunction getObjectiveFunction();
+    abstract ObjectiveFunction getObjectiveFunction();
 
     abstract long getUnimprovedMsLimit();
 
@@ -336,7 +335,7 @@ public final class OptaplannerSolvers {
     }
 
     @CheckReturnValue
-    public Builder withObjectiveFunction(Gendreau06ObjectiveFunction func) {
+    public Builder withObjectiveFunction(ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
         getUnimprovedStepCountLimit(), getSolverXml(), getSolverKey(),
         isBenchmark(), getName(), configs);
@@ -491,12 +490,13 @@ public final class OptaplannerSolvers {
     }
 
     static Builder defaultInstance() {
-      return create(false, Gendreau06ObjectiveFunction.instance(), 1L, -1, null,
+      return create(false, Gendreau06ObjectiveFunction.instance(), -1L, -1,
+        null,
         null, false, null, null)
           .withSolverXmlResource(DEFAULT_SOLVER_XML_RESOURCE);
     }
 
-    static Builder create(boolean validate, Gendreau06ObjectiveFunction func,
+    static Builder create(boolean validate, ObjectiveFunction func,
         long ms, int count, @Nullable String xml, @Nullable String key,
         boolean benchmark, @Nullable String name,
         @Nullable ImmutableMap<String, SolverConfig> map) {
@@ -953,8 +953,19 @@ public final class OptaplannerSolvers {
     @Override
     public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
         throws InterruptedException {
-      checkState(Math.abs(state.getVehicles().get(0).getDto().getSpeed()
-        - builder.getObjectiveFunction().getVehicleSpeed()) < MAX_SPEED_DIFF);
+
+      if (builder
+        .getObjectiveFunction() instanceof Gendreau06ObjectiveFunction) {
+        final Gendreau06ObjectiveFunction objFunc =
+          (Gendreau06ObjectiveFunction) builder.getObjectiveFunction();
+
+        checkState(Math.abs(state.getVehicles().get(0).getDto().getSpeed()
+          - objFunc.getVehicleSpeed()) < MAX_SPEED_DIFF,
+          "Speed of vehicle (%s) does not correspond with speed in objective"
+            + " function (%s).",
+          state.getVehicles().get(0).getDto().getSpeed(),
+          objFunc.getVehicleSpeed());
+      }
 
       final ImmutableList<ImmutableList<Parcel>> schedule = solver.solve(state);
 

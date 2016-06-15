@@ -31,10 +31,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- *
+ * Move for a pair of pickup and delivery visits.
  * @author Rinde van Lon
  */
-public class MoveBetweenVehicles extends AbstractMove {
+public class MovePair extends AbstractMove {
   final ImmutableList<Changeset> changesets;
   final boolean isUndo;
 
@@ -43,12 +43,12 @@ public class MoveBetweenVehicles extends AbstractMove {
   @Nullable
   ImmutableSet<Visit> planningValues;
 
-  MoveBetweenVehicles(ImmutableList<Changeset> cs, boolean undo) {
+  MovePair(ImmutableList<Changeset> cs, boolean undo) {
     changesets = cs;
     isUndo = undo;
   }
 
-  static MoveBetweenVehicles create(ParcelVisit pick, ParcelVisit delv,
+  static MovePair create(ParcelVisit pick, ParcelVisit delv,
       Visit pickToPrev, Visit delvToPrev) {
 
     final ImmutableList.Builder<Changeset> changesets = ImmutableList.builder();
@@ -94,7 +94,7 @@ public class MoveBetweenVehicles extends AbstractMove {
           nonNulls(delvToPrev, delvToPrev.getNextVisit()),
           nonNulls(delvToPrev, delv, delvToPrev.getNextVisit())));
     }
-    return new MoveBetweenVehicles(changesets.build(), false);
+    return new MovePair(changesets.build(), false);
   }
 
   @SafeVarargs
@@ -114,8 +114,8 @@ public class MoveBetweenVehicles extends AbstractMove {
   }
 
   @Override
-  public MoveBetweenVehicles createUndoMove(ScoreDirector scoreDirector) {
-    return new MoveBetweenVehicles(changesets, true);
+  public MovePair createUndoMove(ScoreDirector scoreDirector) {
+    return new MovePair(changesets, true);
   }
 
   @Override
@@ -161,8 +161,8 @@ public class MoveBetweenVehicles extends AbstractMove {
   public boolean equals(@Nullable Object other) {
     if (this == other) {
       return true;
-    } else if (other instanceof MoveBetweenVehicles) {
-      final MoveBetweenVehicles o = (MoveBetweenVehicles) other;
+    } else if (other instanceof MovePair) {
+      final MovePair o = (MovePair) other;
       return Objects.equals(changesets, o.changesets);
     }
     return false;
@@ -215,7 +215,7 @@ public class MoveBetweenVehicles extends AbstractMove {
 
     static Changeset create(ImmutableList<Visit> original,
         ImmutableList<Visit> target) {
-      return new AutoValue_MoveBetweenVehicles_Changeset(original, target);
+      return new AutoValue_MovePair_Changeset(original, target);
     }
   }
 }

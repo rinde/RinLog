@@ -83,7 +83,9 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
         sb.append("->").append(next);
         next = next.getNextVisit();
       }
-      sb.append(System.lineSeparator());
+      if (vehicleList.get(vehicleList.size() - 1) != v) {
+        sb.append(System.lineSeparator());
+      }
     }
     return sb.toString();
   }

@@ -54,13 +54,11 @@ public class OptaplannerIntegrationTest {
           .solverConfiguration(
             OptaplannerSolvers.builder()
               .withValidated(true)
-              .withObjectiveFunction(
-                Gendreau06ObjectiveFunction.instance(30d))
+              .withObjectiveFunction(Gendreau06ObjectiveFunction.instance(30d))
               .withUnimprovedMsLimit(1L)
               .withName("test")
               .buildSolverSupplier()))
-          .addEventHandler(AddParcelEvent.class,
-            AddParcelEvent.namedHandler())
+          .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
           .build())
       .addScenarios(Gendreau06Parser.parser().addFile(new File(
         "files/scenarios/gendreau06/req_rapide_1_240_24"))
@@ -87,8 +85,7 @@ public class OptaplannerIntegrationTest {
             RtCentral.solverConfiguration(
               OptaplannerSolvers.builder()
                 .withValidated(true)
-                .withObjectiveFunction(
-                  Gendreau06ObjectiveFunction.instance())
+                .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
                 .withUnimprovedMsLimit(5000L)
                 .withName("test")
                 .buildRealtimeSolverSupplier(),
@@ -134,8 +131,7 @@ public class OptaplannerIntegrationTest {
             Central.solverConfiguration(
               OptaplannerSolvers.builder()
                 .withValidated(true)
-                .withObjectiveFunction(
-                  Gendreau06ObjectiveFunction.instance())
+                .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
                 .withUnimprovedStepCountLimit(1000)
                 .withName("test")
                 .buildSolverSupplier(),
