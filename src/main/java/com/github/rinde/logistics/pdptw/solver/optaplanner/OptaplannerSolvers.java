@@ -27,8 +27,10 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -151,6 +153,8 @@ public final class OptaplannerSolvers {
     final Map<Parcel, ParcelVisit> pickups = new LinkedHashMap<>();
     final Map<Parcel, ParcelVisit> deliveries = new LinkedHashMap<>();
 
+    final Set<ParcelVisit> unassignedPickups = new LinkedHashSet<>();
+
     for (final Parcel p : state.getAvailableParcels()) {
       final ParcelVisit pickup = new ParcelVisit(p, VisitType.PICKUP);
       final ParcelVisit delivery = new ParcelVisit(p, VisitType.DELIVER);
@@ -161,8 +165,7 @@ public final class OptaplannerSolvers {
       parcelList.add(pickup);
       parcelList.add(delivery);
     }
-
-    final boolean firstVehicle = true;
+    unassignedPickups.addAll(pickups.values());
 
     final List<Vehicle> vehicleList = new ArrayList<>();
     for (int i = 0; i < state.getVehicles().size(); i++) {
@@ -173,15 +176,6 @@ public final class OptaplannerSolvers {
       final List<ParcelVisit> visits = new ArrayList<>();
       if (vso.getRoute().isPresent()) {
         final List<Parcel> route = vso.getRoute().get();
-
-        // if (firstVehicle) {
-        // route = new ArrayList<>(route);
-        // final Set<Parcel> unassigned =
-        // GlobalStateObjects.unassignedParcels(state);
-        // route.addAll(unassigned);
-        // route.addAll(unassigned);
-        // firstVehicle = false;
-        // }
 
         for (final Parcel p : route) {
           // is it a pickup or a delivery?
@@ -200,22 +194,13 @@ public final class OptaplannerSolvers {
         }
       } else {
         throw new IllegalArgumentException();
-        // add destination
-        //
-        // final List<Parcel> route = new ArrayList<>();
-        // route.addAll(vso.getDestination().asSet());
-
-        // add contents
       }
+      unassignedPickups.removeAll(visits);
       initRoute(vehicle, visits);
     }
-
     problem.parcelList = parcelList;
     problem.vehicleList = vehicleList;
-
-    // System.out.println("**** INITIAL ****");
-    // System.out.println(problem);
-
+    problem.unassignedPickups = unassignedPickups;
     return problem;
   }
 

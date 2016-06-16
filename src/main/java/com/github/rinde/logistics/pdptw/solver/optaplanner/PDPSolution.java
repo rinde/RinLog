@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
@@ -42,6 +43,8 @@ public class PDPSolution implements Solution<HardSoftLongScore> {
   @PlanningEntityCollectionProperty
   @ValueRangeProvider(id = VEHICLE_RANGE)
   List<Vehicle> vehicleList;
+
+  Set<ParcelVisit> unassignedPickups;
 
   HardSoftLongScore score;
 

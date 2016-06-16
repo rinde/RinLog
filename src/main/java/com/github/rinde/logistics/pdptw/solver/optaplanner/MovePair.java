@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 
+import com.github.rinde.rinsim.geom.Point;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +44,46 @@ public class MovePair extends AbstractMove {
   @Nullable
   ImmutableSet<Visit> planningValues;
 
+  enum NullVisit implements Visit {
+    INSTANCE;
+
+    @Override
+    public ParcelVisit getNextVisit() {
+      return null;
+    }
+
+    @Override
+    public void setNextVisit(ParcelVisit v) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Vehicle getVehicle() {
+      return null;
+    }
+
+    @Override
+    public void setVehicle(Vehicle v) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Point getPosition() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ParcelVisit getLastVisit() {
+      return null;
+    }
+
+    @Override
+    public String toString() {
+      return "NullVisit";
+    }
+
+  }
+
   MovePair(ImmutableList<Changeset> cs, boolean undo) {
     changesets = cs;
     isUndo = undo;
@@ -50,20 +91,22 @@ public class MovePair extends AbstractMove {
 
   static MovePair create(ParcelVisit pick, ParcelVisit delv,
       Visit pickToPrev, Visit delvToPrev) {
-
     final ImmutableList.Builder<Changeset> changesets = ImmutableList.builder();
 
-    if (delv.equals(pick.getNextVisit()) || pick.equals(delv.getNextVisit())) {
+    if (delv.equals(pick.getNextVisit())
+      || pick.equals(delv.getNextVisit())) {
       // pickup and delivery are neighbors in originating vehicle
       if (pick.isBefore(delv)) {
         changesets.add(
           Changeset.create(
-            nonNulls(pick.getPreviousVisit(), pick, delv, delv.getNextVisit()),
+            nonNulls(pick.getPreviousVisit(), pick, delv,
+              delv.getNextVisit()),
             nonNulls(pick.getPreviousVisit(), delv.getNextVisit())));
       } else {
         changesets.add(
           Changeset.create(
-            nonNulls(delv.getPreviousVisit(), delv, pick, pick.getNextVisit()),
+            nonNulls(delv.getPreviousVisit(), delv, pick,
+              pick.getNextVisit()),
             nonNulls(delv.getPreviousVisit(), pick.getNextVisit())));
       }
     } else {
@@ -97,13 +140,22 @@ public class MovePair extends AbstractMove {
     return new MovePair(changesets.build(), false);
   }
 
+  @Override
+  public String toString() {
+    return "MovePair{" + changesets.toString() + "}";
+  }
+
   @SafeVarargs
-  static <T> ImmutableList<T> nonNulls(final T... values) {
-    final ImmutableList.Builder<T> builder = ImmutableList.builder();
-    for (final T t : values) {
-      if (t != null) {
+  static ImmutableList<Visit> nonNulls(final Visit... values) {
+    final ImmutableList.Builder<Visit> builder = ImmutableList.builder();
+    boolean first = true;
+    for (final Visit t : values) {
+      if (first && t == null) {
+        builder.add(NullVisit.INSTANCE);
+      } else if (t != null) {
         builder.add(t);
       }
+      first = false;
     }
     return builder.build();
   }
@@ -163,14 +215,14 @@ public class MovePair extends AbstractMove {
       return true;
     } else if (other instanceof MovePair) {
       final MovePair o = (MovePair) other;
-      return Objects.equals(changesets, o.changesets);
+      return isUndo == o.isUndo && Objects.equals(changesets, o.changesets);
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(changesets);
+    return Objects.hash(changesets, isUndo);
   }
 
   @AutoValue
@@ -208,7 +260,13 @@ public class MovePair extends AbstractMove {
       for (int i = state.size() - 1; i > 0; i--) {
         final ParcelVisit subject = (ParcelVisit) state.get(i);
         scoreDirector.beforeVariableChanged(subject, PREV_VISIT);
-        subject.setPreviousVisit(state.get(i - 1));
+
+        final Visit target = state.get(i - 1);
+        if (target == NullVisit.INSTANCE) {
+          subject.setPreviousVisit(null);
+        } else {
+          subject.setPreviousVisit(target);
+        }
         scoreDirector.afterVariableChanged(subject, PREV_VISIT);
       }
     }

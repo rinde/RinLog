@@ -60,9 +60,14 @@ public final class Insertions {
       "startIndex must be >= 0 and <= %s (list size), it is %s.",
       list.size(), startIndex);
     checkArgument(numOfInsertions > 0, "numOfInsertions must be positive.");
-    return Iterators.transform(new InsertionIndexGenerator(numOfInsertions,
-      list.size(), startIndex),
+    return Iterators.transform(
+      new InsertionIndexGenerator(numOfInsertions, list.size(), startIndex),
       new IndexToInsertionTransform<T>(list, item));
+  }
+
+  public static Iterator<IntList> insertionsIndexIterator(
+      int numOfInsertions, int listSize, int startIndex) {
+    return new InsertionIndexGenerator(numOfInsertions, listSize, startIndex);
   }
 
   /**

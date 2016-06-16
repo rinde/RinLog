@@ -36,30 +36,36 @@ import com.google.common.collect.ImmutableList;
  */
 public class CheapestInsertionComparison {
 
-  static final ObjectiveFunction objFunc =
+  static final ObjectiveFunction OBJ_FUNC =
     Gendreau06ObjectiveFunction.instance(50d);
 
+  static final Solver OP_CIH = OptaplannerSolvers.builder()
+    .withSolverXmlResource(
+      "com/github/rinde/logistics/pdptw/solver/optaplanner/cheapestInsertion.xml")
+    .withValidated(true)
+    .withObjectiveFunction(OBJ_FUNC)
+    .withName("test")
+    .buildSolverSupplier()
+    .get(123L);
+
+  static final Solver RIN_CIH =
+    CheapestInsertionHeuristic.supplier(OBJ_FUNC).get(123L);
+
+  static final Parcel A =
+    Parcel.builder(new Point(0, 0), new Point(2, 0)).toString("A").build();
+  static final Parcel B =
+    Parcel.builder(new Point(0, 1), new Point(2, 1)).toString("B").build();
+  static final Parcel C =
+    Parcel.builder(new Point(0, 2), new Point(2, 2)).toString("C").build();
+  static final Parcel D =
+    Parcel.builder(new Point(0, 3), new Point(2, 3)).toString("D").build();
+  static final Parcel E =
+    Parcel.builder(new Point(0, 4), new Point(2, 4)).toString("E").build();
+
   @Test
-  public void test() throws InterruptedException {
-    final Solver optaplannerCih =
-      OptaplannerSolvers.builder()
-        .withSolverXmlResource(
-          "com/github/rinde/logistics/pdptw/solver/optaplanner/cheapestInsertion.xml")
-        .withValidated(true)
-        // .withUnimprovedMsLimit(1000L)
-        .withObjectiveFunction(objFunc)
-        .withName("test")
-        .buildSolverSupplier()
-        .get(123L);
-
-    final Solver rindeCih =
-      CheapestInsertionHeuristic.supplier(objFunc).get(123L);
-
+  public void testSimple() throws InterruptedException {
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
-      .addAvailableParcel(
-        Parcel.builder(new Point(0, 0), new Point(2, 0)).toString("A").build())
-      .addAvailableParcel(
-        Parcel.builder(new Point(3, 0), new Point(2, 1)).toString("B").build())
+      .addAvailableParcels(A)
       .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of())
@@ -67,18 +73,45 @@ public class CheapestInsertionComparison {
       .build();
 
     final ImmutableList<ImmutableList<Parcel>> opResult =
-      optaplannerCih.solve(gso);
+      OP_CIH.solve(gso);
 
     final ImmutableList<ImmutableList<Parcel>> rindeResult =
-      rindeCih.solve(gso);
+      RIN_CIH.solve(gso);
 
     System.out.println(opResult);
     System.out.println(rindeResult);
 
     System.out
-      .println(objFunc.computeCost(Solvers.computeStats(gso, opResult)));
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
     System.out
-      .println(objFunc.computeCost(Solvers.computeStats(gso, rindeResult)));
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
+
+    assertThat(opResult).isEqualTo(rindeResult);
+  }
+
+  @Test
+  public void test5() throws InterruptedException {
+    final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+      .addAvailableParcels(A, B, C, D, E)
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setLocation(new Point(5, 5))
+        .setRoute(ImmutableList.<Parcel>of())
+        .build())
+      .build();
+
+    final ImmutableList<ImmutableList<Parcel>> opResult =
+      OP_CIH.solve(gso);
+
+    final ImmutableList<ImmutableList<Parcel>> rindeResult =
+      RIN_CIH.solve(gso);
+
+    System.out.println(opResult);
+    System.out.println(rindeResult);
+
+    System.out
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
+    System.out
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
 
     assertThat(opResult).isEqualTo(rindeResult);
   }

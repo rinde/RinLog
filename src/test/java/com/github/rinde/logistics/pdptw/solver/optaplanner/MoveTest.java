@@ -412,14 +412,74 @@ public class MoveTest {
     assertThat(delivrB.getPreviousVisit()).isEqualTo(pickupB);
   }
 
+  @Test
+  public void testInsertion() {
+    final PDPSolution sol =
+      createWithUnassigned(ImmutableList.of(A, A, B, B), vehicle());
+    final ParcelVisit pickupA = sol.parcelList.get(0);
+    final ParcelVisit delivrA = sol.parcelList.get(1);
+    final ParcelVisit pickupB = sol.parcelList.get(2);
+    final ParcelVisit delivrB = sol.parcelList.get(3);
+    final Vehicle vehicle0 = sol.vehicleList.get(0);
+    final ScoreDirector scoreDirector = createScoreDirector();
+    scoreDirector.setWorkingSolution(sol);
+
+    final MovePair move =
+      MovePair.create(pickupA, delivrA, vehicle0, vehicle0);
+    final MovePair undo = move.createUndoMove(scoreDirector);
+
+    assertThat(pickupA.getPreviousVisit()).isNull();
+    assertThat(delivrA.getPreviousVisit()).isNull();
+
+    // A, A
+    move.doMove(scoreDirector);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+
+    undo.doMove(scoreDirector);
+    assertThat(pickupA.getPreviousVisit()).isNull();
+    assertThat(delivrA.getPreviousVisit()).isNull();
+
+    move.doMove(scoreDirector);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+
+    final MovePair move2 =
+      MovePair.create(pickupB, delivrB, vehicle0, delivrA);
+    final MovePair undo2 = move2.createUndoMove(scoreDirector);
+
+    // B, A, A, B
+    move2.doMove(scoreDirector);
+    assertThat(pickupB.getPreviousVisit()).isEqualTo(vehicle0);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(pickupB);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(delivrB.getPreviousVisit()).isEqualTo(delivrA);
+
+    System.out.println();
+    // A, A
+    undo2.doMove(scoreDirector);
+    assertThat(pickupA.getPreviousVisit()).isEqualTo(vehicle0);
+    assertThat(delivrA.getPreviousVisit()).isEqualTo(pickupA);
+    assertThat(pickupB.getPreviousVisit()).isNull();
+    assertThat(delivrB.getPreviousVisit()).isNull();
+
+  }
+
   @SafeVarargs
   static PDPSolution create(ImmutableList<Parcel>... schedule) {
+    return createWithUnassigned(ImmutableList.<Parcel>of(), schedule);
+  }
+
+  @SafeVarargs
+  static PDPSolution createWithUnassigned(ImmutableList<Parcel> unassigned,
+      ImmutableList<Parcel>... schedule) {
     final VehicleDTO vehicleDto = VehicleDTO.builder()
       .speed(1d)
       .build();
     final GlobalStateObjectBuilder b = GlobalStateObjectBuilder.globalBuilder();
 
     final Set<Parcel> available = new LinkedHashSet<>();
+    available.addAll(unassigned);
     for (final ImmutableList<Parcel> v : schedule) {
       available.addAll(v);
     }
