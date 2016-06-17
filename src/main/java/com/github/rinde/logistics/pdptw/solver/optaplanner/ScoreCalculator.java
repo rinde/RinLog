@@ -83,7 +83,7 @@ public class ScoreCalculator
   @Override
   public void resetWorkingSolution(
       @SuppressWarnings("null") PDPSolution workingSolution) {
-    System.out.println("resetWorkingSolution: \n" + workingSolution);
+    // System.out.println("resetWorkingSolution: \n" + workingSolution);
     solution = workingSolution;
 
     unplannedParcelVisits = new LinkedHashSet<>(workingSolution.parcelList);
@@ -110,7 +110,7 @@ public class ScoreCalculator
       updateRoute(v, v.getNextVisit());
     }
 
-    System.out.println(" > " + softScore);
+    // System.out.println(" > " + softScore);
   }
 
   @Override
@@ -189,10 +189,10 @@ public class ScoreCalculator
       }
       changedVehicles.clear();
     }
-    System.out.println("*** calculate score ***");
-    System.out.println(solution);
-    System.out.println("Score " + hardScore + "/" + softScore);
-    System.out.println("***********************");
+    // System.out.println("*** calculate score ***");
+    // System.out.println(solution);
+    // System.out.println("Score " + hardScore + "/" + softScore);
+    // System.out.println("***********************");
     return HardSoftLongScore.valueOf(hardScore, softScore);
   }
 
@@ -230,8 +230,8 @@ public class ScoreCalculator
       newRoute.add(cur);
       cur = cur.getNextVisit();
     }
-    System.out.println("old route: " + routes.get(v));
-    System.out.println("new route: " + newRoute);
+    // System.out.println("old route: " + routes.get(v));
+    // System.out.println("new route: " + newRoute);
     routes.replaceValues(v, newRoute);
     return newRoute;
   }
@@ -266,7 +266,7 @@ public class ScoreCalculator
   }
 
   void updateRoute(Vehicle v, @Nullable ParcelVisit firstDiff) {
-    System.out.println("update, " + firstDiff);
+    // System.out.println("update, " + firstDiff);
     ParcelVisit c = firstDiff;
     while (c != null) {
       insert(c);
@@ -340,7 +340,7 @@ public class ScoreCalculator
   }
 
   void remove(ParcelVisit pv) {
-    System.out.println("remove " + pv);
+    // System.out.println("remove " + pv);
     hardScore -= MISSING_VISIT_PENALTY;
     unplannedParcelVisits.add(pv);
     softScore += travelTimes.getLong(pv);
@@ -348,7 +348,7 @@ public class ScoreCalculator
   }
 
   void insert(ParcelVisit pv) {
-    System.out.println("insert " + pv);
+    // System.out.println("insert " + pv);
     hardScore += MISSING_VISIT_PENALTY;
     unplannedParcelVisits.remove(pv);
 

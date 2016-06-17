@@ -18,6 +18,8 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -29,6 +31,7 @@ import com.github.rinde.rinsim.experiment.ExperimentResults;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.experiment.PostProcessors;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
+import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.RouteRenderer;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.pdptw.common.TimeLinePanel;
@@ -122,6 +125,7 @@ public class OptaplannerIntegrationTest {
 
   @Test
   public void testDeterminism() {
+    final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     final ExperimentResults results =
       Experiment.builder()
         .withThreads(3)
@@ -131,9 +135,29 @@ public class OptaplannerIntegrationTest {
             Central.solverConfiguration(
               OptaplannerSolvers.builder()
                 .withValidated(true)
-                .withObjectiveFunction(Gendreau06ObjectiveFunction.instance())
-                .withUnimprovedStepCountLimit(1000)
-                .withName("test")
+                .withCheapestInsertionSolver()
+                .withObjectiveFunction(objFunc)
+                .buildSolverSupplier(),
+              ""))
+            .build())
+        .addConfiguration(
+          MASConfiguration.builder(
+            Central.solverConfiguration(
+              OptaplannerSolvers.builder()
+                .withValidated(true)
+                .withFirstFitDecreasingSolver()
+                .withObjectiveFunction(objFunc)
+                .buildSolverSupplier(),
+              ""))
+            .build())
+        .addConfiguration(
+          MASConfiguration.builder(
+            Central.solverConfiguration(
+              OptaplannerSolvers.builder()
+                .withValidated(true)
+                .withFirstFitDecreasingWithTabuSolver()
+                .withObjectiveFunction(objFunc)
+                .withUnimprovedStepCountLimit(100)
                 .buildSolverSupplier(),
               ""))
             .build())
@@ -143,15 +167,19 @@ public class OptaplannerIntegrationTest {
             .offline()
             .setNumParcels(15)
             .parse())
-        .usePostProcessor(PostProcessors
-          .statisticsPostProcessor(Gendreau06ObjectiveFunction.instance()))
+        .usePostProcessor(PostProcessors.statisticsPostProcessor(objFunc))
         .perform();
 
-    final StatisticsDTO stats =
-      (StatisticsDTO) results.getResults().iterator().next().getResultObject();
+    final Map<MASConfiguration, StatisticsDTO> resultsMap =
+      new LinkedHashMap<>();
     for (final SimulationResult sr : results.getResults()) {
-      assertThat(sr.getResultObject()).isEqualTo(stats);
+      final MASConfiguration config = sr.getSimArgs().getMasConfig();
+      final StatisticsDTO stats = (StatisticsDTO) sr.getResultObject();
+      if (resultsMap.containsKey(config)) {
+        assertThat(stats).isEqualTo(resultsMap.get(config));
+      } else {
+        resultsMap.put(config, stats);
+      }
     }
-
   }
 }

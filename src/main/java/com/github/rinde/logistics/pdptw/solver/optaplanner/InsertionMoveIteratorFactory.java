@@ -15,12 +15,9 @@
  */
 package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
-import static com.google.common.base.Verify.verifyNotNull;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
 import javax.annotation.Nullable;
@@ -29,9 +26,7 @@ import org.optaplanner.core.impl.heuristic.move.Move;
 import org.optaplanner.core.impl.heuristic.selector.move.factory.MoveIteratorFactory;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 
-import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.opt.localsearch.Insertions;
-import com.google.common.base.Joiner;
 import com.google.common.collect.AbstractIterator;
 
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -75,6 +70,25 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
     // workingRandom);
   }
 
+  static class RandomInsertionIterator extends AbstractIterator<Move> {
+    final PDPSolution solution;
+
+    RandomInsertionIterator(PDPSolution sol) {
+      solution = sol;
+    }
+
+    @Override
+    protected Move computeNext() {
+      // TODO Auto-generated method stub
+
+      // pick random unassigned pickup
+      // solution.unassignedPickups.
+
+      return null;
+    }
+
+  }
+
   static class InsertionIterator extends AbstractIterator<Move> {
     final PDPSolution solution;
     @Nullable
@@ -98,19 +112,32 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
       if (current != null && current.getPreviousVisit() != null) {
         solution.unassignedPickups.remove(current);
         parcelIterator = solution.unassignedPickups.iterator();
-        System.out.println("SKIP");
-        // current has been inserterd in the meantime so we have to skip it
+        // System.out.println("SKIP: " + current);
+        // current has been inserted in the meantime so we have to skip it
         current = null;
       }
 
       if (!parcelIterator.hasNext() && current == null) {
-        System.out.println("endOfData");
         return endOfData();
       }
 
       if (current == null) {
         // switch to new parcel
         current = parcelIterator.next();
+
+        while (current.getPreviousVisit() != null && parcelIterator.hasNext()) {
+          // System.out.println("SKIP: " + current);
+          solution.unassignedPickups.remove(current);
+
+          parcelIterator = solution.unassignedPickups.iterator();
+          current = parcelIterator.next();
+        }
+
+        if (current.getPreviousVisit() != null) {
+          return endOfData();
+        }
+
+        // System.out.println("SWITCH TO NEW " + current);
         vehicleIterator = solution.vehicleList.iterator();
         currentVehicle = null;
       }
@@ -135,9 +162,10 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
       final MovePair move = MovePair.create(current, current.getAssociation(),
         getPrev(insertionPoints.getInt(0)), getPrev(insertionPoints.getInt(1)));
 
-      System.out.println(Joiner.on("-").join(current, current.getAssociation(),
-        getPrev(insertionPoints.getInt(0)),
-        getPrev(insertionPoints.getInt(1))));
+      // System.out.println(Joiner.on("-").join(current,
+      // current.getAssociation(),
+      // getPrev(insertionPoints.getInt(0)),
+      // getPrev(insertionPoints.getInt(1))));
 
       if (!insertionIterator.hasNext()) {
         currentVehicle = null;
@@ -146,7 +174,7 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
         }
       }
 
-      System.out.println(move);
+      // System.out.println(" >>> Create move: " + move);
       return move;
     }
 
@@ -157,63 +185,6 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
       } else {
         return currentRoute.get(i);
       }
-    }
-  }
-
-  static class RandomIterator extends AbstractIterator<Move> {
-    final PDPSolution solution;
-    final Random rng;
-    final List<ParcelVisit> movablePickups;
-    final List<Visit> allTargets;
-
-    RandomIterator(PDPSolution sol, Random r) {
-      solution = sol;
-      rng = r;
-
-      allTargets = new ArrayList<>();
-      allTargets.addAll(sol.parcelList);
-      allTargets.addAll(sol.vehicleList);
-
-      movablePickups = new ArrayList<>();
-      for (final ParcelVisit pv : sol.parcelList) {
-        if (pv.getVisitType() == VisitType.PICKUP
-          && pv.getAssociation() != null
-          && pv.getVehicle() != null
-          && Objects.equals(pv.getVehicle(),
-            pv.getAssociation().getVehicle())) {
-          movablePickups.add(pv);
-        }
-      }
-    }
-
-    @Override
-    protected Move computeNext() {
-      if (movablePickups.isEmpty() || solution.vehicleList.size() <= 1) {
-        return endOfData();
-      }
-      final ParcelVisit pickup =
-        movablePickups.get(rng.nextInt(movablePickups.size()));
-      final ParcelVisit delivery = verifyNotNull(pickup.getAssociation());
-      Visit pickupTarget;
-      do {
-        pickupTarget = allTargets.get(rng.nextInt(allTargets.size()));
-      } while (Objects.equals(pickupTarget.getVehicle(), pickup.getVehicle()));
-
-      // the delivery target can only be placed somewhere after the pickup
-      // target (including the pickup itself)
-      final List<ParcelVisit> options = new ArrayList<>();
-      options.add(pickup);
-      ParcelVisit next = pickupTarget.getNextVisit();
-      while (next != null) {
-        options.add(next);
-        next = next.getNextVisit();
-      }
-
-      final ParcelVisit deliverTarget =
-        options.get(rng.nextInt(options.size()));
-
-      return MovePair.create(pickup, delivery, pickupTarget,
-        deliverTarget);
     }
   }
 }

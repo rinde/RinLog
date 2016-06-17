@@ -85,12 +85,22 @@ public class MovePair extends AbstractMove {
   }
 
   MovePair(ImmutableList<Changeset> cs, boolean undo) {
+    // if (!undo) {
+    // System.out.println(Joiner.on("\n").join(cs));
+    // }
     changesets = cs;
     isUndo = undo;
   }
 
   static MovePair create(ParcelVisit pick, ParcelVisit delv,
       Visit pickToPrev, Visit delvToPrev) {
+    // System.out
+    // .println(pick + ", " + delv + ", " + pickToPrev + ", " + delvToPrev);
+    //
+    // if (pick.getVehicle() != null) {
+    // System.out.println(pick.getVehicle().printRoute());
+    // }
+
     final ImmutableList.Builder<Changeset> changesets = ImmutableList.builder();
 
     if (delv.equals(pick.getNextVisit())
@@ -257,6 +267,7 @@ public class MovePair extends AbstractMove {
     }
 
     static void apply(List<Visit> state, ScoreDirector scoreDirector) {
+      // System.out.println("APPLY: " + state);
       for (int i = state.size() - 1; i > 0; i--) {
         final ParcelVisit subject = (ParcelVisit) state.get(i);
         scoreDirector.beforeVariableChanged(subject, PREV_VISIT);

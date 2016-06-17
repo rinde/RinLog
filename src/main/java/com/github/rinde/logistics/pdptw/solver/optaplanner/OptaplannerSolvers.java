@@ -280,8 +280,16 @@ public final class OptaplannerSolvers {
   public abstract static class Builder implements Serializable {
     private static final long serialVersionUID = 20160425L;
     private static final String SINGLE_SOLVER_KEY = "single_solver";
-    private static final String DEFAULT_SOLVER_XML_RESOURCE =
-      "com/github/rinde/logistics/pdptw/solver/optaplanner/solverConfig.xml";
+
+    private static final String RESOURCE_DIR =
+      "com/github/rinde/logistics/pdptw/solver/optaplanner/";
+
+    private static final String FIRST_FIT_DECREASING =
+      RESOURCE_DIR + "firstFitDecreasing.xml";
+    private static final String CHEAPEST_INSERTION =
+      RESOURCE_DIR + "cheapestInsertion.xml";
+    private static final String FIRST_FIT_DECREASING_WITH_TABU =
+      RESOURCE_DIR + "firstFitDecreasingWithTabu.xml";
 
     @Nullable
     private transient ImmutableMap<String, SolverConfig> configs;
@@ -359,6 +367,24 @@ public final class OptaplannerSolvers {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         xml, SINGLE_SOLVER_KEY, false, getName(), null).interpretXml();
+    }
+
+    @CheckReturnValue
+    public Builder withFirstFitDecreasingSolver() {
+      return withSolverXmlResource(FIRST_FIT_DECREASING)
+        .withName("first-fit-decreasing");
+    }
+
+    @CheckReturnValue
+    public Builder withFirstFitDecreasingWithTabuSolver() {
+      return withSolverXmlResource(FIRST_FIT_DECREASING_WITH_TABU)
+        .withName("first-fit-decreasing-with-tabu");
+    }
+
+    @CheckReturnValue
+    public Builder withCheapestInsertionSolver() {
+      return withSolverXmlResource(CHEAPEST_INSERTION)
+        .withName("cheapest-insertion");
     }
 
     @CheckReturnValue
@@ -476,9 +502,8 @@ public final class OptaplannerSolvers {
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), -1L, -1,
-        null,
-        null, false, null, null)
-          .withSolverXmlResource(DEFAULT_SOLVER_XML_RESOURCE);
+        null, null, false, null, null)
+          .withSolverXmlResource(FIRST_FIT_DECREASING);
     }
 
     static Builder create(boolean validate, ObjectiveFunction func,
@@ -899,7 +924,7 @@ public final class OptaplannerSolvers {
 
     @Override
     public String toString() {
-      return "OptaplannerST";
+      return "OptaPlannerST-" + builder.getName();
     }
   }
 

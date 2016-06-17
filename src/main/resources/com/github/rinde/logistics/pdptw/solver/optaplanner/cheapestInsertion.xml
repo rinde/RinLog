@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solver>
+	<constructionHeuristic>
+		<pooledEntityPlacer>
+			<moveIteratorFactory>
+				<moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.InsertionMoveIteratorFactory</moveIteratorFactoryClass>
+			</moveIteratorFactory>
+		</pooledEntityPlacer>
+	</constructionHeuristic>
+</solver>

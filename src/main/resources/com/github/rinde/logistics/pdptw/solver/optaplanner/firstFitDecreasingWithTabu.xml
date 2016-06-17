@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solver>
+	<constructionHeuristic>
+		<constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+	</constructionHeuristic>
+	<localSearch>
+		<localSearchType>TABU_SEARCH</localSearchType>
+		<unionMoveSelector>
+			<moveIteratorFactory>
+				<moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.MoveItFactory</moveIteratorFactoryClass>
+			</moveIteratorFactory>
+			<changeMoveSelector>
+				<entitySelector>
+					<filterClass>com.github.rinde.logistics.pdptw.solver.optaplanner.EntityFilter</filterClass>
+				</entitySelector>
+			</changeMoveSelector>
+		</unionMoveSelector>
+	</localSearch>
+</solver>

@@ -116,4 +116,31 @@ public class CheapestInsertionComparison {
     assertThat(opResult).isEqualTo(rindeResult);
   }
 
+  @Test
+  public void test5_2() throws InterruptedException {
+    final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+      .addAvailableParcels(A, B, C, D, E)
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setLocation(new Point(5, 5))
+        .setRoute(ImmutableList.<Parcel>of(A, B, A, B))
+        .build())
+      .build();
+
+    final ImmutableList<ImmutableList<Parcel>> opResult =
+      OP_CIH.solve(gso);
+
+    final ImmutableList<ImmutableList<Parcel>> rindeResult =
+      RIN_CIH.solve(gso);
+
+    System.out.println(opResult);
+    System.out.println(rindeResult);
+
+    System.out
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
+    System.out
+      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
+
+    assertThat(opResult).isEqualTo(rindeResult);
+  }
+
 }
