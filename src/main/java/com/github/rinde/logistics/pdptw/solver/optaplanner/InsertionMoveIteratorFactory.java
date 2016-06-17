@@ -52,41 +52,14 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
   @Override
   public Iterator<Move> createOriginalMoveIterator(
       ScoreDirector scoreDirector) {
-
     final PDPSolution sol = (PDPSolution) scoreDirector.getWorkingSolution();
-
     return new InsertionIterator(sol);
   }
-
-  // first select Parcel pair (assigned/unassigned) -> walk over parcel list?
-  // then select destination pair
 
   @Override
   public Iterator<Move> createRandomMoveIterator(ScoreDirector scoreDirector,
       Random workingRandom) {
     throw new UnsupportedOperationException();
-    // return new RandomIterator((PDPSolution)
-    // scoreDirector.getWorkingSolution(),
-    // workingRandom);
-  }
-
-  static class RandomInsertionIterator extends AbstractIterator<Move> {
-    final PDPSolution solution;
-
-    RandomInsertionIterator(PDPSolution sol) {
-      solution = sol;
-    }
-
-    @Override
-    protected Move computeNext() {
-      // TODO Auto-generated method stub
-
-      // pick random unassigned pickup
-      // solution.unassignedPickups.
-
-      return null;
-    }
-
   }
 
   static class InsertionIterator extends AbstractIterator<Move> {
@@ -109,35 +82,23 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
 
     @Override
     protected Move computeNext() {
-      if (current != null && current.getPreviousVisit() != null) {
-        solution.unassignedPickups.remove(current);
-        parcelIterator = solution.unassignedPickups.iterator();
-        // System.out.println("SKIP: " + current);
-        // current has been inserted in the meantime so we have to skip it
-        current = null;
-      }
-
       if (!parcelIterator.hasNext() && current == null) {
         return endOfData();
       }
 
-      if (current == null) {
+      if (current == null || current.getPreviousVisit() != null) {
         // switch to new parcel
         current = parcelIterator.next();
 
         while (current.getPreviousVisit() != null && parcelIterator.hasNext()) {
-          // System.out.println("SKIP: " + current);
           solution.unassignedPickups.remove(current);
-
           parcelIterator = solution.unassignedPickups.iterator();
           current = parcelIterator.next();
         }
-
+        // there are no unassigned parcels left
         if (current.getPreviousVisit() != null) {
           return endOfData();
         }
-
-        // System.out.println("SWITCH TO NEW " + current);
         vehicleIterator = solution.vehicleList.iterator();
         currentVehicle = null;
       }
@@ -162,19 +123,12 @@ public class InsertionMoveIteratorFactory implements MoveIteratorFactory {
       final MovePair move = MovePair.create(current, current.getAssociation(),
         getPrev(insertionPoints.getInt(0)), getPrev(insertionPoints.getInt(1)));
 
-      // System.out.println(Joiner.on("-").join(current,
-      // current.getAssociation(),
-      // getPrev(insertionPoints.getInt(0)),
-      // getPrev(insertionPoints.getInt(1))));
-
       if (!insertionIterator.hasNext()) {
         currentVehicle = null;
         if (!vehicleIterator.hasNext()) {
           current = null;
         }
       }
-
-      // System.out.println(" >>> Create move: " + move);
       return move;
     }
 

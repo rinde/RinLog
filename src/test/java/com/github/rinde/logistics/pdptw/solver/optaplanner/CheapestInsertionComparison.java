@@ -23,7 +23,6 @@ import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.central.Solver;
-import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
@@ -61,6 +60,8 @@ public class CheapestInsertionComparison {
     Parcel.builder(new Point(0, 3), new Point(2, 3)).toString("D").build();
   static final Parcel E =
     Parcel.builder(new Point(0, 4), new Point(2, 4)).toString("E").build();
+  static final Parcel F =
+    Parcel.builder(new Point(0, 5), new Point(2, 5)).toString("F").build();
 
   @Test
   public void testSimple() throws InterruptedException {
@@ -77,15 +78,6 @@ public class CheapestInsertionComparison {
 
     final ImmutableList<ImmutableList<Parcel>> rindeResult =
       RIN_CIH.solve(gso);
-
-    System.out.println(opResult);
-    System.out.println(rindeResult);
-
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
-
     assertThat(opResult).isEqualTo(rindeResult);
   }
 
@@ -104,43 +96,36 @@ public class CheapestInsertionComparison {
 
     final ImmutableList<ImmutableList<Parcel>> rindeResult =
       RIN_CIH.solve(gso);
-
-    System.out.println(opResult);
-    System.out.println(rindeResult);
-
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
-
     assertThat(opResult).isEqualTo(rindeResult);
   }
 
   @Test
   public void test5_2() throws InterruptedException {
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
-      .addAvailableParcels(A, B, C, D, E)
+      .addAvailableParcels(A, B, C, D, E, F)
       .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of(A, B, A, B))
+        .build())
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setLocation(new Point(5, 5))
+        .setRoute(ImmutableList.<Parcel>of(C, C))
+        .build())
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setLocation(new Point(5, 5))
+        .setRoute(ImmutableList.<Parcel>of(D, D, E, E))
+        .build())
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setLocation(new Point(5, 5))
+        .setRoute(ImmutableList.<Parcel>of())
         .build())
       .build();
 
     final ImmutableList<ImmutableList<Parcel>> opResult =
       OP_CIH.solve(gso);
-
     final ImmutableList<ImmutableList<Parcel>> rindeResult =
       RIN_CIH.solve(gso);
 
-    System.out.println(opResult);
-    System.out.println(rindeResult);
-
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, opResult)));
-    System.out
-      .println(OBJ_FUNC.computeCost(Solvers.computeStats(gso, rindeResult)));
-
     assertThat(opResult).isEqualTo(rindeResult);
   }
-
 }

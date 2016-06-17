@@ -34,9 +34,9 @@ import com.google.common.collect.AbstractIterator;
  *
  * @author Rinde van Lon
  */
-public class MoveItFactory implements MoveIteratorFactory {
+public class SwapMoveIteratorFactory implements MoveIteratorFactory {
 
-  public MoveItFactory() {}
+  public SwapMoveIteratorFactory() {}
 
   @Override
   public long getSize(ScoreDirector scoreDirector) {
@@ -52,9 +52,6 @@ public class MoveItFactory implements MoveIteratorFactory {
       ScoreDirector scoreDirector) {
     throw new UnsupportedOperationException();
   }
-
-  // first select Parcel pair (assigned/unassigned) -> walk over parcel list?
-  // then select destination pair
 
   @Override
   public Iterator<Move> createRandomMoveIterator(ScoreDirector scoreDirector,
@@ -115,8 +112,7 @@ public class MoveItFactory implements MoveIteratorFactory {
       final ParcelVisit deliverTarget =
         options.get(rng.nextInt(options.size()));
 
-      return MovePair.create(pickup, delivery, pickupTarget,
-        deliverTarget);
+      return MovePair.create(pickup, delivery, pickupTarget, deliverTarget);
     }
   }
 }

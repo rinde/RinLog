@@ -7,7 +7,7 @@
 		<localSearchType>TABU_SEARCH</localSearchType>
 		<unionMoveSelector>
 			<moveIteratorFactory>
-				<moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.MoveItFactory</moveIteratorFactoryClass>
+				<moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.SwapMoveIteratorFactory</moveIteratorFactoryClass>
 			</moveIteratorFactory>
 			<changeMoveSelector>
 				<entitySelector>

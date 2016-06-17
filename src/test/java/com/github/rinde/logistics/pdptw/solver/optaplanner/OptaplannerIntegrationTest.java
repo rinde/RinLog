@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.Central;
 import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.experiment.Experiment;
@@ -161,6 +162,9 @@ public class OptaplannerIntegrationTest {
                 .buildSolverSupplier(),
               ""))
             .build())
+        .addConfiguration(
+          Central
+            .solverConfiguration(CheapestInsertionHeuristic.supplier(objFunc)))
         .addScenarios(
           Gendreau06Parser.parser()
             .addFile(new File("files/scenarios/gendreau06/req_rapide_1_240_24"))
@@ -175,6 +179,9 @@ public class OptaplannerIntegrationTest {
     for (final SimulationResult sr : results.getResults()) {
       final MASConfiguration config = sr.getSimArgs().getMasConfig();
       final StatisticsDTO stats = (StatisticsDTO) sr.getResultObject();
+
+      System.out.println(config.getName() + " " + objFunc.computeCost(stats)
+        + " " + stats.computationTime);
       if (resultsMap.containsKey(config)) {
         assertThat(stats).isEqualTo(resultsMap.get(config));
       } else {
