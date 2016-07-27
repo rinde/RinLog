@@ -1,6 +1,7 @@
 # RinLog 3.1.0-SNAPSHOT
 [![Javadocs](https://javadoc.io/badge/com.github.rinde/rinlog.svg?color=red)](https://javadoc.io/doc/com.github.rinde/rinlog)
-[![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.27361.svg)](http://dx.doi.org/10.5281/zenodo.27361)
+[![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) 
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.58848.svg)](http://dx.doi.org/10.5281/zenodo.58848)
 
 Code for experiments in logistics. See [release notes](releasenotes.md). This library uses [semantic versioning](http://semver.org/) and is open source under the [Apache License Version 2.0](LICENSE).
  * Solvers:
