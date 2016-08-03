@@ -24,8 +24,8 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -168,15 +168,15 @@ public class NegotiatingBidder extends SolverBidder {
     }
 
     final SimSolver sol = simSolvBuilder.get()
-      .setVehicles(trucks)
+      .setVehicles(new LinkedHashSet<>(trucks))
       .build(negotiationSolver);
-    final List<Queue<Parcel>> routes = sol.solve(SolveArgs.create()
+    final List<ImmutableList<Parcel>> routes = sol.solve(SolveArgs.create()
       .useCurrentRoutes(currentRoutes.build())
       .useParcels(availableParcels));
 
     final List<Parcel> list = newArrayList();
     for (int i = 0; i < trucks.size(); i++) {
-      final Queue<Parcel> route = routes.get(i);
+      final ImmutableList<Parcel> route = routes.get(i);
       ((SolverRoutePlanner) trucks.get(i).getRoutePlanner()).changeRoute(route);
       trucks.get(i).setRoute(route);
       ((NegotiatingBidder) trucks.get(i).getCommunicator()).assignedParcels

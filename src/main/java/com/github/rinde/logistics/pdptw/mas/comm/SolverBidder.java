@@ -18,7 +18,6 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
-import java.util.Queue;
 import java.util.Set;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
@@ -31,7 +30,6 @@ import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
-import com.github.rinde.rinsim.central.Solvers.StateContext;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -77,10 +75,10 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
     final ImmutableList<Parcel> currentRoute = ImmutableList
       .copyOf(((Truck) vehicle.get()).getRoute());
     LOGGER.trace(" > currentRoute {}", currentRoute);
-    final StateContext context = solverHandle.get().convert(
+    final GlobalStateObject state = solverHandle.get().convert(
       SolveArgs.create().noCurrentRoutes().useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(Solvers.computeStats(
-      context.state, ImmutableList.of(currentRoute)));
+      state, ImmutableList.of(currentRoute)));
 
     // make sure that all parcels in the route are always in the available
     // parcel list when needed. This is needed to satisfy the solver.
@@ -94,15 +92,16 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
     final SolveArgs args = SolveArgs.create().useParcels(parcels)
       .useCurrentRoutes(ImmutableList.of(currentRoute));
     try {
-      final GlobalStateObject gso = solverHandle.get().convert(args).state;
+      final GlobalStateObject gso = solverHandle.get().convert(args);
       SolverValidator.checkRoute(gso.getVehicles().get(0), 0);
     } catch (final IllegalArgumentException e) {
       args.noCurrentRoutes();
     }
     // if the route is not compatible, don't use routes at all
-    final Queue<Parcel> newRoute = solverHandle.get().solve(args).get(0);
+    final ImmutableList<Parcel> newRoute =
+      solverHandle.get().solve(args).get(0);
     final double newCost = objectiveFunction.computeCost(Solvers.computeStats(
-      context.state, ImmutableList.of(ImmutableList.copyOf(newRoute))));
+      state, ImmutableList.of(ImmutableList.copyOf(newRoute))));
 
     auctioneer.submit(DoubleBid.create(time, this, p, newCost - baseline));
   }
@@ -113,7 +112,8 @@ public class SolverBidder extends AbstractBidder<DoubleBid>
 
   @Override
   public void setSolverProvider(SimSolverBuilder builder) {
-    solverHandle = Optional.of(builder.setVehicle(vehicle.get()).build(solver));
+    solverHandle =
+      Optional.of(builder.setVehicles(vehicle.asSet()).build(solver));
   }
 
   /**

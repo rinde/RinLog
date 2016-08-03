@@ -69,7 +69,7 @@ public class SolverRoutePlanner
    * are done.
    * @param r The new route.
    */
-  public void changeRoute(Queue<? extends Parcel> r) {
+  public void changeRoute(Iterable<? extends Parcel> r) {
     updated = true;
     route = newLinkedList(r);
   }
@@ -95,7 +95,7 @@ public class SolverRoutePlanner
       if (reuseCurRoutes) {
         args.useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route)));
         try {
-          final GlobalStateObject gso = solverHandle.get().convert(args).state;
+          final GlobalStateObject gso = solverHandle.get().convert(args);
           LOGGER.info("destination {} available: {}",
             gso.getVehicles().get(0).getDestination(),
             gso.getAvailableParcels());
@@ -105,7 +105,7 @@ public class SolverRoutePlanner
           args.noCurrentRoutes();
         }
       }
-      route = solverHandle.get().solve(args).get(0);
+      route = newLinkedList(solverHandle.get().solve(args).get(0));
     }
     LOGGER.info("{}", pdpModel.get().getVehicleState(vehicle.get()));
     dispatchChangeEvent();
@@ -143,8 +143,9 @@ public class SolverRoutePlanner
   @Override
   public void afterInit() {
     if (solverBuilder.isPresent() && vehicle.isPresent()) {
-      solverHandle = Optional.of(solverBuilder.get().setVehicle(vehicle.get())
-        .build(solver));
+      solverHandle =
+        Optional.of(solverBuilder.get().setVehicles(vehicle.asSet())
+          .build(solver));
     }
   }
 

@@ -41,7 +41,7 @@ import com.github.rinde.logistics.pdptw.mas.comm.TestBidder;
 import com.github.rinde.logistics.pdptw.mas.route.RandomRoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.logistics.pdptw.mas.route.SolverRoutePlanner;
-import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
+import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.SolverUser;
@@ -63,6 +63,7 @@ import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
+import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -263,7 +264,8 @@ public class SingleTruckTest {
 
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 1,
       SolverRoutePlanner.supplierWithoutCurrentRoutes(
-        MultiVehicleHeuristicSolver.supplier(50, 100)));
+        CheapestInsertionHeuristic
+          .supplier(Gendreau06ObjectiveFunction.instance())));
 
     final List<Event> events = new ArrayList<>();
     truck.getStateMachine().getEventAPI().addListener(new Listener() {

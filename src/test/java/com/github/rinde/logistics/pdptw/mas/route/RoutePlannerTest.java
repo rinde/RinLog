@@ -36,7 +36,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.rinde.logistics.pdptw.solver.MultiVehicleHeuristicSolver;
 import com.github.rinde.rinsim.central.SolverModel;
 import com.github.rinde.rinsim.central.arrays.RandomMVArraysSolver;
 import com.github.rinde.rinsim.core.Simulator;
@@ -84,8 +83,6 @@ public class RoutePlannerTest {
     return Arrays
       .asList(new Object[][] {
         {RandomRoutePlanner.supplier()},
-        {SolverRoutePlanner.supplier(MultiVehicleHeuristicSolver.supplier(
-          50, 100))},
         {SolverRoutePlanner
           .supplier(RandomMVArraysSolver.solverSupplier())},
         {GotoClosestRoutePlanner.supplier()},
@@ -109,6 +106,7 @@ public class RoutePlannerTest {
 
     final MASConfiguration config = MASConfiguration.pdptwBuilder()
       .addEventHandler(AddVehicleEvent.class, TestTruckHandler.INSTANCE)
+      .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
       .addModel(SolverModel.builder())
       .build();
 
@@ -155,7 +153,9 @@ public class RoutePlannerTest {
     }
 
     final Set<Parcel> onMap = roadModel.getObjectsOfType(Parcel.class);
+    System.out.println(onMap.size());
     final Set<Parcel> inCargo = pdpModel.getContents(truck);
+    System.out.println(inCargo.size());
     final List<Parcel> visited = newLinkedList();
     routePlanner.update(onMap, 0);
 
@@ -168,6 +168,8 @@ public class RoutePlannerTest {
     if (routePlanner instanceof AbstractRoutePlanner) {
       assertTrue(((AbstractRoutePlanner) routePlanner).isUpdated());
     }
+
+    System.out.println(routePlanner.currentRoute());
 
     while (routePlanner.hasNext()) {
       visited.add(routePlanner.current().get());
