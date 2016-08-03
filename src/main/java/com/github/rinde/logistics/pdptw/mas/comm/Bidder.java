@@ -20,6 +20,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 /**
  * Implementations of this interface can participate in auctions.
  * @author Rinde van Lon
+ * @param <T> The bid type.
  */
 public interface Bidder<T extends Bid<T>> extends Communicator {
 

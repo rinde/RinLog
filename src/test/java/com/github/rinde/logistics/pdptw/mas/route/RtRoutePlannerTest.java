@@ -34,8 +34,8 @@ import com.github.rinde.logistics.pdptw.mas.comm.RtSolverBidder;
 import com.github.rinde.logistics.pdptw.solver.CheapestInsertionHeuristic;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
+import com.github.rinde.rinsim.central.rt.RtStAdapters;
 import com.github.rinde.rinsim.central.rt.SleepySolver;
-import com.github.rinde.rinsim.central.rt.SolverToRealtimeAdapter;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.Model.AbstractModelVoid;
@@ -113,7 +113,7 @@ public class RtRoutePlannerTest {
   public void test() {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     final StochasticSupplier<RealtimeSolver> rtSolverSup =
-      SolverToRealtimeAdapter.create(
+      RtStAdapters.create(
         SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
 
     Experiment.builder()

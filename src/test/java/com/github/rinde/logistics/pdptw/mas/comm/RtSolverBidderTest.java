@@ -38,7 +38,7 @@ import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
-import com.github.rinde.rinsim.central.rt.SolverToRealtimeAdapter;
+import com.github.rinde.rinsim.central.rt.RtStAdapters;
 import com.github.rinde.rinsim.core.model.DependencyProvider;
 import com.github.rinde.rinsim.core.model.FakeDependencyProvider;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
@@ -108,7 +108,7 @@ public class RtSolverBidderTest {
 
   @Test
   public void test() throws InterruptedException {
-    final RealtimeSolver solver = SolverToRealtimeAdapter.create(new Solver() {
+    final RealtimeSolver solver = RtStAdapters.create(new Solver() {
       @Override
       public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
           throws InterruptedException {

@@ -24,12 +24,16 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
+import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver;
 import com.github.rinde.rinsim.central.rt.RtSimSolver.EventType;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
+import com.github.rinde.rinsim.central.rt.RtStAdapters;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.event.Event;
@@ -167,13 +171,68 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
   public static StochasticSupplier<RoutePlanner> supplier(
       StochasticSupplier<? extends RealtimeSolver> solver) {
-    return new Sup(solver);
+    return new RtSup(solver);
   }
 
-  static class Sup implements StochasticSupplier<RoutePlanner> {
-    StochasticSupplier<? extends RealtimeSolver> solver;
+  public static StochasticSupplier<RoutePlanner> simulatedTimeSupplier(
+      final StochasticSupplier<? extends Solver> solver) {
+    return new StSup(solver);
+  }
 
-    Sup(StochasticSupplier<? extends RealtimeSolver> s) {
+  static String toStringHelper(String methodName, Object obj) {
+    return Joiner.on("").join(RtSolverRoutePlanner.class.getSimpleName(),
+      ".", methodName, "(", obj, ")");
+  }
+
+  static class StSolverRoutePlanner extends ForwardingRoutePlanner
+      implements SolverUser {
+    RtSolverRoutePlanner delegate;
+    SolverUser stAdapter;
+
+    StSolverRoutePlanner(RtSolverRoutePlanner deleg) {
+      delegate = deleg;
+      stAdapter = RtStAdapters.toSimTime(deleg);
+    }
+
+    @Override
+    protected RtSolverRoutePlanner delegate() {
+      return delegate;
+    }
+
+    @Override
+    public void setSolverProvider(SimSolverBuilder builder) {
+      stAdapter.setSolverProvider(builder);
+    }
+
+    @Override
+    public String toString() {
+      return "ST" + delegate().toString();
+    }
+  }
+
+  static final class StSup implements StochasticSupplier<RoutePlanner> {
+    final StochasticSupplier<? extends Solver> solver;
+
+    StSup(StochasticSupplier<? extends Solver> s) {
+      solver = s;
+    }
+
+    @Override
+    public RoutePlanner get(long seed) {
+      return new StSolverRoutePlanner(new RtSolverRoutePlanner(
+        RtStAdapters.create(solver.get(seed))));
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper("simulatedTimeSupplier", solver);
+    }
+  }
+
+  static final class RtSup implements StochasticSupplier<RoutePlanner> {
+    final StochasticSupplier<? extends RealtimeSolver> solver;
+
+    RtSup(StochasticSupplier<? extends RealtimeSolver> s) {
       solver = s;
     }
 
@@ -184,8 +243,8 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
     @Override
     public String toString() {
-      return Joiner.on("").join(RtSolverRoutePlanner.class.getSimpleName(),
-        ".supplier(", solver, ")");
+      return toStringHelper("supplier", solver);
     }
   }
+
 }

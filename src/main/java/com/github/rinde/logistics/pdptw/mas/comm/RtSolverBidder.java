@@ -34,6 +34,9 @@ import javax.annotation.Nullable;
 
 import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.SimSolverBuilder;
+import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
@@ -43,6 +46,7 @@ import com.github.rinde.rinsim.central.rt.RtSimSolver.SolverEvent;
 import com.github.rinde.rinsim.central.rt.RtSimSolverBuilder;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
 import com.github.rinde.rinsim.central.rt.RtSolverUser;
+import com.github.rinde.rinsim.central.rt.RtStAdapters;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
@@ -396,12 +400,20 @@ public class RtSolverBidder
       .build(solver));
   }
 
-  public static StochasticSupplier<RtSolverBidder> supplier(
+  public static StochasticSupplier<Bidder<DoubleBid>> supplier(
       ObjectiveFunction objFunc,
       StochasticSupplier<? extends RealtimeSolver> solverSupplier,
       BidFunction bidFunction) {
-    return new AutoValue_RtSolverBidder_Sup(objFunc, solverSupplier,
-      bidFunction);
+    return new AutoValue_RtSolverBidder_RtSup(objFunc, bidFunction,
+      solverSupplier);
+  }
+
+  public static StochasticSupplier<Bidder<DoubleBid>> simulatedTimeSupplier(
+      ObjectiveFunction objFunc,
+      StochasticSupplier<? extends Solver> solverSupplier,
+      BidFunction bidFunction) {
+    return new AutoValue_RtSolverBidder_StSup(objFunc, bidFunction,
+      solverSupplier);
   }
 
   public interface BidFunction {
@@ -454,16 +466,20 @@ public class RtSolverBidder
     }
   }
 
+  interface RtSolverBidderSupplier
+      extends StochasticSupplier<Bidder<DoubleBid>> {
+
+    ObjectiveFunction getObjectiveFunction();
+
+    BidFunction getBidFunction();
+  }
+
   @AutoValue
-  abstract static class Sup implements StochasticSupplier<RtSolverBidder> {
+  abstract static class RtSup implements RtSolverBidderSupplier {
 
-    Sup() {}
-
-    abstract ObjectiveFunction getObjectiveFunction();
+    RtSup() {}
 
     abstract StochasticSupplier<? extends RealtimeSolver> getSolverSupplier();
-
-    abstract BidFunction getBidFunction();
 
     @Override
     public RtSolverBidder get(long seed) {
@@ -474,6 +490,62 @@ public class RtSolverBidder
     @Override
     public String toString() {
       return RtSolverBidder.class.getSimpleName() + ".supplier(..)";
+    }
+  }
+
+  @AutoValue
+  abstract static class StSup implements RtSolverBidderSupplier {
+
+    StSup() {}
+
+    abstract StochasticSupplier<? extends Solver> getSolverSupplier();
+
+    @Override
+    public Bidder<DoubleBid> get(long seed) {
+
+      return new StSolverBidder(
+        new RtSolverBidder(getObjectiveFunction(),
+          RtStAdapters.create(getSolverSupplier()).get(seed),
+          getBidFunction()));
+    }
+
+    @Override
+    public String toString() {
+      return RtSolverBidder.class.getSimpleName()
+        + ".simulatedTimeSupplier(..)";
+    }
+  }
+
+  static final class StSolverBidder extends ForwardingBidder<DoubleBid>
+      implements SolverUser, TickListener {
+
+    RtSolverBidder delegate;
+    SolverUser stAdapter;
+
+    StSolverBidder(RtSolverBidder deleg) {
+      System.out.println("constructor " + StSolverBidder.class);
+      delegate = deleg;
+      stAdapter = RtStAdapters.toSimTime(deleg);
+    }
+
+    @Override
+    protected RtSolverBidder delegate() {
+      return delegate;
+    }
+
+    @Override
+    public void setSolverProvider(SimSolverBuilder builder) {
+      stAdapter.setSolverProvider(builder);
+    }
+
+    @Override
+    public void tick(TimeLapse timeLapse) {
+      delegate().tick(timeLapse);
+    }
+
+    @Override
+    public void afterTick(TimeLapse timeLapse) {
+      delegate().afterTick(timeLapse);
     }
   }
 }

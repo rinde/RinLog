@@ -40,6 +40,7 @@ import com.google.common.base.Optional;
 /**
  * Basic implementation for {@link Bidder}.
  * @author Rinde van Lon
+ * @param <T> The bid type.
  */
 public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
