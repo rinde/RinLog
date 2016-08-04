@@ -34,4 +34,7 @@ public interface Auctioneer<T extends Bid<T>> {
 
   boolean hasWinner();
 
+  // -1L if the last auction was a success
+  long getLastUnsuccessTime();
+
 }

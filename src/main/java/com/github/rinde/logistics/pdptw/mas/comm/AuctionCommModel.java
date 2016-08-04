@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -248,6 +247,7 @@ public class AuctionCommModel<T extends Bid<T>>
     Optional<Listener> callback;
     int unsuccessfulAuctions;
     int failedAuctions;
+    long lastUnsuccessfulAuctionTime;
 
     ParcelAuctioneer(Parcel p) {
       parcel = p;
@@ -255,6 +255,7 @@ public class AuctionCommModel<T extends Bid<T>>
       winner = Optional.absent();
       initiator = Optional.absent();
       callback = Optional.absent();
+      lastUnsuccessfulAuctionTime = -1L;
     }
 
     void initialAuction(long time) {
@@ -272,6 +273,7 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     void auction(long time, @Nullable Bidder<T> currentOwner) {
+      LOGGER.trace("{} auction({},{})", this, time, currentOwner);
       if (rng != null) {
         Collections.shuffle(communicators, rng);
       }
@@ -300,7 +302,7 @@ public class AuctionCommModel<T extends Bid<T>>
         if (time - auctionStartTime > maxAuctionDurationMs) {
           throw new IllegalStateException(
             "Auction duration for " + parcel + " exceeded threshold of "
-              + maxAuctionDurationMs + " ms.");
+              + maxAuctionDurationMs + " ms. Current time: " + time + ".");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
@@ -311,7 +313,8 @@ public class AuctionCommModel<T extends Bid<T>>
               + "<<<<",
             this, time, parcel, bids.size(), time - auctionStartTime);
           checkState(!bids.isEmpty(),
-            "No bids received (yet), cannot end auction.");
+            "No bids received (yet), cannot end auction. StopCondition: %s.",
+            stopCondition);
 
           // end of auction, choose winner
           final T winningBid = Collections.min(bids);
@@ -328,7 +331,9 @@ public class AuctionCommModel<T extends Bid<T>>
             unsuccessfulAuctions++;
             // nothing changes
             initiator = Optional.absent();
+            lastUnsuccessfulAuctionTime = time;
           } else {
+            lastUnsuccessfulAuctionTime = -1L;
             boolean success = true;
             if (initiator.isPresent()) {
               LOGGER.info("{} Release {} from {}.", this, parcel,
@@ -379,8 +384,9 @@ public class AuctionCommModel<T extends Bid<T>>
     public void auctionParcel(Bidder<T> currentOwner, long time,
         T bidToBeat, Listener cb) {
       LOGGER.trace(
-        "{} *** Start RE-auction at {} for {}. Prev auctions: {} ***",
-        this, time, parcel, auctions);
+        "{} *** Start RE-auction at {} for {}. Prev auctions: {}. Current "
+          + "owner: {} ***",
+        this, time, parcel, auctions, currentOwner);
       LOGGER.trace("{} > base line bid: {}", this, bidToBeat);
 
       synchronized (bids) {
@@ -442,10 +448,14 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     @Override
+    public long getLastUnsuccessTime() {
+      return lastUnsuccessfulAuctionTime;
+    }
+
+    @Override
     public String toString() {
       return "{Auctioneer for " + parcel.toString() + "}";
     }
-
   }
 
   /**
@@ -455,8 +465,7 @@ public class AuctionCommModel<T extends Bid<T>>
    */
   @AutoValue
   public abstract static class Builder<T extends Bid<T>>
-      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>>
-      implements Serializable {
+      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>> {
     private static final long serialVersionUID = 9020465403959292485L;
     private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
     private static final boolean DEFAULT_CFB_SHUFFLING = true;
