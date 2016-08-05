@@ -108,7 +108,7 @@ public class RtSolverBidderTest {
 
   @Test
   public void test() throws InterruptedException {
-    final RealtimeSolver solver = RtStAdapters.create(new Solver() {
+    final RealtimeSolver solver = RtStAdapters.toRealtime(new Solver() {
       @Override
       public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
           throws InterruptedException {

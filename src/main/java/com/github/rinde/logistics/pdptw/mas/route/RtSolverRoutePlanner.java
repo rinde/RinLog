@@ -122,10 +122,12 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
           .useCurrentRoutes(ImmutableList.of(ImmutableList.copyOf(route))));
 
       final Optional<Parcel> dest = gso.getVehicles().get(0).getDestination();
-      LOGGER.trace("destination {}", dest);
-      if (dest.isPresent()) {
-        LOGGER.trace("parcel state {}",
-          pdpModel.get().getParcelState(dest.get()));
+      if (LOGGER.isTraceEnabled()) {
+        LOGGER.trace("destination {}", dest);
+        if (dest.isPresent()) {
+          LOGGER.trace("parcel state {}",
+            pdpModel.get().getParcelState(dest.get()));
+        }
       }
 
       simSolver.get().solve(gso);
@@ -220,7 +222,7 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     @Override
     public RoutePlanner get(long seed) {
       return new StSolverRoutePlanner(new RtSolverRoutePlanner(
-        RtStAdapters.create(solver.get(seed))));
+        RtStAdapters.toRealtime(solver.get(seed))));
     }
 
     @Override

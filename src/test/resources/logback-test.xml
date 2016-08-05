@@ -20,7 +20,11 @@
 	
 	<!-- suppress RinSim logs -->
 	<logger name="com.github.rinde.rinsim" level="WARN" />
+	<logger name="com.github.rinde.rinsim.core.Simulator" level="WARN" />
+	<logger name="com.github.rinde.rinsim.core.model" level="WARN" />
 	<logger name="com.github.rinde.rinsim.core.model.time" level="WARN" />
+	<logger name="com.github.rinde.rinsim.core.model.road" level="WARN" />
+	<logger name="com.github.rinde.rinsim.core.model.pdp" level="WARN" />
 	<logger name="com.github.rinde.rinsim.central" level="WARN" />
   	<logger name="com.github.rinde.logistics" level="TRACE" />
   	<logger name="com.github.rinde.opt" level="TRACE" />
@@ -28,7 +32,7 @@
   	<logger name="org.optaplanner" level="WARN" />
 
 	<root level="INFO">
-		<!-- <appender-ref ref="STDOUT" /> --> 
+		<!-- <appender-ref ref="STDOUT" /> -->  
 		<appender-ref ref="FILE" />
 	</root>
 </configuration>

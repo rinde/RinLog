@@ -113,7 +113,7 @@ public class RtRoutePlannerTest {
   public void test() {
     final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance();
     final StochasticSupplier<RealtimeSolver> rtSolverSup =
-      RtStAdapters.create(
+      RtStAdapters.toRealtime(
         SleepySolver.create(500, CheapestInsertionHeuristic.supplier(objFunc)));
 
     Experiment.builder()

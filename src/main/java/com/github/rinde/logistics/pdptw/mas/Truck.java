@@ -246,11 +246,13 @@ public class Truck
       api.register(communicator);
     } catch (final IllegalArgumentException e) {
       // may not be supported
+      LOGGER.info(e.getMessage());
     }
     try {
       api.register(routePlanner);
     } catch (final IllegalArgumentException e) {
       // may not be supported
+      LOGGER.info(e.getMessage());
     }
   }
 

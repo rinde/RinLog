@@ -525,7 +525,7 @@ public class RtSolverBidder
       } else {
         return new StSolverBidder(
           new RtSolverBidder(getObjectiveFunction(),
-            RtStAdapters.create(getStSolverSupplier()).get(seed),
+            RtStAdapters.toRealtime(getStSolverSupplier()).get(seed),
             getBidFunction(), getReauctionCooldownPeriod()));
       }
     }
