@@ -53,7 +53,22 @@ public class CheapestInsertionHeuristic implements Solver {
   @Override
   public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
       throws InterruptedException {
-    return decomposed(state);
+    return decomposed(state, objectiveFunction);
+  }
+
+  /**
+   * Static method variant of cheapest insertion heuristic.
+   * @param state The state that specifies the problem to be solved. All
+   *          unassigned parcels will be inserted use the cheapest insertion
+   *          cost heuristic.
+   * @param objFunc The objective function to use to determine the cost.
+   * @return A list of routes, one for every vehicle in the GlobalStateObject.
+   * @throws InterruptedException When the computation is interrupted.
+   */
+  public static ImmutableList<ImmutableList<Parcel>> solve(
+      GlobalStateObject state, ObjectiveFunction objFunc)
+          throws InterruptedException {
+    return decomposed(state, objFunc);
   }
 
   static ImmutableList<ImmutableList<Parcel>> createSchedule(
@@ -70,20 +85,22 @@ public class CheapestInsertionHeuristic implements Solver {
     return b.build();
   }
 
-  ImmutableList<Double> decomposedCost(GlobalStateObject state,
-      ImmutableList<ImmutableList<Parcel>> schedule) {
+  static ImmutableList<Double> decomposedCost(GlobalStateObject state,
+      ImmutableList<ImmutableList<Parcel>> schedule,
+      ObjectiveFunction objFunc) {
     final ImmutableList.Builder<Double> builder = ImmutableList.builder();
     for (int i = 0; i < schedule.size(); i++) {
-      builder.add(objectiveFunction.computeCost(Solvers.computeStats(
+      builder.add(objFunc.computeCost(Solvers.computeStats(
         state.withSingleVehicle(i), ImmutableList.of(schedule.get(i)))));
     }
     return builder.build();
   }
 
-  ImmutableList<ImmutableList<Parcel>> decomposed(GlobalStateObject state)
-      throws InterruptedException {
+  static ImmutableList<ImmutableList<Parcel>> decomposed(
+      GlobalStateObject state, ObjectiveFunction objFunc)
+          throws InterruptedException {
     ImmutableList<ImmutableList<Parcel>> schedule = createSchedule(state);
-    ImmutableList<Double> costs = decomposedCost(state, schedule);
+    ImmutableList<Double> costs = decomposedCost(state, schedule, objFunc);
     final ImmutableSet<Parcel> newParcels =
       GlobalStateObjects.unassignedParcels(state);
     // all new parcels need to be inserted in the plan
@@ -106,7 +123,7 @@ public class CheapestInsertionHeuristic implements Solver {
           }
 
           final ImmutableList<Parcel> r = insertions.next();
-          final double absCost = objectiveFunction.computeCost(Solvers
+          final double absCost = objFunc.computeCost(Solvers
             .computeStats(state.withSingleVehicle(i), ImmutableList.of(r)));
 
           final double insertionCost = absCost - costs.get(i);
