@@ -88,11 +88,14 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
 
       LOGGER.trace("route {}", route);
       route.removeAll(toRemove);
-      LOGGER.trace("to remove: {}", toRemove);
+      LOGGER.trace("to remove: {}, remaining route: {}", toRemove, route);
 
+      // when diversion is allowed we can just change course
       @Nullable
       final Parcel destination =
-        pdpRoadModel.get().getDestinationToParcel(vehicle.get());
+        pdpRoadModel.get().isVehicleDiversionAllowed()
+          ? null
+          : pdpRoadModel.get().getDestinationToParcel(vehicle.get());
 
       if (pdpModel.get().getVehicleState(vehicle.get()) != VehicleState.IDLE
         || destination != null) {
@@ -105,12 +108,15 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
           // remove first occurrence
           route.removeFirstOccurrence(next);
           route.addFirst(next);
+          LOGGER.trace("moved {} to first position in route", next);
         }
       }
 
       final Iterable<Parcel> newRoute =
         RouteFollowingVehicle.delayAdjuster().adjust(route,
           (RouteFollowingVehicle) vehicle.get());
+
+      LOGGER.trace("adjusted route: {}", newRoute);
 
       route.clear();
       Iterables.addAll(route, newRoute);
