@@ -59,7 +59,7 @@ public class CheapestInsertionHeuristic implements Solver {
   /**
    * Static method variant of cheapest insertion heuristic.
    * @param state The state that specifies the problem to be solved. All
-   *          unassigned parcels will be inserted use the cheapest insertion
+   *          unassigned parcels will be inserted using the cheapest insertion
    *          cost heuristic.
    * @param objFunc The objective function to use to determine the cost.
    * @return A list of routes, one for every vehicle in the GlobalStateObject.
