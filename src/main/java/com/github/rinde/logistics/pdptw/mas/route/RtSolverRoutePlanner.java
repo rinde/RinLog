@@ -17,6 +17,7 @@ package com.github.rinde.logistics.pdptw.mas.route;
 
 import static com.google.common.collect.Lists.newLinkedList;
 
+import java.io.Serializable;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -217,7 +218,9 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     }
   }
 
-  static final class StSup implements StochasticSupplier<RoutePlanner> {
+  static final class StSup
+      implements StochasticSupplier<RoutePlanner>, Serializable {
+    private static final long serialVersionUID = 8587803855370922629L;
     final StochasticSupplier<? extends Solver> solver;
 
     StSup(StochasticSupplier<? extends Solver> s) {

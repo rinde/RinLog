@@ -17,6 +17,7 @@ package com.github.rinde.logistics.pdptw.mas.comm;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -61,9 +62,9 @@ public final class AuctionStopConditions {
   }
 
   static class Or<T extends Bid<T>>
-      implements AuctionStopCondition<T> {
-
-    List<AuctionStopCondition<T>> conditions;
+      implements AuctionStopCondition<T>, Serializable {
+    private static final long serialVersionUID = 3185190846375609722L;
+    final List<AuctionStopCondition<T>> conditions;
 
     @SafeVarargs
     Or(AuctionStopCondition<T>... conds) {
@@ -91,8 +92,9 @@ public final class AuctionStopConditions {
   }
 
   static class And<T extends Bid<T>>
-      implements AuctionStopCondition<T> {
-    List<AuctionStopCondition<T>> conditions;
+      implements AuctionStopCondition<T>, Serializable {
+    private static final long serialVersionUID = 1196306807489070880L;
+    final List<AuctionStopCondition<T>> conditions;
 
     @SafeVarargs
     And(AuctionStopCondition<T>... conds) {
@@ -121,8 +123,8 @@ public final class AuctionStopConditions {
   }
 
   static class MaxAuctionDuration<T extends Bid<T>>
-      implements AuctionStopCondition<T> {
-
+      implements AuctionStopCondition<T>, Serializable {
+    private static final long serialVersionUID = -8143195322445105246L;
     final long maxAuctionDuration;
 
     MaxAuctionDuration(long maxDuration) {
@@ -143,7 +145,8 @@ public final class AuctionStopConditions {
   }
 
   static class AtLeastNumBidders<T extends Bid<T>>
-      implements AuctionStopCondition<T> {
+      implements AuctionStopCondition<T>, Serializable {
+    private static final long serialVersionUID = 7047849008699533713L;
     final int numBidders;
 
     AtLeastNumBidders(int num) {
