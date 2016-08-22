@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.SetFactories.SetFactory;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
+import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
@@ -107,7 +108,7 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
   @Override
   public void claim(Parcel p) {
-    LOGGER.info("claim {}", p);
+    LOGGER.info("{}: claim {}", this, p);
     checkArgument(!claimedParcels.contains(p),
       "Can not claim parcel %s because it is already claimed.", p);
     checkArgument(assignedParcels.contains(p),
@@ -124,20 +125,30 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
 
   @Override
   public void unclaim(Parcel p) {
-    LOGGER.info("unclaim {}", p);
+    LOGGER.info("{} unclaim {}", this, p);
     checkArgument(claimedParcels.contains(p),
       "Can not unclaim %s because it is not claimed.", p);
-    checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED,
-      "Parcel (%s) must be either %s or %s, but is %s.", p,
-      ParcelState.AVAILABLE, ParcelState.ANNOUNCED,
-      pdpModel.get().getParcelState(p));
+
+    // check that parcel is still assignable to another bidder
+    checkArgument(
+      // it may be available or announced
+      pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
+        || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED
+        // otherwise, we must make sure that 'our' vehicle is not servicing it
+        // i.e. if our vehicle is idle:
+        || pdpModel.get().getVehicleState(vehicle.get()) == VehicleState.IDLE
+        // or, if our vehicle is not idle, that it is not servicing the parcel
+        // we are trying to get rid of:
+        || pdpModel.get().getVehicleActionInfo(vehicle.get()).getParcel() != p,
+      "%s: Parcel (%s) can not be unclaimed because it is being serviced.",
+      this, p, pdpModel.get().getParcelState(p));
+
     claimedParcels.remove(p);
   }
 
   @Override
   public void done() {
-    LOGGER.info("done {}", claimedParcels);
+    LOGGER.info("{} done with {}", this, claimedParcels);
     assignedParcels.removeAll(claimedParcels);
     claimedParcels.clear();
   }

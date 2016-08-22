@@ -178,7 +178,7 @@ public class Truck
 
   @Override
   public void handleEvent(Event e) {
-    LOGGER.trace("{} - Event: {}", this, e);
+    LOGGER.trace("{} - Event: {}. Route:{}.", this, e, getRoute());
     // checkRoutePlanner();
 
     if (e.getEventType() == CommunicatorEventType.CHANGE) {
