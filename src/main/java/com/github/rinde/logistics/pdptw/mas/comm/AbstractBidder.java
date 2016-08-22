@@ -128,7 +128,10 @@ public abstract class AbstractBidder<T extends Bid<T>> implements Bidder<T> {
     checkArgument(claimedParcels.contains(p),
       "Can not unclaim %s because it is not claimed.", p);
     checkArgument(pdpModel.get().getParcelState(p) == ParcelState.AVAILABLE
-      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED);
+      || pdpModel.get().getParcelState(p) == ParcelState.ANNOUNCED,
+      "Parcel (%s) must be either %s or %s, but is %s.", p,
+      ParcelState.AVAILABLE, ParcelState.ANNOUNCED,
+      pdpModel.get().getParcelState(p));
     claimedParcels.remove(p);
   }
 
