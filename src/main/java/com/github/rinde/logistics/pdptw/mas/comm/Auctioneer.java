@@ -37,4 +37,7 @@ public interface Auctioneer<T extends Bid<T>> {
   // -1L if the last auction was a success
   long getLastUnsuccessTime();
 
+  // the time of the last auction (attempt)
+  long getLastAttemptTime();
+
 }

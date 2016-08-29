@@ -248,6 +248,7 @@ public class AuctionCommModel<T extends Bid<T>>
     int unsuccessfulAuctions;
     int failedAuctions;
     long lastUnsuccessfulAuctionTime;
+    long lastAuctionAttemptTime;
 
     ParcelAuctioneer(Parcel p) {
       parcel = p;
@@ -256,6 +257,7 @@ public class AuctionCommModel<T extends Bid<T>>
       initiator = Optional.absent();
       callback = Optional.absent();
       lastUnsuccessfulAuctionTime = -1L;
+      lastAuctionAttemptTime = p.getOrderAnnounceTime();
     }
 
     void initialAuction(long time) {
@@ -388,7 +390,7 @@ public class AuctionCommModel<T extends Bid<T>>
           + "owner: {} ***",
         this, time, parcel, auctions, currentOwner);
       LOGGER.trace("{} > base line bid: {}", this, bidToBeat);
-
+      lastAuctionAttemptTime = time;
       synchronized (bids) {
         checkRealtime();
 
@@ -450,6 +452,11 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public long getLastUnsuccessTime() {
       return lastUnsuccessfulAuctionTime;
+    }
+
+    @Override
+    public long getLastAttemptTime() {
+      return lastAuctionAttemptTime;
     }
 
     @Override
