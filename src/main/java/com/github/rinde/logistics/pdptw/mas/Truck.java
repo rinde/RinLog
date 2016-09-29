@@ -17,8 +17,11 @@ package com.github.rinde.logistics.pdptw.mas;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -205,7 +208,16 @@ public class Truck
         final Parcel cur = getRoute().iterator().next();
         if (!getPDPModel().getParcelState(cur).isPickedUp()) {
           LOGGER.trace("{} claim:{}", this, cur);
-          communicator.claim(cur);
+
+          if (communicator.getParcels().contains(cur)) {
+            communicator.claim(cur);
+          } else {
+            LOGGER.warn("Attempt to visit parcel that is not assigned to me.");
+            final List<Parcel> currentRoute = new ArrayList<>(getRoute());
+            currentRoute.removeAll(Collections.singleton(cur));
+            setRoute(currentRoute);
+            LOGGER.warn("Removed parcel from route:{}.", cur);
+          }
         }
       } else if (event.trigger == DefaultEvent.DONE) {
         communicator.done();

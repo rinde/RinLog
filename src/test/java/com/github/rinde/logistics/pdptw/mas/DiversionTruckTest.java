@@ -24,9 +24,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.mockito.Matchers;
 
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator.CommunicatorEventType;
@@ -102,7 +105,7 @@ public class DiversionTruckTest {
     p3 = new Parcel(Parcel
       .builder(new Point(.99, 0), new Point(1, 2))
       .pickupTimeWindow(
-        TimeWindow.create((60 * 60 * 1000) + 10, 2 * 60 * 60 * 1000))
+        TimeWindow.create(60 * 60 * 1000 + 10, 2 * 60 * 60 * 1000))
       .buildDTO());
     p4 = new Parcel(Parcel.builder(new Point(0, 0), new Point(1, 2))
       .buildDTO());
@@ -116,7 +119,13 @@ public class DiversionTruckTest {
 
     routePlanner = mock(RoutePlanner.class);
     when(routePlanner.getEventAPI()).thenReturn(mock(EventAPI.class));
+
     communicator = mock(Communicator.class);
+
+    final Set set = mock(Set.class);
+    when(set.contains(Matchers.any())).thenReturn(true);
+    when(communicator.getParcels()).thenReturn(set);
+
     final VehicleDTO dto = VehicleDTO.builder()
       .startPosition(new Point(0, 0))
       .speed(30d)
