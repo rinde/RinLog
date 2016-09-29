@@ -125,6 +125,7 @@ public class DiversionTruckTest {
     final Set set = mock(Set.class);
     when(set.contains(Matchers.any())).thenReturn(true);
     when(communicator.getParcels()).thenReturn(set);
+    when(communicator.getClaimedParcels()).thenReturn(set);
 
     final VehicleDTO dto = VehicleDTO.builder()
       .startPosition(new Point(0, 0))

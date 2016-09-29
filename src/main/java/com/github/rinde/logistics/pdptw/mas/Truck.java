@@ -200,7 +200,12 @@ public class Truck
         || event.trigger == DefaultEvent.NOGO)
         && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
           .isPickedUp()) {
-        communicator.unclaim(gotoState.getPreviousDestination());
+        final Parcel prev = gotoState.getPreviousDestination();
+        if (communicator.getClaimedParcels().contains(prev)) {
+          communicator.unclaim(prev);
+        } else {
+          LOGGER.warn("Cannot unclaim {} because it wasn't claimed.", prev);
+        }
       }
 
       if (event.trigger == DefaultEvent.GOTO
