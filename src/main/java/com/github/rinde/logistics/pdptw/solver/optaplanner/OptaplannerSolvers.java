@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -70,6 +71,9 @@ import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.central.Solver;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
+import com.github.rinde.rinsim.central.Solvers.MeasureableSolver;
+import com.github.rinde.rinsim.central.Solvers.SolverTimeMeasurement;
+import com.github.rinde.rinsim.central.rt.MeasurableRealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
@@ -320,18 +324,21 @@ public final class OptaplannerSolvers {
     @Nullable
     abstract String getName();
 
+    abstract boolean isTimeMeasuringEnabled();
+
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
+        isTimeMeasuringEnabled());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
         getUnimprovedStepCountLimit(), getSolverXml(), getSolverKey(),
-        isBenchmark(), getName(), configs);
+        isBenchmark(), getName(), configs, isTimeMeasuringEnabled());
     }
 
     /**
@@ -344,7 +351,8 @@ public final class OptaplannerSolvers {
     @CheckReturnValue
     public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms, -1,
-        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
+        isTimeMeasuringEnabled());
     }
 
     /**
@@ -358,7 +366,8 @@ public final class OptaplannerSolvers {
     @CheckReturnValue
     public Builder withUnimprovedStepCountLimit(int count) {
       return create(isValidated(), getObjectiveFunction(), -1L, count,
-        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs);
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
+        isTimeMeasuringEnabled());
     }
 
     @CheckReturnValue
@@ -366,7 +375,8 @@ public final class OptaplannerSolvers {
       final String xml = resourceToString(solverXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        xml, SINGLE_SOLVER_KEY, false, getName(), null).interpretXml();
+        xml, SINGLE_SOLVER_KEY, false, getName(), null,
+        isTimeMeasuringEnabled()).interpretXml();
     }
 
     @CheckReturnValue
@@ -393,7 +403,8 @@ public final class OptaplannerSolvers {
       final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        xml, solverKey, true, getName(), null).interpretXml();
+        xml, solverKey, true, getName(), null, isTimeMeasuringEnabled())
+          .interpretXml();
     }
 
     @CheckReturnValue
@@ -401,7 +412,8 @@ public final class OptaplannerSolvers {
       final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        xml, null, true, getName(), null).interpretXml();
+        xml, null, true, getName(), null, isTimeMeasuringEnabled())
+          .interpretXml();
     }
 
     @CheckReturnValue
@@ -409,7 +421,8 @@ public final class OptaplannerSolvers {
       checkArgument(isBenchmark());
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXml(), key, true, getName(), configs).interpretXml();
+        getSolverXml(), key, true, getName(), configs, isTimeMeasuringEnabled())
+          .interpretXml();
     }
 
     /**
@@ -425,7 +438,15 @@ public final class OptaplannerSolvers {
       checkNotNull(name);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXml(), getSolverKey(), isBenchmark(), name, configs);
+        getSolverXml(), getSolverKey(), isBenchmark(), name, configs,
+        isTimeMeasuringEnabled());
+    }
+
+    public Builder withTimeMeasurementsEnabled(boolean enable) {
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
+        enable);
     }
 
     @CheckReturnValue
@@ -502,17 +523,18 @@ public final class OptaplannerSolvers {
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), -1L, -1,
-        null, null, false, null, null)
+        null, null, false, null, null, false)
           .withSolverXmlResource(FIRST_FIT_DECREASING);
     }
 
     static Builder create(boolean validate, ObjectiveFunction func,
         long ms, int count, @Nullable String xml, @Nullable String key,
         boolean benchmark, @Nullable String name,
-        @Nullable ImmutableMap<String, SolverConfig> map) {
+        @Nullable ImmutableMap<String, SolverConfig> map,
+        boolean timeMeasuringEnabled) {
       final Builder b =
         new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
-          xml, key, benchmark, name);
+          xml, key, benchmark, name, timeMeasuringEnabled);
       // copy the transient config map
       b.configs = map;
       return b;
@@ -599,20 +621,30 @@ public final class OptaplannerSolvers {
   // // }
   // }
 
-  static class OptaplannerSolver implements Solver {
+  static class OptaplannerSolver implements MeasureableSolver {
     @Nullable
     PDPSolution lastSolution;
     final ScoreCalculator scoreCalculator;
+    final List<SolverTimeMeasurement> measurements;
 
     private final org.optaplanner.core.api.solver.Solver solver;
     private final String name;
     private long lastSoftScore;
+    private final boolean isMeasuringEnabled;
 
     OptaplannerSolver(Builder builder, long seed) {
       solver = createOptaplannerSolver(builder, seed);
       scoreCalculator = new ScoreCalculator();
       lastSolution = null;
       name = "OptaPlanner-" + verifyNotNull(builder.getFullName());
+      isMeasuringEnabled = builder.isTimeMeasuringEnabled();
+      measurements = new ArrayList<>();
+    }
+
+    @Override
+    public List<SolverTimeMeasurement> getTimeMeasurements() {
+      checkState(isMeasuringEnabled);
+      return Collections.unmodifiableList(measurements);
     }
 
     @Override
@@ -634,8 +666,15 @@ public final class OptaplannerSolvers {
     @Nullable
     public ImmutableList<ImmutableList<Parcel>> doSolve(GlobalStateObject state)
         throws InterruptedException {
+      final long start = System.nanoTime();
+      // start solving
       final PDPSolution problem = convert(state);
       solver.solve(problem);
+      // end solving
+      if (isMeasuringEnabled) {
+        final long duration = System.nanoTime() - start;
+        measurements.add(SolverTimeMeasurement.create(state, duration));
+      }
 
       final PDPSolution solution = (PDPSolution) solver.getBestSolution();
       final HardSoftLongScore score = solution.getScore();
@@ -672,7 +711,7 @@ public final class OptaplannerSolvers {
     }
   }
 
-  static class OptaplannerRTSolver implements RealtimeSolver {
+  static class OptaplannerRTSolver implements MeasurableRealtimeSolver {
     final OptaplannerSolver solver;
     Optional<Scheduler> scheduler;
     @Nullable
@@ -687,6 +726,11 @@ public final class OptaplannerSolvers {
       solver = new OptaplannerSolver(b, seed);
       scheduler = Optional.absent();
       name = "OptaplannerRT-" + verifyNotNull(b.getFullName());
+    }
+
+    @Override
+    public List<SolverTimeMeasurement> getTimeMeasurements() {
+      return solver.getTimeMeasurements();
     }
 
     @Override

@@ -185,18 +185,21 @@ public class AuctionCommModel<T extends Bid<T>>
 
   public static class AuctionEvent extends Event {
     private final Parcel parcel;
+    private final long auctionStartTime;
     private final long time;
     private final Optional<Bidder<?>> winner;
     private final int receivedBids;
 
-    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t) {
-      this(type, p, a, t, -1);
+    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a,
+        long auctStart, long t) {
+      this(type, p, a, auctStart, t, -1);
     }
 
-    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long t,
-        int numBids) {
+    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long auctStart,
+        long t, int numBids) {
       super(type);
       parcel = p;
+      auctionStartTime = auctStart;
       time = t;
       receivedBids = numBids;
       if (type == EventType.FINISH_AUCTION) {
@@ -229,6 +232,10 @@ public class AuctionCommModel<T extends Bid<T>>
 
     public Optional<Bidder<?>> getWinner() {
       return winner;
+    }
+
+    public long getAuctionStartTime() {
+      return auctionStartTime;
     }
 
     public long getTime() {
@@ -270,7 +277,8 @@ public class AuctionCommModel<T extends Bid<T>>
       }
 
       eventDispatcher.dispatchEvent(
-        new AuctionEvent(EventType.START_AUCTION, parcel, this, time));
+        new AuctionEvent(EventType.START_AUCTION, parcel, this,
+          auctionStartTime, time));
       auction(time, null);
     }
 
@@ -371,8 +379,8 @@ public class AuctionCommModel<T extends Bid<T>>
         }
         // notify anybody else interested in auctions
         final AuctionEvent ev =
-          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this, time,
-            bids.size());
+          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this,
+            auctionStartTime, time, bids.size());
 
         eventDispatcher.dispatchEvent(ev);
         if (callback.isPresent()) {
@@ -419,7 +427,8 @@ public class AuctionCommModel<T extends Bid<T>>
 
       auction(time, currentOwner);
       eventDispatcher.dispatchEvent(
-        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this, time));
+        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this,
+          auctionStartTime, time));
     }
 
     @Override

@@ -109,6 +109,10 @@ public class RtSolverBidder
     reauctionCooldownPeriod = cooldown;
   }
 
+  public RealtimeSolver getSolver() {
+    return solver;
+  }
+
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
       final Parcel parcel, final long time) {
