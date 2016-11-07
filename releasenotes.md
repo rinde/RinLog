@@ -1,5 +1,11 @@
 # Release notes
 
+## v3.1.0
+ * Compatible with RinSim 4.2.0
+ * Added simulated time versions of RtSolverBidder and RtSolverRoutePlanner
+ * Computation time of OptaPlanner solver is now measurable
+ * Bugfixes
+
 ## v3.0.0
  * Compatible with RinSim 4.1.1
  * Algorithms now respond to interrupts

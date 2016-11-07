@@ -1,4 +1,4 @@
-# RinLog 3.1.0-SNAPSHOT
+# RinLog 3.1.0
 [![Javadocs](https://javadoc.io/badge/com.github.rinde/rinlog.svg?color=red)](https://javadoc.io/doc/com.github.rinde/rinlog)
 [![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) 
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.58848.svg)](http://dx.doi.org/10.5281/zenodo.58848)
