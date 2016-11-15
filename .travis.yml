@@ -4,12 +4,20 @@ jdk:
   - oraclejdk7
   - openjdk7
 
+# OpenJDK 7 buffer overflow workaround from https://github.com/travis-ci/travis-ci/issues/5227
 before_install:
   - cat /etc/hosts # optionally check the content *before*
   - sudo hostname "$(hostname | cut -c1-63)"
-  - sed -e "s/^\\(127\\.0\\.0\\.1.*\\)/\\1 $(hostname | cut -c1-63)/" /etc/hosts | sudo tee /etc/hosts
+  - sed -e "s/^\\(127\\.0\\.0\\.1.*\\)/\\1 $(hostname | cut -c1-63)/" /etc/hosts > /tmp/hosts
+  - sudo mv /tmp/hosts /etc/hosts
   - cat /etc/hosts # optionally check the content *after*
+
 install: mvn install -DskipTests=true
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
 
 script: mvn verify
 
