@@ -179,8 +179,26 @@ public class AuctionCommModel<T extends Bid<T>>
     return Builder.<T>create();
   }
 
+  /**
+   * Event types of {@link AuctionEvent}.
+   * @author Rinde van Lon
+   */
   public enum EventType {
-    START_AUCTION, FINISH_AUCTION, START_RE_AUCTION
+
+    /**
+     * Event type indicating the start of an auction.
+     */
+    START_AUCTION,
+
+    /**
+     * Event type indicating the end of an auction.
+     */
+    FINISH_AUCTION,
+
+    /**
+     * Event type indicating the start of a reauction.
+     */
+    START_RE_AUCTION
   }
 
   public static class AuctionEvent extends Event {
@@ -190,13 +208,12 @@ public class AuctionCommModel<T extends Bid<T>>
     private final Optional<Bidder<?>> winner;
     private final int receivedBids;
 
-    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a,
-        long auctStart, long t) {
+    AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long auctStart, long t) {
       this(type, p, a, auctStart, t, -1);
     }
 
-    protected AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long auctStart,
-        long t, int numBids) {
+    AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long auctStart, long t,
+        int numBids) {
       super(type);
       parcel = p;
       auctionStartTime = auctStart;
