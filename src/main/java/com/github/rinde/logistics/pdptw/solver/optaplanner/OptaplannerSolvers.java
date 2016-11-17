@@ -442,6 +442,16 @@ public final class OptaplannerSolvers {
         isTimeMeasuringEnabled());
     }
 
+    /**
+     * Enables/disables the usage of time measurements in the solver. If this is
+     * disabled, {@link MeasureableSolver#getTimeMeasurements()} and
+     * {@link MeasurableRealtimeSolver#getTimeMeasurements()} will throw an
+     * {@link IllegalStateException}. If enabled these methods will return time
+     * measurements.
+     * @param enable <code>true</code> to enable, <code>false</code> to disable.
+     *          Default value: <code>false</code>.
+     * @return A new builder with the time measurement property changed.
+     */
     public Builder withTimeMeasurementsEnabled(boolean enable) {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
@@ -573,7 +583,7 @@ public final class OptaplannerSolvers {
 
     @Override
     public List<SolverTimeMeasurement> getTimeMeasurements() {
-      checkState(isMeasuringEnabled);
+      checkState(isMeasuringEnabled, "Time measuring is not enabled.");
       return Collections.unmodifiableList(measurements);
     }
 
