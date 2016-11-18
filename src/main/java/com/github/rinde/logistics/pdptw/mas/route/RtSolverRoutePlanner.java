@@ -20,13 +20,16 @@ import static com.google.common.collect.Lists.newLinkedList;
 import java.io.Serializable;
 import java.util.Deque;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.github.rinde.rinsim.central.GlobalStateObject;
+import com.github.rinde.rinsim.central.Measurable;
 import com.github.rinde.rinsim.central.SimSolverBuilder;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverTimeMeasurement;
 import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.central.Solvers.SolveArgs;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
@@ -52,7 +55,7 @@ import com.google.common.collect.Iterables;
  * @author Rinde van Lon
  */
 public final class RtSolverRoutePlanner extends AbstractRoutePlanner
-    implements RtSolverUser {
+    implements RtSolverUser, Measurable {
 
   Deque<Parcel> route;
   Optional<PDPRoadModel> pdpRoadModel;
@@ -177,6 +180,14 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     }, EventType.NEW_SCHEDULE);
   }
 
+  @Override
+  public List<SolverTimeMeasurement> getTimeMeasurements() {
+    if (solver instanceof Measurable) {
+      return ((Measurable) solver).getTimeMeasurements();
+    }
+    throw new IllegalStateException("Solver " + solver + " is not measurable.");
+  }
+
   public static StochasticSupplier<RoutePlanner> supplier(
       StochasticSupplier<? extends RealtimeSolver> solver) {
     return new RtSup(solver);
@@ -256,5 +267,4 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
       return toStringHelper("supplier", solver);
     }
   }
-
 }
