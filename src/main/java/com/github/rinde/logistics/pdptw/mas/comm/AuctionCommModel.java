@@ -329,7 +329,8 @@ public class AuctionCommModel<T extends Bid<T>>
         if (time - auctionStartTime > maxAuctionDurationMs) {
           throw new IllegalStateException(
             "Auction duration for " + parcel + " exceeded threshold of "
-              + maxAuctionDurationMs + " ms. Current time: " + time + ".");
+              + maxAuctionDurationMs + " ms. Auction start time: "
+              + auctionStartTime + ", current time: " + time + ".");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
