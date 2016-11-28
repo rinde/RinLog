@@ -88,6 +88,7 @@ public class RtSolverBidder
   AtomicBoolean computing;
 
   final BidFunction bidFunction;
+  final boolean reauctionsEnabled;
   long lastAuctionWinTime;
 
   // this field will either be set to the decorator reference (if the bidder is
@@ -99,7 +100,7 @@ public class RtSolverBidder
   private final long reauctionCooldownPeriod;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
-      BidFunction bidFunc, long cooldown) {
+      BidFunction bidFunc, long cooldown, boolean reauctEnabled) {
     super(SetFactories.synchronizedFactory(SetFactories.linkedHashSet()));
     objectiveFunction = objFunc;
     solver = s;
@@ -110,6 +111,7 @@ public class RtSolverBidder
     reauctioning = new AtomicBoolean();
     computing = new AtomicBoolean();
     reauctionCooldownPeriod = cooldown;
+    reauctionsEnabled = reauctEnabled;
   }
 
   public RealtimeSolver getSolver() {
@@ -299,7 +301,7 @@ public class RtSolverBidder
 
   @SuppressWarnings({"null", "unused"})
   void reauction() {
-    if (assignedParcels.isEmpty()) {
+    if (!reauctionsEnabled || assignedParcels.isEmpty()) {
       return;
     }
     LOGGER.trace("{} Considering a reauction, assignedParcels: {}.", decorator,
@@ -497,6 +499,7 @@ public class RtSolverBidder
       implements StochasticSupplier<Bidder<DoubleBid>> {
     static final BidFunction DEFAULT_BID_FUNCTION = BidFunctions.PLAIN;
     static final long DEFAULT_COOLDOWN_VALUE = 0L;
+    static final boolean DEFAULT_REAUCTIONS_ENABLED = true;
 
     Builder() {}
 
@@ -507,6 +510,8 @@ public class RtSolverBidder
     // after an unsuccessful reauction, this period indicates the minimum amount
     // of time to wait before a new reauction may be started for the same parcel
     abstract long getReauctionCooldownPeriod();
+
+    abstract boolean isReauctionsEnabled();
 
     @Nullable
     abstract StochasticSupplier<? extends RealtimeSolver> getRtSolverSupplier();
@@ -520,6 +525,7 @@ public class RtSolverBidder
         getObjectiveFunction(),
         bidFunction,
         getReauctionCooldownPeriod(),
+        isReauctionsEnabled(),
         getRtSolverSupplier(),
         getStSolverSupplier());
     }
@@ -543,6 +549,26 @@ public class RtSolverBidder
         getObjectiveFunction(),
         getBidFunction(),
         periodMs,
+        isReauctionsEnabled(),
+        getRtSolverSupplier(),
+        getStSolverSupplier());
+    }
+
+    /**
+     * Enables or disables the usage of reauctions by {@link RtSolverBidder}s
+     * created by this builder.
+     * @param enabled Whether to enable (<code>true</code>) or disable (
+     *          <code>false</code>) reauctions. Default value: <code>true</code>
+     *          .
+     * @return A new {@link Builder} instance with the new reauction setting.
+     */
+    @CheckReturnValue
+    public Builder withReauctionsEnabled(boolean enabled) {
+      return create(
+        getObjectiveFunction(),
+        getBidFunction(),
+        getReauctionCooldownPeriod(),
+        enabled,
         getRtSolverSupplier(),
         getStSolverSupplier());
     }
@@ -553,12 +579,13 @@ public class RtSolverBidder
       if (getRtSolverSupplier() != null) {
         return new RtSolverBidder(getObjectiveFunction(),
           getRtSolverSupplier().get(seed), getBidFunction(),
-          getReauctionCooldownPeriod());
+          getReauctionCooldownPeriod(), isReauctionsEnabled());
       } else {
         return new StSolverBidder(
           new RtSolverBidder(getObjectiveFunction(),
             RtStAdapters.toRealtime(getStSolverSupplier()).get(seed),
-            getBidFunction(), getReauctionCooldownPeriod()));
+            getBidFunction(), getReauctionCooldownPeriod(),
+            isReauctionsEnabled()));
       }
     }
 
@@ -572,24 +599,25 @@ public class RtSolverBidder
 
     static Builder createRt(StochasticSupplier<? extends RealtimeSolver> sup,
         ObjectiveFunction objFunc) {
-      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE, sup,
-        null);
+      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
+        DEFAULT_REAUCTIONS_ENABLED, sup, null);
     }
 
     static Builder createSt(StochasticSupplier<? extends Solver> sup,
         ObjectiveFunction objFunc) {
-      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE, null,
-        sup);
+      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
+        DEFAULT_REAUCTIONS_ENABLED, null, sup);
     }
 
     static Builder create(ObjectiveFunction objectiveFunction,
         RtSolverBidder.BidFunction bidFunction,
         long reauctionCooldownPeriod,
+        boolean reauctionsEnabled,
         @Nullable StochasticSupplier<? extends RealtimeSolver> rtSolverSupplier,
         @Nullable StochasticSupplier<? extends Solver> stSolverSupplier) {
       return new AutoValue_RtSolverBidder_Builder(objectiveFunction,
-        bidFunction, reauctionCooldownPeriod, rtSolverSupplier,
-        stSolverSupplier);
+        bidFunction, reauctionCooldownPeriod, reauctionsEnabled,
+        rtSolverSupplier, stSolverSupplier);
     }
 
   }
