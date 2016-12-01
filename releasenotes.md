@@ -1,5 +1,10 @@
 # Release notes
 
+## v3.2.0
+ * Compatible with RinSim 4.3.0
+ * Added AuctionTimeStatsLogger and RoutePlannerStatsLogger
+ * Reauctions can now be disabled in RtSolverBidder
+
 ## v3.1.0
  * Compatible with RinSim 4.2.0
  * Added simulated time versions of RtSolverBidder and RtSolverRoutePlanner

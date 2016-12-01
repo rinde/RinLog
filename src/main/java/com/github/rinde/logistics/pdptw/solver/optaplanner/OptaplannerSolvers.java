@@ -68,11 +68,11 @@ import org.slf4j.LoggerFactory;
 import com.github.rinde.logistics.pdptw.solver.optaplanner.ParcelVisit.VisitType;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
+import com.github.rinde.rinsim.central.MeasureableSolver;
 import com.github.rinde.rinsim.central.Solver;
+import com.github.rinde.rinsim.central.SolverTimeMeasurement;
 import com.github.rinde.rinsim.central.SolverValidator;
 import com.github.rinde.rinsim.central.Solvers;
-import com.github.rinde.rinsim.central.Solvers.MeasureableSolver;
-import com.github.rinde.rinsim.central.Solvers.SolverTimeMeasurement;
 import com.github.rinde.rinsim.central.rt.MeasurableRealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
@@ -442,6 +442,16 @@ public final class OptaplannerSolvers {
         isTimeMeasuringEnabled());
     }
 
+    /**
+     * Enables/disables the usage of time measurements in the solver. If this is
+     * disabled, {@link MeasureableSolver#getTimeMeasurements()} and
+     * {@link MeasurableRealtimeSolver#getTimeMeasurements()} will throw an
+     * {@link IllegalStateException}. If enabled these methods will return time
+     * measurements.
+     * @param enable <code>true</code> to enable, <code>false</code> to disable.
+     *          Default value: <code>false</code>.
+     * @return A new builder with the time measurement property changed.
+     */
     public Builder withTimeMeasurementsEnabled(boolean enable) {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
@@ -551,76 +561,6 @@ public final class OptaplannerSolvers {
     }
   }
 
-  // FIXME factory should be merged with builder as they are conceptually very
-  // similar (but not exactly the same).
-  /**
-   * Factory for instantiating Optaplanner solvers. See
-   * {@link OptaplannerSolvers#getFactoryFromBenchmark(String)} for obtaining an
-   * instance.
-   * @author Rinde van Lon
-   */
-
-  // public interface OptaplannerFactory {
-  /**
-   * Create an OptaPlanner solver.
-   * @param unimprovedMs Maximum interval of time (in ms) the solver will run
-   *          without finding an improving solution.
-   * @param nm The name of the solver.
-   * @return A supplier that will construct the specified solver.
-   * @throws IllegalArgumentException if a solver with the specified name does
-   *           not exist in the factory.
-   */
-  // StochasticSupplier<RealtimeSolver> createRT(long unimprovedMs, String nm);
-  //
-  // StochasticSupplier<Solver> create(long unimprovedMs, String nm);
-  //
-  // StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
-  // String nm);
-  //
-  // // ImmutableSet<String> getAvailableSolvers();
-  // }
-
-  // static class OptaplannerSolversFactory implements OptaplannerFactory {
-  // private final String xmlResource;
-  //
-  // OptaplannerSolversFactory(String xmlLocation) {
-  // xmlResource = xmlLocation;
-  // }
-  //
-  // @Override
-  // public StochasticSupplier<RealtimeSolver> createRT(long ms, String nm) {
-  // return builderHelper(ms, nm).buildRealtimeSolverSupplier();
-  // }
-  //
-  // @Override
-  // public StochasticSupplier<Solver> create(long unimprovedMs, String nm) {
-  // return builderHelper(unimprovedMs, nm).buildSolverSupplier();
-  // }
-  //
-  // @Override
-  // public StochasticSupplier<Solver> createWithMaxCount(int unimprovedCount,
-  // String nm) {
-  // return builder()
-  // .withUnimprovedStepCountLimit(unimprovedCount)
-  // .withSolverFromBenchmark(xmlResource, nm)
-  // .withName(nm)
-  // .buildSolverSupplier();
-  // }
-  //
-  // Builder builderHelper(long ms, String nm) {
-  // return builder()
-  // .withUnimprovedMsLimit(ms)
-  // .withSolverFromBenchmark(xmlResource, nm)
-  // .withName(nm);
-  // }
-  //
-  // // @Override
-  // // public ImmutableSet<String> getAvailableSolvers() {
-  // // return builder().withSolverFromBenchmark(benchmarkXmlResource,
-  // solverKey)
-  // // }
-  // }
-
   static class OptaplannerSolver implements MeasureableSolver {
     @Nullable
     PDPSolution lastSolution;
@@ -643,7 +583,7 @@ public final class OptaplannerSolvers {
 
     @Override
     public List<SolverTimeMeasurement> getTimeMeasurements() {
-      checkState(isMeasuringEnabled);
+      checkState(isMeasuringEnabled, "Time measuring is not enabled.");
       return Collections.unmodifiableList(measurements);
     }
 

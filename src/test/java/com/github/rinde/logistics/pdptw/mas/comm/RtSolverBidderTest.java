@@ -120,7 +120,7 @@ public class RtSolverBidderTest {
     });
     final RtSolverBidder bidder =
       new RtSolverBidder(mock(ObjectiveFunction.class), solver,
-        BidFunctions.PLAIN, -1);
+        BidFunctions.PLAIN, -1, true);
 
     final RoutePlanner rp = mock(RoutePlanner.class);
     when(rp.getEventAPI()).thenReturn(mock(EventAPI.class));
