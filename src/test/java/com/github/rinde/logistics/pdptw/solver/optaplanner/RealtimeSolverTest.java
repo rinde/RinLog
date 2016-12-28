@@ -153,9 +153,11 @@ public class RealtimeSolverTest {
       builder.addAvailableParcel(
         Parcel.builder(new Point(0, i), new Point(1, i)).build());
     }
-    return builder.addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
-      .setRoute(ImmutableList.<Parcel>of())
-      .build())
+    return builder
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
+      .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
+        .setRoute(ImmutableList.<Parcel>of())
+        .build())
       .build();
   }
 

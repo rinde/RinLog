@@ -55,6 +55,7 @@ public class SolverTest {
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of())
         .build())
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .build();
 
     compare(optaplannerSolver, gso);
@@ -74,6 +75,7 @@ public class SolverTest {
         .setRemainingServiceTime(120000L)
         .setDestination(A)
         .build())
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .build();
 
     final OptaplannerSolver optaplannerSolver =

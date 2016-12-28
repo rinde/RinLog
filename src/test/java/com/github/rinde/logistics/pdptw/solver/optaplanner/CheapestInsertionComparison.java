@@ -71,6 +71,7 @@ public class CheapestInsertionComparison {
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of())
         .build())
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .build();
 
     final ImmutableList<ImmutableList<Parcel>> opResult =
@@ -89,6 +90,7 @@ public class CheapestInsertionComparison {
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of())
         .build())
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .build();
 
     final ImmutableList<ImmutableList<Parcel>> opResult =
@@ -119,6 +121,7 @@ public class CheapestInsertionComparison {
         .setLocation(new Point(5, 5))
         .setRoute(ImmutableList.<Parcel>of())
         .build())
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .build();
 
     final ImmutableList<ImmutableList<Parcel>> opResult =

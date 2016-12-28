@@ -998,7 +998,7 @@ public final class OptaplannerSolvers {
       checkState(difference < TEN_SEC_IN_NS,
         "ObjectiveFunction cost (%s) must be equal to Optaplanner cost (%s),"
           + " the difference is %s.",
-        cost, optaplannerCost, difference);
+        cost, optaplannerCost, difference, builder.getObjectiveFunction());
 
       return schedule;
     }

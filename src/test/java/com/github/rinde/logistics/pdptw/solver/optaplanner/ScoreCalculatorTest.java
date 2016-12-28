@@ -60,6 +60,7 @@ public class ScoreCalculatorTest {
 
   static PDPSolution asPDPSolutionV1(Parcel... parcels) {
     final GlobalStateObject gso = GlobalStateObjectBuilder.globalBuilder()
+      .setPlaneTravelTimes(new Point(0, 0), new Point(10, 10))
       .addAvailableParcels(A, B)
       .addVehicle(GlobalStateObjectBuilder.vehicleBuilder()
         .setRoute(ImmutableList.copyOf(parcels))

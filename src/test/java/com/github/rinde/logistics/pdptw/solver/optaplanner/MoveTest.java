@@ -477,6 +477,7 @@ public class MoveTest {
       .speed(1d)
       .build();
     final GlobalStateObjectBuilder b = GlobalStateObjectBuilder.globalBuilder();
+    b.setPlaneTravelTimes(new Point(0, 0), new Point(10, 10));
 
     final Set<Parcel> available = new LinkedHashSet<>();
     available.addAll(unassigned);
