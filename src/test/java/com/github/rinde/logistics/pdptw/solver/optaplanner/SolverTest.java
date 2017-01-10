@@ -102,7 +102,10 @@ public class SolverTest {
     final double rinSimCost = Gendreau06ObjectiveFunction.instance(50d)
       .computeCost(Solvers.computeStats(gso, schedule)) * 60000d;
 
-    assertThat(optaPlannerCost).isWithin(.0001).of(rinSimCost);
+    assertThat(optaPlannerCost)
+      .named("OptaPlanner cost")
+      .isWithin(.0001)
+      .of(rinSimCost);
   }
 
 }

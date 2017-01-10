@@ -47,6 +47,7 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleParcelActionInfo;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
+import com.github.rinde.rinsim.core.model.road.TravelTimesTestUtil;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.event.EventAPI;
@@ -113,7 +114,6 @@ public class RtSolverBidderTest {
       public ImmutableList<ImmutableList<Parcel>> solve(GlobalStateObject state)
           throws InterruptedException {
         while (true) {
-          System.out.println("computing");
           Thread.sleep(100);
         }
       }
@@ -134,6 +134,9 @@ public class RtSolverBidderTest {
 
     final VehicleParcelActionInfo info = mock(VehicleParcelActionInfo.class);
     when(info.getParcel()).thenReturn(a);
+    when(rm.getTravelTimes(SI.MILLI(SI.SECOND))).thenReturn(
+      TravelTimesTestUtil.createDefaultPlaneTravelTimes(new Point(0, 0),
+        new Point(10, 10), SI.MILLI(SI.SECOND), SI.METER));
 
     when(pm.getVehicleState(truck)).thenReturn(VehicleState.IDLE);
     when(pm.getVehicleActionInfo(truck)).thenReturn(info);
