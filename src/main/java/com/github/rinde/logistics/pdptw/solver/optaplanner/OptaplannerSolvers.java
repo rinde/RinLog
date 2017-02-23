@@ -943,7 +943,9 @@ public final class OptaplannerSolvers {
     }
   }
 
-  static class RealtimeSupplier implements StochasticSupplier<RealtimeSolver> {
+  static class RealtimeSupplier
+      implements Serializable, StochasticSupplier<RealtimeSolver> {
+    private static final long serialVersionUID = 4644145971526200115L;
     final Builder builder;
 
     RealtimeSupplier(Builder b) {

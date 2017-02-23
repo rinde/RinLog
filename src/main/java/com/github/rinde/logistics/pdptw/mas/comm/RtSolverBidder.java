@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -496,7 +497,7 @@ public class RtSolverBidder
 
   @AutoValue
   public abstract static class Builder
-      implements StochasticSupplier<Bidder<DoubleBid>> {
+      implements Serializable, StochasticSupplier<Bidder<DoubleBid>> {
     static final BidFunction DEFAULT_BID_FUNCTION = BidFunctions.PLAIN;
     static final long DEFAULT_COOLDOWN_VALUE = 0L;
     static final boolean DEFAULT_REAUCTIONS_ENABLED = true;

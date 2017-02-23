@@ -250,7 +250,10 @@ public final class RtSolverRoutePlanner extends AbstractRoutePlanner
     }
   }
 
-  static final class RtSup implements StochasticSupplier<RoutePlanner> {
+  static final class RtSup
+      implements Serializable, StochasticSupplier<RoutePlanner> {
+
+    private static final long serialVersionUID = 4962818332822395670L;
     final StochasticSupplier<? extends RealtimeSolver> solver;
 
     RtSup(StochasticSupplier<? extends RealtimeSolver> s) {
