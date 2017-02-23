@@ -32,7 +32,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.road.RoadModelSnapshot;
 import com.github.rinde.rinsim.geom.Connection;
 import com.github.rinde.rinsim.geom.ConnectionData;
-import com.github.rinde.rinsim.geom.Graphs.Heuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class Vehicle implements Visit {
   // problem facts
   private final VehicleStateObject vehicle;
   private final RoadModelSnapshot snapshot;
-  private final Heuristic routeHeuristic;
+  private final GeomHeuristic routeHeuristic;
   private final Unit<Duration> timeUnit;
   private final Unit<Velocity> speedUnit;
   private final long endTime;
@@ -73,7 +73,7 @@ public class Vehicle implements Visit {
     index = -1;
   }
 
-  Vehicle(VehicleStateObject vso, RoadModelSnapshot ss, Heuristic heuristic,
+  Vehicle(VehicleStateObject vso, RoadModelSnapshot ss, GeomHeuristic heuristic,
       Unit<Duration> modelTimeUnit, Unit<Velocity> modelSpeedUnit, int ind) {
     vehicle = vso;
     snapshot = ss;

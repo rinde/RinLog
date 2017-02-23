@@ -77,8 +77,8 @@ import com.github.rinde.rinsim.central.rt.MeasurableRealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.geom.GraphHeuristics;
-import com.github.rinde.rinsim.geom.Graphs.Heuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
@@ -146,12 +146,12 @@ public final class OptaplannerSolvers {
   // }
 
   public static PDPSolution convert(GlobalStateObject state) {
-    return convert(state, GraphHeuristics.euclidean());
+    return convert(state, GeomHeuristics.euclidean());
   }
 
   @CheckReturnValue
   public static PDPSolution convert(GlobalStateObject state,
-      Heuristic heuristic) {
+      GeomHeuristic heuristic) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
     checkArgument(state.getDistUnit().equals(DISTANCE_UNIT));
@@ -334,7 +334,7 @@ public final class OptaplannerSolvers {
 
     abstract boolean isTimeMeasuringEnabled();
 
-    public abstract Heuristic getSolverHeuristic();
+    public abstract GeomHeuristic getSolverHeuristic();
 
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
@@ -478,10 +478,10 @@ public final class OptaplannerSolvers {
      * optimal routes.
      * @param heuristic The heuristic to be used by the solver for determining
      *          routes for vehicles. By default this is
-     *          {@link GraphHeuristics#euclidean()}}.
+     *          {@link GeomHeuristics#euclidean()}}.
      * @return A new builder with the new heuristic configured.
      */
-    public Builder withSolverHeuristic(Heuristic heuristic) {
+    public Builder withSolverHeuristic(GeomHeuristic heuristic) {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
@@ -562,7 +562,7 @@ public final class OptaplannerSolvers {
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), -1L, -1,
-        null, null, false, null, null, false, GraphHeuristics.euclidean())
+        null, null, false, null, null, false, GeomHeuristics.euclidean())
           .withSolverXmlResource(FIRST_FIT_DECREASING);
     }
 
@@ -570,7 +570,7 @@ public final class OptaplannerSolvers {
         long ms, int count, @Nullable String xml, @Nullable String key,
         boolean benchmark, @Nullable String name,
         @Nullable ImmutableMap<String, SolverConfig> map,
-        boolean timeMeasuringEnabled, Heuristic heuristic) {
+        boolean timeMeasuringEnabled, GeomHeuristic heuristic) {
       final Builder b =
         new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
           xml, key, benchmark, name, timeMeasuringEnabled, heuristic);
@@ -600,7 +600,7 @@ public final class OptaplannerSolvers {
     private final String name;
     private long lastSoftScore;
     private final boolean isMeasuringEnabled;
-    private final Heuristic routeHeuristic;
+    private final GeomHeuristic routeHeuristic;
 
     OptaplannerSolver(Builder builder, long seed) {
       solver = createOptaplannerSolver(builder, seed);
