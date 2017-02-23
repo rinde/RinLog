@@ -47,7 +47,7 @@ import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleParcelActionInfo;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
-import com.github.rinde.rinsim.core.model.road.TravelTimesTestUtil;
+import com.github.rinde.rinsim.core.model.road.RoadModelSnapshotTestUtil;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.event.EventAPI;
@@ -88,6 +88,9 @@ public class RtSolverBidderTest {
     rm = mock(PDPRoadModel.class);
     when(rm.getSpeedUnit()).thenReturn(NonSI.KILOMETERS_PER_HOUR);
     when(rm.getDistanceUnit()).thenReturn(SI.KILOMETER);
+    when(rm.getSnapshot()).thenReturn(
+      RoadModelSnapshotTestUtil.createPlaneRoadModelSnapshot(new Point(0, 0),
+        new Point(10, 10), SI.KILOMETER));
 
     pm = mock(PDPModel.class);
     when(pm.getEventAPI()).thenReturn(mock(EventAPI.class));
@@ -134,9 +137,9 @@ public class RtSolverBidderTest {
 
     final VehicleParcelActionInfo info = mock(VehicleParcelActionInfo.class);
     when(info.getParcel()).thenReturn(a);
-    when(rm.getTravelTimes(SI.MILLI(SI.SECOND))).thenReturn(
-      TravelTimesTestUtil.createDefaultPlaneTravelTimes(new Point(0, 0),
-        new Point(10, 10), SI.MILLI(SI.SECOND), SI.METER));
+    when(rm.getSnapshot()).thenReturn(
+      RoadModelSnapshotTestUtil.createPlaneRoadModelSnapshot(new Point(0, 0),
+        new Point(10, 10), SI.METER));
 
     when(pm.getVehicleState(truck)).thenReturn(VehicleState.IDLE);
     when(pm.getVehicleActionInfo(truck)).thenReturn(info);

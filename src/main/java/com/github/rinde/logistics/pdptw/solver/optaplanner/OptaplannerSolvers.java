@@ -77,6 +77,8 @@ import com.github.rinde.rinsim.central.rt.MeasurableRealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.geom.GraphHeuristics;
+import com.github.rinde.rinsim.geom.Graphs.Heuristic;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
@@ -143,8 +145,13 @@ public final class OptaplannerSolvers {
   // return new OptaplannerSolversFactory(xmlLocation);
   // }
 
-  @CheckReturnValue
   public static PDPSolution convert(GlobalStateObject state) {
+    return convert(state, GraphHeuristics.euclidean());
+  }
+
+  @CheckReturnValue
+  public static PDPSolution convert(GlobalStateObject state,
+      Heuristic heuristic) {
     checkArgument(state.getTimeUnit().equals(TIME_UNIT));
     checkArgument(state.getSpeedUnit().equals(SPEED_UNIT));
     checkArgument(state.getDistUnit().equals(DISTANCE_UNIT));
@@ -174,7 +181,8 @@ public final class OptaplannerSolvers {
     final List<Vehicle> vehicleList = new ArrayList<>();
     for (int i = 0; i < state.getVehicles().size(); i++) {
       final VehicleStateObject vso = state.getVehicles().get(i);
-      final Vehicle vehicle = new Vehicle(vso, i);
+      final Vehicle vehicle = new Vehicle(vso, state.getRoadModelSnapshot(),
+        heuristic, state.getTimeUnit(), state.getSpeedUnit(), i);
       vehicleList.add(vehicle);
 
       final List<ParcelVisit> visits = new ArrayList<>();
@@ -326,19 +334,22 @@ public final class OptaplannerSolvers {
 
     abstract boolean isTimeMeasuringEnabled();
 
+    public abstract Heuristic getSolverHeuristic();
+
     @CheckReturnValue
     public Builder withValidated(boolean validate) {
       return create(validate, getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
-        isTimeMeasuringEnabled());
+        isTimeMeasuringEnabled(), getSolverHeuristic());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(ObjectiveFunction func) {
       return create(isValidated(), func, getUnimprovedMsLimit(),
         getUnimprovedStepCountLimit(), getSolverXml(), getSolverKey(),
-        isBenchmark(), getName(), configs, isTimeMeasuringEnabled());
+        isBenchmark(), getName(), configs, isTimeMeasuringEnabled(),
+        getSolverHeuristic());
     }
 
     /**
@@ -352,7 +363,7 @@ public final class OptaplannerSolvers {
     public Builder withUnimprovedMsLimit(long ms) {
       return create(isValidated(), getObjectiveFunction(), ms, -1,
         getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
-        isTimeMeasuringEnabled());
+        isTimeMeasuringEnabled(), getSolverHeuristic());
     }
 
     /**
@@ -367,7 +378,7 @@ public final class OptaplannerSolvers {
     public Builder withUnimprovedStepCountLimit(int count) {
       return create(isValidated(), getObjectiveFunction(), -1L, count,
         getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
-        isTimeMeasuringEnabled());
+        isTimeMeasuringEnabled(), getSolverHeuristic());
     }
 
     @CheckReturnValue
@@ -376,7 +387,7 @@ public final class OptaplannerSolvers {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         xml, SINGLE_SOLVER_KEY, false, getName(), null,
-        isTimeMeasuringEnabled()).interpretXml();
+        isTimeMeasuringEnabled(), getSolverHeuristic()).interpretXml();
     }
 
     @CheckReturnValue
@@ -403,7 +414,8 @@ public final class OptaplannerSolvers {
       final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        xml, solverKey, true, getName(), null, isTimeMeasuringEnabled())
+        xml, solverKey, true, getName(), null, isTimeMeasuringEnabled(),
+        getSolverHeuristic())
           .interpretXml();
     }
 
@@ -412,7 +424,8 @@ public final class OptaplannerSolvers {
       final String xml = resourceToString(benchmarkXmlResource);
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        xml, null, true, getName(), null, isTimeMeasuringEnabled())
+        xml, null, true, getName(), null, isTimeMeasuringEnabled(),
+        getSolverHeuristic())
           .interpretXml();
     }
 
@@ -421,7 +434,8 @@ public final class OptaplannerSolvers {
       checkArgument(isBenchmark());
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
-        getSolverXml(), key, true, getName(), configs, isTimeMeasuringEnabled())
+        getSolverXml(), key, true, getName(), configs, isTimeMeasuringEnabled(),
+        getSolverHeuristic())
           .interpretXml();
     }
 
@@ -439,7 +453,7 @@ public final class OptaplannerSolvers {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         getSolverXml(), getSolverKey(), isBenchmark(), name, configs,
-        isTimeMeasuringEnabled());
+        isTimeMeasuringEnabled(), getSolverHeuristic());
     }
 
     /**
@@ -456,7 +470,22 @@ public final class OptaplannerSolvers {
       return create(isValidated(), getObjectiveFunction(),
         getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
         getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
-        enable);
+        enable, getSolverHeuristic());
+    }
+
+    /**
+     * Configures the Solver to use a specific heuristic for the calculation of
+     * optimal routes.
+     * @param heuristic The heuristic to be used by the solver for determining
+     *          routes for vehicles. By default this is
+     *          {@link GraphHeuristics#euclidean()}}.
+     * @return A new builder with the new heuristic configured.
+     */
+    public Builder withSolverHeuristic(Heuristic heuristic) {
+      return create(isValidated(), getObjectiveFunction(),
+        getUnimprovedMsLimit(), getUnimprovedStepCountLimit(),
+        getSolverXml(), getSolverKey(), isBenchmark(), getName(), configs,
+        isTimeMeasuringEnabled(), heuristic);
     }
 
     @CheckReturnValue
@@ -533,7 +562,7 @@ public final class OptaplannerSolvers {
 
     static Builder defaultInstance() {
       return create(false, Gendreau06ObjectiveFunction.instance(), -1L, -1,
-        null, null, false, null, null, false)
+        null, null, false, null, null, false, GraphHeuristics.euclidean())
           .withSolverXmlResource(FIRST_FIT_DECREASING);
     }
 
@@ -541,10 +570,10 @@ public final class OptaplannerSolvers {
         long ms, int count, @Nullable String xml, @Nullable String key,
         boolean benchmark, @Nullable String name,
         @Nullable ImmutableMap<String, SolverConfig> map,
-        boolean timeMeasuringEnabled) {
+        boolean timeMeasuringEnabled, Heuristic heuristic) {
       final Builder b =
         new AutoValue_OptaplannerSolvers_Builder(validate, func, ms, count,
-          xml, key, benchmark, name, timeMeasuringEnabled);
+          xml, key, benchmark, name, timeMeasuringEnabled, heuristic);
       // copy the transient config map
       b.configs = map;
       return b;
@@ -571,6 +600,7 @@ public final class OptaplannerSolvers {
     private final String name;
     private long lastSoftScore;
     private final boolean isMeasuringEnabled;
+    private final Heuristic routeHeuristic;
 
     OptaplannerSolver(Builder builder, long seed) {
       solver = createOptaplannerSolver(builder, seed);
@@ -579,6 +609,7 @@ public final class OptaplannerSolvers {
       name = "OptaPlanner-" + verifyNotNull(builder.getFullName());
       isMeasuringEnabled = builder.isTimeMeasuringEnabled();
       measurements = new ArrayList<>();
+      routeHeuristic = builder.getSolverHeuristic();
     }
 
     @Override
@@ -608,7 +639,7 @@ public final class OptaplannerSolvers {
         throws InterruptedException {
       final long start = System.nanoTime();
       // start solving
-      final PDPSolution problem = convert(state);
+      final PDPSolution problem = convert(state, routeHeuristic);
       solver.solve(problem);
       // end solving
       if (isMeasuringEnabled) {
@@ -912,7 +943,9 @@ public final class OptaplannerSolvers {
     }
   }
 
-  static class RealtimeSupplier implements StochasticSupplier<RealtimeSolver> {
+  static class RealtimeSupplier
+      implements Serializable, StochasticSupplier<RealtimeSolver> {
+    private static final long serialVersionUID = 4644145971526200115L;
     final Builder builder;
 
     RealtimeSupplier(Builder b) {

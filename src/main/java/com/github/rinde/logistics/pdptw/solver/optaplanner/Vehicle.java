@@ -21,9 +21,18 @@ import java.math.RoundingMode;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
+import javax.measure.Measure;
+import javax.measure.quantity.Duration;
+import javax.measure.quantity.Velocity;
+import javax.measure.unit.SI;
+import javax.measure.unit.Unit;
 
 import com.github.rinde.rinsim.central.GlobalStateObject.VehicleStateObject;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.core.model.road.RoadModelSnapshot;
+import com.github.rinde.rinsim.geom.Connection;
+import com.github.rinde.rinsim.geom.ConnectionData;
+import com.github.rinde.rinsim.geom.Graphs.Heuristic;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -45,19 +54,32 @@ public class Vehicle implements Visit {
 
   // problem facts
   private final VehicleStateObject vehicle;
+  private final RoadModelSnapshot snapshot;
+  private final Heuristic routeHeuristic;
+  private final Unit<Duration> timeUnit;
+  private final Unit<Velocity> speedUnit;
   private final long endTime;
   private final long remainingServiceTime;
   private final int index;
 
   Vehicle() {
     vehicle = null;
+    snapshot = null;
+    routeHeuristic = null;
+    timeUnit = null;
+    speedUnit = null;
     endTime = -1;
     remainingServiceTime = -1;
     index = -1;
   }
 
-  Vehicle(VehicleStateObject vso, int ind) {
+  Vehicle(VehicleStateObject vso, RoadModelSnapshot ss, Heuristic heuristic,
+      Unit<Duration> modelTimeUnit, Unit<Velocity> modelSpeedUnit, int ind) {
     vehicle = vso;
+    snapshot = ss;
+    routeHeuristic = heuristic;
+    timeUnit = modelTimeUnit;
+    speedUnit = modelSpeedUnit;
     endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
     remainingServiceTime = vso.getRemainingServiceTime() > 0
       ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
@@ -133,11 +155,30 @@ public class Vehicle implements Visit {
   public long computeTravelTime(Point from, Point to) {
     final double speedKMH = vehicle.getDto().getSpeed();
 
-    final double distKM = Point.distance(from, to);
+    Point fromPoint = from;
+    double travelTime = 0d;
+    // If the vehicle is on a connection in a graph, take relative position into
+    // account.
+    if (vehicle.getConnection().isPresent()) {
+      fromPoint = vehicle.getConnection().get().to();
+      final Connection<? extends ConnectionData> conn =
+        vehicle.getConnection().get();
+      final double connectionPercentage =
+        Point.distance(vehicle.getLocation(), conn.to())
+          / Point.distance(conn.from(), conn.to());
+      travelTime +=
+        snapshot.getPathTo(conn.from(), conn.to(), timeUnit,
+          Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime()
+          * connectionPercentage;
+    }
 
-    final double travelTimeH = distKM / speedKMH;
+    travelTime +=
+      snapshot.getPathTo(fromPoint, to, timeUnit,
+        Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime();
+
     // convert to nanoseconds
-    return DoubleMath.roundToLong(travelTimeH * H_TO_NS,
+    return DoubleMath.roundToLong(
+      Measure.valueOf(travelTime, timeUnit).doubleValue(SI.NANO(SI.SECOND)),
       RoundingMode.HALF_DOWN);
   }
 

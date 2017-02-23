@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.measure.unit.SI;
+
 import org.junit.Test;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.domain.solution.descriptor.SolutionDescriptor;
@@ -30,6 +32,7 @@ import org.optaplanner.core.impl.score.director.incremental.IncrementalScoreDire
 import com.github.rinde.rinsim.central.GlobalStateObjectBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
+import com.github.rinde.rinsim.core.model.road.RoadModelSnapshotTestUtil;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.ImmutableList;
 
@@ -493,6 +496,10 @@ public class MoveTest {
         .setRoute(v)
         .build());
     }
+
+    b.setSnapshot(RoadModelSnapshotTestUtil.createPlaneRoadModelSnapshot(
+      new Point(0, 0), new Point(10, 10), SI.KILOMETER));
+
     return OptaplannerSolvers.convert(b.build());
   }
 
