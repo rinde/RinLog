@@ -17,6 +17,7 @@ package com.github.rinde.logistics.pdptw.solver.optaplanner;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.math.RoundingMode;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -35,6 +36,7 @@ import com.github.rinde.rinsim.geom.Graphs.Heuristic;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.math.DoubleMath;
 
 /**
  *
@@ -153,12 +155,12 @@ public class Vehicle implements Visit {
   public long computeTravelTime(Point from, Point to) {
     final double speedKMH = vehicle.getDto().getSpeed();
 
-    Point fromConn = from;
+    Point fromPoint = from;
     double travelTime = 0d;
-    // If the vehicle is on a connection in a graph
-    // Round position to the starting position.
+    // If the vehicle is on a connection in a graph, take relative position into
+    // account.
     if (vehicle.getConnection().isPresent()) {
-      fromConn = vehicle.getConnection().get().to();
+      fromPoint = vehicle.getConnection().get().to();
       final Connection<? extends ConnectionData> conn =
         vehicle.getConnection().get();
       final double connectionPercentage =
@@ -171,12 +173,13 @@ public class Vehicle implements Visit {
     }
 
     travelTime +=
-      snapshot.getPathTo(fromConn, to, timeUnit,
+      snapshot.getPathTo(fromPoint, to, timeUnit,
         Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime();
 
     // convert to nanoseconds
-    return (long) Measure.valueOf(travelTime, timeUnit)
-      .doubleValue(SI.NANO(SI.SECOND));
+    return DoubleMath.roundToLong(
+      Measure.valueOf(travelTime, timeUnit).doubleValue(SI.NANO(SI.SECOND)),
+      RoundingMode.HALF_DOWN);
   }
 
   @Override
