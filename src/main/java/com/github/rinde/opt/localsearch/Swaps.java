@@ -99,7 +99,7 @@ public final class Swaps {
       C context,
       RouteEvaluator<C, T> evaluator,
       Optional<? extends ProgressListener<T>> listener)
-          throws InterruptedException {
+      throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, false,
       Optional.<RandomGenerator>absent(), listener);
   }
@@ -137,7 +137,7 @@ public final class Swaps {
       RouteEvaluator<C, T> evaluator,
       RandomGenerator rng,
       Optional<? extends ProgressListener<T>> listener)
-          throws InterruptedException {
+      throws InterruptedException {
     return opt2(schedule, startIndices, context, evaluator, true,
       Optional.of(rng), listener);
   }
@@ -150,7 +150,7 @@ public final class Swaps {
       boolean depthFirst,
       Optional<RandomGenerator> rng,
       Optional<? extends ProgressListener<T>> listener)
-          throws InterruptedException {
+      throws InterruptedException {
 
     checkArgument(schedule.size() == startIndices.size());
 
@@ -233,7 +233,7 @@ public final class Swaps {
       ImmutableList
         .builder();
 
-    Range<Integer> range;
+    final Range<Integer> range;
     if (indices.size() == 1) {
       range = Range.closedOpen(fromRow, fromRow + 1);
     } else {

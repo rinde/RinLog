@@ -184,7 +184,7 @@ public final class OptaplannerSolvers {
         for (final Parcel p : route) {
           // is it a pickup or a delivery?
           if (vso.getContents().contains(p) || !pickups.containsKey(p)) {
-            ParcelVisit delivery;
+            final ParcelVisit delivery;
             if (deliveries.containsKey(p)) {
               delivery = deliveries.remove(p);
             } else {

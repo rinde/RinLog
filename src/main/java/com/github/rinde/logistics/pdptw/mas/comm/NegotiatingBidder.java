@@ -126,7 +126,7 @@ public class NegotiatingBidder extends SolverBidder {
   }
 
   Point convertToPos(Truck t) {
-    Point p;
+    final Point p;
     if (t.getRoute().isEmpty()
       || heuristic == SelectNegotiatorsHeuristic.VEHICLE_POSITION) {
       p = roadModel.get().getPosition(t);
