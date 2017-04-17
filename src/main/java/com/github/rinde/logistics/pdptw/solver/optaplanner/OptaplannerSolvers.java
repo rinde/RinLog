@@ -1002,7 +1002,8 @@ public final class OptaplannerSolvers {
       System.out.println("new schedule");
       System.out.println(Joiner.on("\n").join(schedule));
 
-      final StatisticsDTO stats = Solvers.computeStats(state, schedule);
+      final StatisticsDTO stats =
+        Solvers.computeStats(state, schedule, builder.getSolverHeuristic());
 
       // convert cost to nanosecond precision
       final double cost = builder.getObjectiveFunction().computeCost(stats)

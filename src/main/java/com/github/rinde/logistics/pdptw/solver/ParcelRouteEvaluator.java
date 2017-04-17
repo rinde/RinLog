@@ -19,6 +19,8 @@ import com.github.rinde.opt.localsearch.RouteEvaluator;
 import com.github.rinde.rinsim.central.GlobalStateObject;
 import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.google.common.collect.ImmutableList;
 
@@ -26,14 +28,23 @@ class ParcelRouteEvaluator implements
     RouteEvaluator<GlobalStateObject, Parcel> {
   private final ObjectiveFunction objectiveFunction;
 
+  private final GeomHeuristic heuristic;
+
   ParcelRouteEvaluator(ObjectiveFunction objFunc) {
     objectiveFunction = objFunc;
+    heuristic = GeomHeuristics.euclidean();
+  }
+
+  ParcelRouteEvaluator(ObjectiveFunction objFunc, GeomHeuristic h) {
+    objectiveFunction = objFunc;
+    heuristic = h;
   }
 
   @Override
   public double computeCost(GlobalStateObject context, int routeIndex,
       ImmutableList<Parcel> newRoute) {
     return objectiveFunction.computeCost(Solvers.computeStats(
-      context.withSingleVehicle(routeIndex), ImmutableList.of(newRoute)));
+      context.withSingleVehicle(routeIndex), ImmutableList.of(newRoute),
+      heuristic));
   }
 }
