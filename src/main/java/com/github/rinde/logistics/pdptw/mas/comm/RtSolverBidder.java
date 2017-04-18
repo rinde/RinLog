@@ -380,7 +380,7 @@ public class RtSolverBidder
         LOGGER.trace("Found most expensive parcel for reauction: {}.", toSwap);
 
         final double bidValue = bidFunction.computeBidValue(currentRoute.size(),
-          lowestCost - baseline);
+                baseline - lowestCost);
         final DoubleBid initialBid =
           DoubleBid.create(state.getTime(), decorator, toSwap, bidValue);
 
