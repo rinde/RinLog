@@ -57,6 +57,8 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.util.StochasticSupplier;
@@ -92,6 +94,8 @@ public class RtSolverBidder
   final boolean reauctionsEnabled;
   long lastAuctionWinTime;
 
+  GeomHeuristic geomHeuristic;
+
   // this field will either be set to the decorator reference (if the bidder is
   // decorated) or it will not be set, in that case it will refer to 'this'.
   // This field prevents the decorated bidder from leaking from its decorator.
@@ -101,7 +105,8 @@ public class RtSolverBidder
   private final long reauctionCooldownPeriod;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
-      BidFunction bidFunc, long cooldown, boolean reauctEnabled) {
+      BidFunction bidFunc, long cooldown, boolean reauctEnabled,
+      GeomHeuristic heuristic) {
     super(SetFactories.synchronizedFactory(SetFactories.linkedHashSet()));
     objectiveFunction = objFunc;
     solver = s;
@@ -113,6 +118,7 @@ public class RtSolverBidder
     computing = new AtomicBoolean();
     reauctionCooldownPeriod = cooldown;
     reauctionsEnabled = reauctEnabled;
+    geomHeuristic = heuristic;
   }
 
   public RealtimeSolver getSolver() {
@@ -224,7 +230,8 @@ public class RtSolverBidder
         .fixRoutes()
         .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(
-      Solvers.computeStats(state, ImmutableList.of(currentRoute)));
+      Solvers.computeStats(state, ImmutableList.of(currentRoute),
+        geomHeuristic));
 
     final EventAPI ev = solverHandle.get().getEventAPI();
     final Bidder<DoubleBid> bidder = decorator;
@@ -257,7 +264,7 @@ public class RtSolverBidder
           final ImmutableList<ImmutableList<Parcel>> schedule =
             solverHandle.get().getCurrentSchedule();
           final double newCost = objectiveFunction.computeCost(
-            Solvers.computeStats(state, schedule));
+            Solvers.computeStats(state, schedule, geomHeuristic));
 
           LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
             baseline, newCost);
@@ -312,7 +319,8 @@ public class RtSolverBidder
     final GlobalStateObject state = solverHandle.get().getCurrentState(
       SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
     final StatisticsDTO stats =
-      Solvers.computeStats(state, ImmutableList.of(currentRoute));
+      Solvers.computeStats(state, ImmutableList.of(currentRoute),
+        geomHeuristic);
 
     final Parcel lastReceivedParcel = Iterables.getLast(assignedParcels);
 
@@ -346,7 +354,7 @@ public class RtSolverBidder
         newRoute.removeAll(Collections.singleton(sp));
         final double cost = objectiveFunction.computeCost(
           Solvers.computeStats(state,
-            ImmutableList.of(ImmutableList.copyOf(newRoute))));
+            ImmutableList.of(ImmutableList.copyOf(newRoute)), geomHeuristic));
         if (cost < lowestCost) {
           lowestCost = cost;
           toSwap = sp;
@@ -501,6 +509,8 @@ public class RtSolverBidder
     static final BidFunction DEFAULT_BID_FUNCTION = BidFunctions.PLAIN;
     static final long DEFAULT_COOLDOWN_VALUE = 0L;
     static final boolean DEFAULT_REAUCTIONS_ENABLED = true;
+    static final GeomHeuristic DEFAULT_GEOM_HEURISTIC =
+      GeomHeuristics.euclidean();
 
     Builder() {}
 
@@ -513,6 +523,8 @@ public class RtSolverBidder
     abstract long getReauctionCooldownPeriod();
 
     abstract boolean isReauctionsEnabled();
+
+    abstract GeomHeuristic getGeomHeuristic();
 
     @Nullable
     abstract StochasticSupplier<? extends RealtimeSolver> getRtSolverSupplier();
@@ -527,6 +539,7 @@ public class RtSolverBidder
         bidFunction,
         getReauctionCooldownPeriod(),
         isReauctionsEnabled(),
+        getGeomHeuristic(),
         getRtSolverSupplier(),
         getStSolverSupplier());
     }
@@ -551,6 +564,7 @@ public class RtSolverBidder
         getBidFunction(),
         periodMs,
         isReauctionsEnabled(),
+        getGeomHeuristic(),
         getRtSolverSupplier(),
         getStSolverSupplier());
     }
@@ -570,6 +584,24 @@ public class RtSolverBidder
         getBidFunction(),
         getReauctionCooldownPeriod(),
         enabled,
+        getGeomHeuristic(),
+        getRtSolverSupplier(),
+        getStSolverSupplier());
+    }
+
+    /**
+     * Set the heuristic to be used for calculating costs for bids.
+     * @param heuristic The heuristic to be used when calculating costs. Default
+     *          value: {@link GeomHeuristics#euclidean()}.
+     * @return This, as per Builder pattern.
+     */
+    public Builder withGeomHeuristic(GeomHeuristic heuristic) {
+      return create(
+        getObjectiveFunction(),
+        getBidFunction(),
+        getReauctionCooldownPeriod(),
+        isReauctionsEnabled(),
+        heuristic,
         getRtSolverSupplier(),
         getStSolverSupplier());
     }
@@ -580,13 +612,14 @@ public class RtSolverBidder
       if (getRtSolverSupplier() != null) {
         return new RtSolverBidder(getObjectiveFunction(),
           getRtSolverSupplier().get(seed), getBidFunction(),
-          getReauctionCooldownPeriod(), isReauctionsEnabled());
+          getReauctionCooldownPeriod(), isReauctionsEnabled(),
+          getGeomHeuristic());
       } else {
         return new StSolverBidder(
           new RtSolverBidder(getObjectiveFunction(),
             RtStAdapters.toRealtime(getStSolverSupplier()).get(seed),
             getBidFunction(), getReauctionCooldownPeriod(),
-            isReauctionsEnabled()));
+            isReauctionsEnabled(), getGeomHeuristic()));
       }
     }
 
@@ -601,23 +634,24 @@ public class RtSolverBidder
     static Builder createRt(StochasticSupplier<? extends RealtimeSolver> sup,
         ObjectiveFunction objFunc) {
       return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
-        DEFAULT_REAUCTIONS_ENABLED, sup, null);
+        DEFAULT_REAUCTIONS_ENABLED, DEFAULT_GEOM_HEURISTIC, sup, null);
     }
 
     static Builder createSt(StochasticSupplier<? extends Solver> sup,
         ObjectiveFunction objFunc) {
       return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
-        DEFAULT_REAUCTIONS_ENABLED, null, sup);
+        DEFAULT_REAUCTIONS_ENABLED, DEFAULT_GEOM_HEURISTIC, null, sup);
     }
 
     static Builder create(ObjectiveFunction objectiveFunction,
         RtSolverBidder.BidFunction bidFunction,
         long reauctionCooldownPeriod,
-        boolean reauctionsEnabled,
+        boolean reauctionsEnabled, GeomHeuristic heuristic,
         @Nullable StochasticSupplier<? extends RealtimeSolver> rtSolverSupplier,
         @Nullable StochasticSupplier<? extends Solver> stSolverSupplier) {
       return new AutoValue_RtSolverBidder_Builder(objectiveFunction,
         bidFunction, reauctionCooldownPeriod, reauctionsEnabled,
+        heuristic,
         rtSolverSupplier, stSolverSupplier);
     }
 

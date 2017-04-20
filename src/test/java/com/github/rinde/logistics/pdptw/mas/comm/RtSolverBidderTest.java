@@ -51,6 +51,7 @@ import com.github.rinde.rinsim.core.model.road.RoadModelSnapshotTestUtil;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.event.EventAPI;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.PDPRoadModel;
@@ -123,7 +124,7 @@ public class RtSolverBidderTest {
     });
     final RtSolverBidder bidder =
       new RtSolverBidder(mock(ObjectiveFunction.class), solver,
-        BidFunctions.PLAIN, -1, true);
+        BidFunctions.PLAIN, -1, true, GeomHeuristics.euclidean());
 
     final RoutePlanner rp = mock(RoutePlanner.class);
     when(rp.getEventAPI()).thenReturn(mock(EventAPI.class));

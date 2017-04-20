@@ -38,6 +38,8 @@ import com.github.rinde.rinsim.central.Solvers;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.util.StochasticSupplier;
 import com.google.auto.value.AutoValue;
@@ -70,7 +72,7 @@ public final class Opt2 {
   private Opt2() {}
 
   public static Builder builder() {
-    return Builder.create(null, null, false);
+    return Builder.create(null, null, false, GeomHeuristics.euclidean());
   }
 
   @AutoValue
@@ -86,25 +88,33 @@ public final class Opt2 {
 
     abstract boolean deptFirstSearch();
 
+    abstract GeomHeuristic geomHeuristic();
+
     @CheckReturnValue
     public Builder withDepthFirstSearch() {
-      return create(solverSup(), objFunc(), true);
+      return create(solverSup(), objFunc(), true, geomHeuristic());
     }
 
     @CheckReturnValue
     public Builder withDelegate(
         StochasticSupplier<? extends Solver> solverSupplier) {
-      return create(solverSupplier, objFunc(), deptFirstSearch());
+      return create(solverSupplier, objFunc(), deptFirstSearch(),
+        geomHeuristic());
     }
 
     @CheckReturnValue
     public Builder withObjectiveFunction(ObjectiveFunction of) {
-      return create(solverSup(), of, deptFirstSearch());
+      return create(solverSup(), of, deptFirstSearch(), geomHeuristic());
+    }
+
+    @CheckReturnValue
+    public Builder withGeomHeuristic(GeomHeuristic h) {
+      return create(solverSup(), objFunc(), deptFirstSearch(), h);
     }
 
     @CheckReturnValue
     public StochasticSupplier<Solver> buildSolverSupplier() {
-      return buildSolverSupplier(null);
+      return buildSolverSupplier(null, geomHeuristic());
     }
 
     @CheckReturnValue
@@ -125,7 +135,8 @@ public final class Opt2 {
 
     @CheckReturnValue
     StochasticSupplier<Solver> buildSolverSupplier(
-        @Nullable final ProgressListener<Parcel> progressListener) {
+        @Nullable final ProgressListener<Parcel> progressListener,
+        final GeomHeuristic heuristic) {
       final ObjectiveFunction objFunc = objFunc();
       checkArgument(objFunc != null,
         "An objective function must be defined.");
@@ -141,9 +152,10 @@ public final class Opt2 {
           if (dfs) {
             final RandomGenerator rng = new MersenneTwister(seed);
             return new DfsOpt2(rng.nextLong(), delegate.get(rng.nextLong()),
-              objFunc, progressListener);
+              objFunc, progressListener, heuristic);
           }
-          return new BfsOpt2(delegate.get(seed), objFunc, progressListener);
+          return new BfsOpt2(delegate.get(seed), objFunc, progressListener,
+            heuristic);
         }
 
         @Override
@@ -167,10 +179,10 @@ public final class Opt2 {
     static Builder create(
         @Nullable StochasticSupplier<? extends Solver> solverSup,
         @Nullable ObjectiveFunction objFunc,
-        boolean dfs) {
+        boolean dfs, GeomHeuristic heuristic) {
       return new AutoValue_Opt2_Builder(
         (StochasticSupplier<Solver>) solverSup,
-        objFunc, dfs);
+        objFunc, dfs, heuristic);
     }
   }
 
@@ -180,9 +192,9 @@ public final class Opt2 {
     final Optional<ProgressListener<Parcel>> progressListener;
 
     AbstractOpt2Solver(Solver deleg, ObjectiveFunction objFunc,
-        @Nullable ProgressListener<Parcel> pl) {
+        @Nullable ProgressListener<Parcel> pl, GeomHeuristic heuristic) {
       delegate = deleg;
-      evaluator = new ParcelRouteEvaluator(objFunc);
+      evaluator = new ParcelRouteEvaluator(objFunc, heuristic);
       progressListener = Optional.fromNullable(pl);
     }
 
@@ -197,7 +209,7 @@ public final class Opt2 {
 
     abstract ImmutableList<ImmutableList<Parcel>> doSolve(
         ImmutableList<ImmutableList<Parcel>> schedule, GlobalStateObject state)
-            throws InterruptedException;
+        throws InterruptedException;
 
     static IntList indices(GlobalStateObject state) {
       final IntList indices = new IntArrayList();
@@ -210,8 +222,8 @@ public final class Opt2 {
 
   static class BfsOpt2 extends AbstractOpt2Solver {
     BfsOpt2(Solver deleg, ObjectiveFunction objFunc,
-        @Nullable ProgressListener<Parcel> pl) {
-      super(deleg, objFunc, pl);
+        @Nullable ProgressListener<Parcel> pl, GeomHeuristic h) {
+      super(deleg, objFunc, pl, h);
     }
 
     @Override
@@ -227,15 +239,15 @@ public final class Opt2 {
     RandomGenerator rng;
 
     DfsOpt2(long seed, Solver deleg, ObjectiveFunction objFunc,
-        @Nullable ProgressListener<Parcel> pl) {
-      super(deleg, objFunc, pl);
+        @Nullable ProgressListener<Parcel> pl, GeomHeuristic h) {
+      super(deleg, objFunc, pl, h);
       rng = new MersenneTwister(seed);
     }
 
     @Override
     ImmutableList<ImmutableList<Parcel>> doSolve(
         ImmutableList<ImmutableList<Parcel>> schedule, GlobalStateObject state)
-            throws InterruptedException {
+        throws InterruptedException {
       return Swaps.dfsOpt2(schedule, indices(state), state, evaluator, rng,
         progressListener);
     }
@@ -311,7 +323,7 @@ public final class Opt2 {
     GlobalStateObject lastSnapshot;
 
     RealtimeOpt2(Builder b, long seed) {
-      solver = b.buildSolverSupplier(this).get(seed);
+      solver = b.buildSolverSupplier(this, b.geomHeuristic()).get(seed);
       currentFuture = Optional.absent();
       scheduler = Optional.absent();
       lastSnapshot = null;

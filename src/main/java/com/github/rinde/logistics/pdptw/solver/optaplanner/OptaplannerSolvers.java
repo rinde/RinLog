@@ -77,8 +77,8 @@ import com.github.rinde.rinsim.central.rt.MeasurableRealtimeSolver;
 import com.github.rinde.rinsim.central.rt.RealtimeSolver;
 import com.github.rinde.rinsim.central.rt.Scheduler;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
@@ -1002,7 +1002,8 @@ public final class OptaplannerSolvers {
       System.out.println("new schedule");
       System.out.println(Joiner.on("\n").join(schedule));
 
-      final StatisticsDTO stats = Solvers.computeStats(state, schedule);
+      final StatisticsDTO stats =
+        Solvers.computeStats(state, schedule, builder.getSolverHeuristic());
 
       // convert cost to nanosecond precision
       final double cost = builder.getObjectiveFunction().computeCost(stats)

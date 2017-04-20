@@ -67,7 +67,7 @@ public class CheapestInsertionHeuristic implements Solver {
    */
   public static ImmutableList<ImmutableList<Parcel>> solve(
       GlobalStateObject state, ObjectiveFunction objFunc)
-          throws InterruptedException {
+      throws InterruptedException {
     return decomposed(state, objFunc);
   }
 
@@ -98,7 +98,7 @@ public class CheapestInsertionHeuristic implements Solver {
 
   static ImmutableList<ImmutableList<Parcel>> decomposed(
       GlobalStateObject state, ObjectiveFunction objFunc)
-          throws InterruptedException {
+      throws InterruptedException {
     ImmutableList<ImmutableList<Parcel>> schedule = createSchedule(state);
     ImmutableList<Double> costs = decomposedCost(state, schedule, objFunc);
     final ImmutableSet<Parcel> newParcels =
