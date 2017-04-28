@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 import com.github.rinde.logistics.pdptw.mas.comm.Communicator;
 import com.github.rinde.logistics.pdptw.mas.route.RoutePlanner;
 import com.github.rinde.rinsim.core.SimulatorAPI;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle.RouteAdjuster;
@@ -54,6 +56,8 @@ public interface TruckFactory
 
   boolean getLazyComputation();
 
+  GeomHeuristic getRouteHeuristic();
+
   @AutoValue
   abstract class DefaultTruckFactory implements TruckFactory {
 
@@ -71,7 +75,7 @@ public interface TruckFactory
         getCommunicator().get(simulator.getRandomGenerator()
           .nextLong());
       simulator.register(new Truck(event.getVehicleDTO(), rp, c,
-        getRouteAdjuster(), getLazyComputation()));
+        getRouteAdjuster(), getLazyComputation(), getRouteHeuristic()));
     }
 
     public static Builder builder() {
@@ -86,12 +90,14 @@ public interface TruckFactory
     StochasticSupplier<? extends Communicator> communicator;
     RouteAdjuster routeAdjuster;
     boolean lazyComputation;
+    GeomHeuristic routeHeuristic;
 
     Builder() {
       routePlanner = null;
       communicator = null;
       routeAdjuster = RouteFollowingVehicle.nopAdjuster();
       lazyComputation = true;
+      routeHeuristic = GeomHeuristics.euclidean();
     }
 
     public Builder setRoutePlanner(
@@ -111,6 +117,11 @@ public interface TruckFactory
       return this;
     }
 
+    public Builder setRouteHeuristic(GeomHeuristic heuristic) {
+      routeHeuristic = heuristic;
+      return this;
+    }
+
     public Builder setLazyComputation(boolean lc) {
       lazyComputation = lc;
       return this;
@@ -120,7 +131,8 @@ public interface TruckFactory
       checkArgument(routePlanner != null, "A route planner must be specified.");
       checkArgument(communicator != null, "A communicator must be specified.");
       return new AutoValue_TruckFactory_DefaultTruckFactory(routePlanner,
-        communicator, routeAdjuster, lazyComputation);
+        communicator, routeAdjuster, lazyComputation, routeHeuristic);
     }
+
   }
 }
