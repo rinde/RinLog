@@ -1,7 +1,7 @@
 # RinLog 3.3.0-SNAPSHOT
 [![Javadocs](https://javadoc.io/badge/com.github.rinde/rinlog.svg?color=red)](https://javadoc.io/doc/com.github.rinde/rinlog)
 [![Build Status](https://travis-ci.org/rinde/RinLog.svg)](https://travis-ci.org/rinde/RinLog) 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.192111.svg)](https://doi.org/10.5281/zenodo.192111)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.571180.svg)](https://doi.org/10.5281/zenodo.571180)
 
 Code for experiments in logistics. See [release notes](releasenotes.md). This library uses [semantic versioning](http://semver.org/) and is open source under the [Apache License Version 2.0](LICENSE).
  * Solvers:
@@ -17,7 +17,7 @@ Code for experiments in logistics. See [release notes](releasenotes.md). This li
              * [RtSolverBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/RtSolverBidder.java) for real-time simulation.
              * [NegotiatingBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/NegotiatingBidder.java)
              * [RandomBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/RandomBidder.java)
-   * Route finding:
+    * Route finding:
          * [SolverRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/SolverRoutePlanner.java)
          * [RtSolverRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/RtSolverRoutePlanner.java) for real-time simulation.
          * [GotoClosestRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/GotoClosestRoutePlanner.java)

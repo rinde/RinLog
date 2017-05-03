@@ -1,5 +1,11 @@
 # Release notes
 
+## v3.2.2
+ * Bugfix in OptaPlannerSolvers
+
+## v3.2.1
+ * Bugfix in reauctions bid computation
+
 ## v3.2.0
  * Compatible with RinSim 4.3.0
  * Added AuctionTimeStatsLogger and RoutePlannerStatsLogger

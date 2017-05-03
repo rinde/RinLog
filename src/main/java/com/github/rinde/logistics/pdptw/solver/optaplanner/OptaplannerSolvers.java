@@ -88,9 +88,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multiset;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -140,11 +142,7 @@ public final class OptaplannerSolvers {
     return builder.build();
   }
 
-  // public static OptaplannerFactory getFactoryFromBenchmark(String
-  // xmlLocation) {
-  // return new OptaplannerSolversFactory(xmlLocation);
-  // }
-
+  @CheckReturnValue
   public static PDPSolution convert(GlobalStateObject state) {
     return convert(state, GeomHeuristics.euclidean());
   }
@@ -158,14 +156,11 @@ public final class OptaplannerSolvers {
 
     final PDPSolution problem = new PDPSolution(state.getTime());
 
-    // final Set<Parcel> parcels = GlobalStateObjects.allParcels(state);
-
     final List<ParcelVisit> parcelList = new ArrayList<>();
     final Map<Parcel, ParcelVisit> pickups = new LinkedHashMap<>();
     final Map<Parcel, ParcelVisit> deliveries = new LinkedHashMap<>();
 
     final Set<ParcelVisit> unassignedPickups = new LinkedHashSet<>();
-
     for (final Parcel p : state.getAvailableParcels()) {
       final ParcelVisit pickup = new ParcelVisit(p, VisitType.PICKUP);
       final ParcelVisit delivery = new ParcelVisit(p, VisitType.DELIVER);
@@ -188,19 +183,27 @@ public final class OptaplannerSolvers {
       final List<ParcelVisit> visits = new ArrayList<>();
       if (vso.getRoute().isPresent()) {
         final List<Parcel> route = vso.getRoute().get();
-
+        final Multiset<Parcel> multiset = HashMultiset.create(route);
         for (final Parcel p : route) {
           // is it a pickup or a delivery?
           if (vso.getContents().contains(p) || !pickups.containsKey(p)) {
-            final ParcelVisit delivery;
-            if (deliveries.containsKey(p)) {
-              delivery = deliveries.remove(p);
+            if (multiset.count(p) == 2) {
+              multiset.remove(p);
+              final ParcelVisit pickup = new ParcelVisit(p, VisitType.PICKUP);
+              visits.add(pickup);
+              parcelList.add(pickup);
             } else {
-              delivery = new ParcelVisit(p, VisitType.DELIVER);
-              parcelList.add(delivery);
+              final ParcelVisit delivery;
+              if (deliveries.containsKey(p)) {
+                delivery = deliveries.remove(p);
+              } else {
+                delivery = new ParcelVisit(p, VisitType.DELIVER);
+                parcelList.add(delivery);
+              }
+              visits.add(delivery);
             }
-            visits.add(delivery);
           } else {
+            multiset.remove(p);
             visits.add(checkNotNull(pickups.remove(p)));
           }
         }
@@ -635,9 +638,11 @@ public final class OptaplannerSolvers {
 
     // actual solving, returns null when no valid solution was found
     @Nullable
-    public ImmutableList<ImmutableList<Parcel>> doSolve(GlobalStateObject state)
+    public ImmutableList<ImmutableList<Parcel>> doSolve(
+        final GlobalStateObject state)
         throws InterruptedException {
       final long start = System.nanoTime();
+
       // start solving
       final PDPSolution problem = convert(state, routeHeuristic);
       solver.solve(problem);
