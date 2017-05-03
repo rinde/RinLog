@@ -17,7 +17,7 @@ Code for experiments in logistics. See [release notes](releasenotes.md). This li
              * [RtSolverBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/RtSolverBidder.java) for real-time simulation.
              * [NegotiatingBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/NegotiatingBidder.java)
              * [RandomBidder](src/main/java/com/github/rinde/logistics/pdptw/mas/comm/RandomBidder.java)
-   * Route finding:
+    * Route finding:
          * [SolverRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/SolverRoutePlanner.java)
          * [RtSolverRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/RtSolverRoutePlanner.java) for real-time simulation.
          * [GotoClosestRoutePlanner](src/main/java/com/github/rinde/logistics/pdptw/mas/route/GotoClosestRoutePlanner.java)
