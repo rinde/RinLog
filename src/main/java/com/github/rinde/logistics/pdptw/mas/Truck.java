@@ -44,6 +44,8 @@ import com.github.rinde.rinsim.event.EventDispatcher;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
 import com.github.rinde.rinsim.fsm.StateMachine.StateTransitionEvent;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.google.common.base.Optional;
 
@@ -76,7 +78,22 @@ public class Truck
    */
   public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
       RouteAdjuster ra, boolean lazyRouteComp) {
-    super(pDto, true, ra);
+    this(pDto, rp, c, ra, lazyRouteComp, GeomHeuristics.euclidean());
+  }
+
+  /**
+   * Create a new Truck using the specified {@link RoutePlanner} and
+   * {@link Communicator}.
+   * @param pDto The truck properties.
+   * @param rp The route planner used.
+   * @param c The communicator used.
+   * @param ra Route adjuster.
+   * @param lazyRouteComp If true, lazy route computing is on.
+   * @param geomHeuristic The heuristic used for route resolution.
+   */
+  public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
+      RouteAdjuster ra, boolean lazyRouteComp, GeomHeuristic geomHeuristic) {
+    super(pDto, true, ra, geomHeuristic);
     routePlanner = rp;
     communicator = c;
     communicator.addUpdateListener(this);

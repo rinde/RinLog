@@ -12,7 +12,7 @@
 	
 	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <rinsim.version>4.4.1</rinsim.version>
+        <rinsim.version>4.4.2</rinsim.version>
         <sonar.language>java</sonar.language>
         <reference.version>1.0.0</reference.version>
     </properties>

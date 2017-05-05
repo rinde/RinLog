@@ -24,6 +24,7 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.fsm.State;
 import com.github.rinde.rinsim.fsm.StateMachine;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.google.auto.value.AutoValue;
@@ -36,6 +37,11 @@ public class TestTruck extends Truck {
   TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
       RouteAdjuster ra, boolean lazy) {
     super(pDto, rp, c, ra, lazy);
+  }
+
+  TestTruck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
+      RouteAdjuster ra, boolean lazy, GeomHeuristic h) {
+    super(pDto, rp, c, ra, lazy, h);
   }
 
   public State<StateEvent, RouteFollowingVehicle> getState() {
@@ -93,7 +99,8 @@ public class TestTruck extends Truck {
       @Override
       public TestTruckFactory build() {
         return new AutoValue_TestTruck_TestTruckFactory(routePlanner,
-          communicator, routeAdjuster, lazyComputation);
+          communicator, routeAdjuster, lazyComputation,
+          routeHeuristic);
       }
     }
   }

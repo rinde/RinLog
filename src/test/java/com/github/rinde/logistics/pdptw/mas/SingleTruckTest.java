@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -29,6 +31,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.measure.unit.NonSI;
+import javax.measure.unit.SI;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -48,21 +52,35 @@ import com.github.rinde.rinsim.central.SolverUser;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.SimulatorAPI;
 import com.github.rinde.rinsim.core.SimulatorUser;
+import com.github.rinde.rinsim.core.model.DependencyProvider;
+import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
+import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.ParcelDTO;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
+import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
+import com.github.rinde.rinsim.core.model.road.RoadModelBuilders.StaticGraphRMB;
+import com.github.rinde.rinsim.core.model.time.TimeLapseFactory;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
 import com.github.rinde.rinsim.experiment.ExperimentTestUtil;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
 import com.github.rinde.rinsim.fsm.StateMachine.StateMachineEvent;
+import com.github.rinde.rinsim.geom.GeomHeuristic;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
+import com.github.rinde.rinsim.geom.Graph;
+import com.github.rinde.rinsim.geom.MultiAttributeData;
 import com.github.rinde.rinsim.geom.Point;
+import com.github.rinde.rinsim.geom.TableGraph;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
+import com.github.rinde.rinsim.pdptw.common.PDPGraphRoadModel;
+import com.github.rinde.rinsim.pdptw.common.RouteFollowingVehicle;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06Scenario;
 import com.github.rinde.rinsim.scenario.gendreau06.GendreauTestUtil;
@@ -109,6 +127,12 @@ public class SingleTruckTest {
   // should be called in beginning of every test
   public void setUp(List<ParcelDTO> parcels, int trucks,
       @Nullable StochasticSupplier<? extends RoutePlanner> rp) {
+    setUp(parcels, trucks, rp, GeomHeuristics.euclidean());
+  }
+
+  public void setUp(List<ParcelDTO> parcels, int trucks,
+      @Nullable StochasticSupplier<? extends RoutePlanner> rp,
+      GeomHeuristic h) {
     final List<AddParcelEvent> events = newArrayList();
     for (final ParcelDTO p : parcels) {
       events.add(AddParcelEvent.create(p));
@@ -126,6 +150,7 @@ public class SingleTruckTest {
           .setRoutePlanner(DebugRoutePlanner.supplier(rp))
           .setCommunicator(TestBidder.supplier())
           .setLazyComputation(false)
+          .setRouteHeuristic(h)
           .build())
       .addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
       .addModel(AuctionCommModel.builder(DoubleBid.class))
@@ -250,6 +275,71 @@ public class SingleTruckTest {
     final ParcelDTO parcel3dto = builder.buildDTO();
     setUp(asList(parcel1dto, parcel2dto, parcel3dto), 2, null);
     simulator.start();
+  }
+
+  @Test
+  public void moveToHeuristicTest() {
+
+    // Relevant Points
+    final Point origin = new Point(0, 0);
+    final Point destination = new Point(0, 10);
+    final Point midway = new Point(5, 5);
+
+    // Parcel
+    final ParcelDTO parcel1dto =
+      Parcel.builder(destination, origin).toString("A").buildDTO();
+    final Parcel parcel = new Parcel(parcel1dto);
+
+    // Truck
+    final TestTruck tt = new TestTruck(
+      VehicleDTO.builder().speed(10).startPosition(origin).build(),
+      RandomRoutePlanner.supplier().get(0), TestBidder.supplier().get(0),
+      RouteFollowingVehicle.nopAdjuster(),
+      false,
+      GeomHeuristics.time(10));
+
+    // Depot
+    final Depot d = new Depot(origin);
+
+    // Graph with slow direct (shortest) route, but fast longer route.
+    final Graph<MultiAttributeData> graph = new TableGraph<>();
+    graph.addConnection(origin, destination,
+      MultiAttributeData.builder().setLength(10).setMaxSpeed(1).build());
+    graph.addConnection(origin, midway,
+      MultiAttributeData.builder().setLength(10).setMaxSpeed(10).build());
+    graph.addConnection(midway, destination,
+      MultiAttributeData.builder().setLength(10).setMaxSpeed(10).build());
+
+    // Models
+    final StaticGraphRMB graphModelBuilder =
+      RoadModelBuilders.staticGraph(graph)
+        .withDistanceUnit(SI.KILOMETER)
+        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR);
+    final RoadModel moveModel =
+      PDPGraphRoadModel.builderForGraphRm(graphModelBuilder)
+        .build(mock(DependencyProvider.class));
+    final DependencyProvider dp = mock(DependencyProvider.class);
+    when(dp.get(RoadModel.class)).thenReturn(moveModel);
+    final PDPModel pdpModel = DefaultPDPModel.builder().build(dp);
+
+    // Register elements to relevant models
+    pdpModel.register(parcel);
+    moveModel.register(parcel);
+    pdpModel.register(tt);
+    pdpModel.register(d);
+    // Init elements
+    d.initRoadUser(moveModel);
+    tt.initRoadUser(moveModel);
+
+    // Set truck to parcel
+    tt.setRoute(pdpModel.getParcels(ParcelState.AVAILABLE));
+
+    // Tick
+    pdpModel.tick(TimeLapseFactory.hour(1));
+    tt.tick(TimeLapseFactory.hour(1));
+
+    // Agent chose speedy route
+    assertEquals(midway, moveModel.getPosition(tt));
   }
 
   /**
